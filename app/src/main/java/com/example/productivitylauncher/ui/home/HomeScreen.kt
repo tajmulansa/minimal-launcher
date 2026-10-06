@@ -100,8 +100,17 @@ fun HomeScreen(onOpenApps: () -> Unit) {
 
         Spacer(Modifier.weight(1f))
 
+        val petFace by produceState(initialValue = "[^_^]") {
+            while (true) {
+                value = "[-_-]"
+                delay(200L)
+                value = "[^_^]"
+                delay(4000L)
+            }
+        }
+
         // TODO(pet): replace this static line with the real pet engine, see docs/DESIGN.md.
-        AppText("[^_^] morning! start with just 2 minutes.", size = 15.sp)
+        AppText("$petFace morning! start with just 2 minutes.", size = 15.sp)
         Rule(Modifier.padding(vertical = 16.dp))
         Row(
             Modifier
