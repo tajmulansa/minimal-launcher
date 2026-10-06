@@ -26,7 +26,7 @@ jobs:
           java-version: 17
 
       # Installs the Android SDK command line tools and accepts the licenses.
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
 
       - uses: gradle/actions/setup-gradle@v4
 
