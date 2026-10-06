@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Placeholder icon: a terminal prompt. Replace when the brand is decided. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M40,42 L56,54 L40,66"
+        android:strokeColor="#D6D6D6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="5" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M60,68 L72,68"
+        android:strokeColor="#D6D6D6"
+        android:strokeLineCap="round"
+        android:strokeWidth="5" />
+</vector>
