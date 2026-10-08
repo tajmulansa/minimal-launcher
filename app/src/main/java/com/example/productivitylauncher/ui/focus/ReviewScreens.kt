@@ -106,7 +106,7 @@ fun EveningScreen(state: LauncherState, nav: Nav) {
             }
             CButton("Close the day", {
                 if (dump.isNotBlank()) state.addDump(dump)
-                state.setTomorrowFrog(tomorrow.trim())
+                state.updateTomorrowFrog(tomorrow.trim())
                 state.finishEvening()
                 done = true
             }, Modifier.fillMaxWidth(), BtnKind.Accent)

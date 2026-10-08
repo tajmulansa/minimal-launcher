@@ -152,7 +152,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                                     PipAction.Evening -> nav.go(Route.Evening)
                                     PipAction.BrainDump -> nav.go(Route.BrainDump)
                                     PipAction.SetFrog -> scope.launch { pager.animateScrollToPage(1) }
-                                    PipAction.Water -> state.setWater(state.water + 1)
+                                    PipAction.Water -> state.updateWater(state.water + 1)
                                     PipAction.None -> Unit
                                 }
                             },

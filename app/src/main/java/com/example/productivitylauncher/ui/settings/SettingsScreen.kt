@@ -72,7 +72,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 )
                 Divider()
                 SettingRow("Pip", subtitle = "The little [^_^] helper on your Home and Widgets pages") {
-                    Toggle(state.pipOn, { state.setPipOn(it) }, "Show Pip")
+                    Toggle(state.pipOn, { state.updatePipOn(it) }, "Show Pip")
                 }
             }
 
@@ -101,19 +101,19 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
 
             SettingsGroup("Focus and rhythm") {
                 SettingRow("Focus length", subtitle = "Default session for your frog") {
-                    Stepper("${state.frogMinutes} min", { state.setFrogMinutes(state.frogMinutes - 5) }, { state.setFrogMinutes(state.frogMinutes + 5) }, valueWidth = 70.dp)
+                    Stepper("${state.frogMinutes} min", { state.updateFrogMinutes(state.frogMinutes - 5) }, { state.updateFrogMinutes(state.frogMinutes + 5) }, valueWidth = 70.dp)
                 }
                 Divider()
                 SettingRow("Do Not Disturb in focus", subtitle = "Silence notifications during a session") {
-                    Toggle(state.focusDnd, { state.setFocusDnd(it) }, "Do Not Disturb in focus")
+                    Toggle(state.focusDnd, { state.updateFocusDnd(it) }, "Do Not Disturb in focus")
                 }
                 Divider()
                 SettingRow("Lock gated apps in focus") {
-                    Toggle(state.focusLockGated, { state.setFocusLockGated(it) }, "Lock gated apps in focus")
+                    Toggle(state.focusLockGated, { state.updateFocusLockGated(it) }, "Lock gated apps in focus")
                 }
                 Divider()
                 SettingRow("Water goal", subtitle = "Glasses per day") {
-                    Stepper("${state.waterGoal}", { state.setWaterGoal(state.waterGoal - 1) }, { state.setWaterGoal(state.waterGoal + 1) }, valueWidth = 40.dp)
+                    Stepper("${state.waterGoal}", { state.updateWaterGoal(state.waterGoal - 1) }, { state.updateWaterGoal(state.waterGoal + 1) }, valueWidth = 40.dp)
                 }
                 Divider()
                 SettingRow("Screen time goal", subtitle = "Shown in your weekly review") {
@@ -121,7 +121,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 }
                 Divider()
                 SettingRow("Evening shutdown", subtitle = "Pip reminds you to close the day") {
-                    Stepper("${state.eveningHour}:00", { state.setEveningHour(state.eveningHour - 1) }, { state.setEveningHour(state.eveningHour + 1) }, valueWidth = 64.dp)
+                    Stepper("${state.eveningHour}:00", { state.updateEveningHour(state.eveningHour - 1) }, { state.updateEveningHour(state.eveningHour + 1) }, valueWidth = 64.dp)
                 }
                 Divider()
                 SettingRow("Close the day now", onClick = { nav.go(Route.Evening) }) { ValueChevron("") }

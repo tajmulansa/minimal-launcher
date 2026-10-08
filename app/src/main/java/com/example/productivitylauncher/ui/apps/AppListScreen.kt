@@ -159,8 +159,8 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                     }
                     if (!gated) {
                         OptionRow(if (onHome) "Remove from Home" else "Add to Home") {
-                            if (onHome) state.setHomeApps(state.homeApps - target.packageName)
-                            else state.setHomeApps((state.homeApps + target.packageName).takeLast(6))
+                            if (onHome) state.updateHomeApps(state.homeApps - target.packageName)
+                            else state.updateHomeApps((state.homeApps + target.packageName).takeLast(6))
                             options = null
                         }
                     }

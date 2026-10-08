@@ -122,14 +122,14 @@ fun FocusScreen(state: LauncherState, nav: Nav) {
                 size = 20.sp, weight = FontWeight.SemiBold, align = TextAlign.Center, lineHeight = 26.sp,
             )
             if (!active) {
-                Stepper("${state.frogMinutes} min", { state.setFrogMinutes(state.frogMinutes - 5) }, { state.setFrogMinutes(state.frogMinutes + 5) }, valueWidth = 90.dp)
+                Stepper("${state.frogMinutes} min", { state.updateFrogMinutes(state.frogMinutes - 5) }, { state.updateFrogMinutes(state.frogMinutes + 5) }, valueWidth = 90.dp)
                 CeramicCard(padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 22.dp)) {
                     SettingRow("Do Not Disturb", subtitle = if (hasDndAccess(context)) "Silence notifications while you focus" else "Needs permission, tap to allow", onClick = if (hasDndAccess(context)) null else ({ openDndSettings(context) })) {
-                        Toggle(state.focusDnd, { state.setFocusDnd(it) }, "Do Not Disturb during focus")
+                        Toggle(state.focusDnd, { state.updateFocusDnd(it) }, "Do Not Disturb during focus")
                     }
                     Divider()
                     SettingRow("Lock gated apps", subtitle = "They stay closed until you're done") {
-                        Toggle(state.focusLockGated, { state.setFocusLockGated(it) }, "Lock gated apps during focus")
+                        Toggle(state.focusLockGated, { state.updateFocusLockGated(it) }, "Lock gated apps during focus")
                     }
                 }
                 CButton("Start focus", { start() }, Modifier.fillMaxWidth(), BtnKind.Accent, enabled = state.frog.isNotBlank(), leading = Ic.Play)

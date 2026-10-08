@@ -101,7 +101,7 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
             CButton(
                 if (step == last) "Start" else "Next",
                 {
-                    if (step == 3 && frog.isNotBlank()) state.setFrog(frog.trim())
+                    if (step == 3 && frog.isNotBlank()) state.updateFrog(frog.trim())
                     if (step == last) {
                         state.finishOnboarding()
                         nav.go(Route.Main)

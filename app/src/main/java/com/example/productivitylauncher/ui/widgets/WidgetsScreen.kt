@@ -120,10 +120,10 @@ private fun FrogWidget(state: LauncherState, nav: Nav) {
                 value = draft,
                 onChange = { draft = it },
                 placeholder = "What is the one thing that matters most?",
-                onDone = { state.setFrog(draft.trim()); editing = false },
+                onDone = { state.updateFrog(draft.trim()); editing = false },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                CButton("Save", { state.setFrog(draft.trim()); editing = false }, Modifier.weight(1f), BtnKind.Accent, small = true, enabled = draft.isNotBlank())
+                CButton("Save", { state.updateFrog(draft.trim()); editing = false }, Modifier.weight(1f), BtnKind.Accent, small = true, enabled = draft.isNotBlank())
                 if (state.frog.isNotBlank()) CButton("Cancel", { draft = state.frog; editing = false }, Modifier.weight(1f), BtnKind.Soft, small = true)
             }
         } else {
@@ -165,7 +165,7 @@ private fun WaterWidget(state: LauncherState) {
                         val on = i < state.water
                         Box(
                             Modifier.weight(1f).height(34.dp).background(if (on) AppColors.focus.copy(alpha = 0.2f) else AppColors.phone, RoundedCornerShape(10.dp))
-                                .clickableRole({ state.setWater(if (on && i == state.water - 1) i else i + 1) }),
+                                .clickableRole({ state.updateWater(if (on && i == state.water - 1) i else i + 1) }),
                             contentAlignment = Alignment.Center,
                         ) { AppIcon(Ic.Drop, if (on) AppColors.focus else AppColors.dot, size = 16.dp) }
                     }
@@ -174,8 +174,8 @@ private fun WaterWidget(state: LauncherState) {
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Stepper("${state.water}", { state.setWater(state.water - 1) }, { state.setWater(state.water + 1) }, valueWidth = 40.dp)
-            TextLink("Goal: ${state.waterGoal}", { state.setWaterGoal(if (state.waterGoal >= 12) 4 else state.waterGoal + 1) })
+            Stepper("${state.water}", { state.updateWater(state.water - 1) }, { state.updateWater(state.water + 1) }, valueWidth = 40.dp)
+            TextLink("Goal: ${state.waterGoal}", { state.updateWaterGoal(if (state.waterGoal >= 12) 4 else state.waterGoal + 1) })
         }
     }
 }
@@ -287,7 +287,7 @@ private fun HabitsWidget(state: LauncherState) {
 private fun NoteWidget(state: LauncherState) {
     CeramicCard {
         WidgetHeader("Quick note")
-        AppField(state.note, { state.setNote(it) }, "Jot one thing…", singleLine = false)
+        AppField(state.note, { state.updateNote(it) }, "Jot one thing…", singleLine = false)
     }
 }
 

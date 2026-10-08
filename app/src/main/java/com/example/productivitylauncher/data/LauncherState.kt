@@ -77,7 +77,7 @@ class LauncherState(context: Context) {
     var pipOn by mutableStateOf(bool("pip_on", true))
         private set
 
-    fun setPipOn(v: Boolean) { pipOn = v; save { putBoolean("pip_on", v) } }
+    fun updatePipOn(v: Boolean) { pipOn = v; save { putBoolean("pip_on", v) } }
 
     // ------------------------------------------------------------ frog
 
@@ -94,9 +94,9 @@ class LauncherState(context: Context) {
 
     val frogDone: Boolean get() = frogDoneDay == dayKey()
 
-    fun setFrog(text: String) { frog = text; save { putString("frog", text) } }
-    fun setTomorrowFrog(text: String) { tomorrowFrog = text; save { putString("tomorrow_frog", text) } }
-    fun setFrogMinutes(m: Int) { frogMinutes = m.coerceIn(5, 120); save { putInt("frog_minutes", frogMinutes) } }
+    fun updateFrog(text: String) { frog = text; save { putString("frog", text) } }
+    fun updateTomorrowFrog(text: String) { tomorrowFrog = text; save { putString("tomorrow_frog", text) } }
+    fun updateFrogMinutes(m: Int) { frogMinutes = m.coerceIn(5, 120); save { putInt("frog_minutes", frogMinutes) } }
 
     fun setFrogDone(done: Boolean) {
         val today = dayKey()
@@ -120,13 +120,13 @@ class LauncherState(context: Context) {
     var waterGoal by mutableStateOf(int("water_goal", 8))
         private set
 
-    fun setWater(n: Int) { water = n.coerceIn(0, 30); save { putInt("water", water) } }
-    fun setWaterGoal(n: Int) { waterGoal = n.coerceIn(1, 16); save { putInt("water_goal", waterGoal) } }
+    fun updateWater(n: Int) { water = n.coerceIn(0, 30); save { putInt("water", water) } }
+    fun updateWaterGoal(n: Int) { waterGoal = n.coerceIn(1, 16); save { putInt("water_goal", waterGoal) } }
 
     var note by mutableStateOf(str("note"))
         private set
 
-    fun setNote(t: String) { note = t; save { putString("note", t) } }
+    fun updateNote(t: String) { note = t; save { putString("note", t) } }
 
     // ------------------------------------------------------------ habits and brain dump
 
@@ -237,7 +237,7 @@ class LauncherState(context: Context) {
         gated = gated + pkg
         pendingRemoval = pendingRemoval - pkg
         // A gated app does not belong on the Home list.
-        if (pkg in homeApps) setHomeApps(homeApps - pkg)
+        if (pkg in homeApps) updateHomeApps(homeApps - pkg)
         save { putStringSet("gated", gated) }
         writeLongMap("pending_removal", pendingRemoval)
     }
@@ -254,7 +254,7 @@ class LauncherState(context: Context) {
         writeLongMap("pending_removal", pendingRemoval)
     }
 
-    fun setHomeApps(list: List<String>) {
+    fun updateHomeApps(list: List<String>) {
         homeApps = list.distinct().take(6)
         val arr = JSONArray(homeApps)
         save { putString("home_apps", arr.toString()) }
@@ -453,8 +453,8 @@ class LauncherState(context: Context) {
         save { putLong("focus_end", 0L) }
     }
 
-    fun setFocusDnd(v: Boolean) { focusDnd = v; save { putBoolean("focus_dnd", v) } }
-    fun setFocusLockGated(v: Boolean) { focusLockGated = v; save { putBoolean("focus_lock", v) } }
+    fun updateFocusDnd(v: Boolean) { focusDnd = v; save { putBoolean("focus_dnd", v) } }
+    fun updateFocusLockGated(v: Boolean) { focusLockGated = v; save { putBoolean("focus_lock", v) } }
 
     // ------------------------------------------------------------ evening and goals
 
@@ -467,7 +467,7 @@ class LauncherState(context: Context) {
 
     val eveningDone: Boolean get() = eveningDoneDay == dayKey()
 
-    fun setEveningHour(h: Int) { eveningHour = h.coerceIn(18, 23); save { putInt("evening_hour", eveningHour) } }
+    fun updateEveningHour(h: Int) { eveningHour = h.coerceIn(18, 23); save { putInt("evening_hour", eveningHour) } }
     fun finishEvening() { eveningDoneDay = dayKey(); save { putString("evening_done", eveningDoneDay) } }
     fun setScreenGoal(m: Int) { screenGoalMin = m.coerceIn(30, 600); save { putInt("screen_goal", screenGoalMin) } }
 
@@ -478,13 +478,13 @@ class LauncherState(context: Context) {
 
     fun hasWidget(id: String) = id in widgets
 
-    fun toggleWidget(id: String) = setWidgets(if (id in widgets) widgets - id else widgets + id)
+    fun toggleWidget(id: String) = updateWidgets(if (id in widgets) widgets - id else widgets + id)
 
-    fun addWidgetId(id: String) { if (id !in widgets) setWidgets(widgets + id) }
+    fun addWidgetId(id: String) { if (id !in widgets) updateWidgets(widgets + id) }
 
-    fun removeWidgetId(id: String) = setWidgets(widgets - id)
+    fun removeWidgetId(id: String) = updateWidgets(widgets - id)
 
-    private fun setWidgets(list: List<String>) {
+    private fun updateWidgets(list: List<String>) {
         widgets = list
         save { putString("widgets", JSONArray(list).toString()) }
     }
@@ -546,13 +546,13 @@ class LauncherState(context: Context) {
         if (last == today) return
         if (last.isNotEmpty()) {
             if (tomorrowFrog.isNotBlank()) {
-                setFrog(tomorrowFrog)
-                setTomorrowFrog("")
+                updateFrog(tomorrowFrog)
+                updateTomorrowFrog("")
             } else if (frogDoneDay.isNotEmpty() && frogDoneDay != today) {
-                setFrog("")
+                updateFrog("")
             }
         }
-        setWater(0)
+        updateWater(0)
         save { putString("last_day", today) }
     }
 

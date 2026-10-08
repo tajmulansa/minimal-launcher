@@ -98,8 +98,8 @@ fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
                         .heightIn(min = 60.dp)
                         .background(AppColors.card, RadiusMd)
                         .clickableRole({
-                            if (on) state.setHomeApps(state.homeApps - app.packageName)
-                            else if (state.homeApps.size < 6) state.setHomeApps(state.homeApps + app.packageName)
+                            if (on) state.updateHomeApps(state.homeApps - app.packageName)
+                            else if (state.homeApps.size < 6) state.updateHomeApps(state.homeApps + app.packageName)
                         })
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,

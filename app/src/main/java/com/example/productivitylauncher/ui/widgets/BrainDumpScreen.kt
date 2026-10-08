@@ -51,7 +51,7 @@ fun BrainDumpScreen(state: LauncherState, nav: Nav) {
                     AppText(d.text, size = 16.sp, lineHeight = 22.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         CButton("Make it my frog", {
-                            state.setFrog(d.text); state.setFrogDone(false); state.removeDump(d.id); nav.back()
+                            state.updateFrog(d.text); state.setFrogDone(false); state.removeDump(d.id); nav.back()
                         }, kind = BtnKind.Accent, small = true)
                         CButton("Let it go", { state.removeDump(d.id) }, kind = BtnKind.Soft, small = true, leading = Ic.Trash)
                     }
