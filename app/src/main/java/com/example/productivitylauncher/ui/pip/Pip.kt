@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.data.PipAction
+import com.example.productivitylauncher.data.PipAsk
 import com.example.productivitylauncher.data.PipMessage
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.BtnKind
@@ -53,22 +54,44 @@ fun PipBubble(message: PipMessage, onClick: () -> Unit, modifier: Modifier = Mod
     }
 }
 
-/** Pip's message card, shown over a soft scrim. */
+/** A small speech chip next to the bubble, shown briefly when Pip has something worth saying. */
 @Composable
-fun PipCard(message: PipMessage, onDismiss: () -> Unit, onAction: (PipAction) -> Unit) {
+fun PipPreview(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val first = text.substringBefore(". ").let { if (it.length < text.length && !it.endsWith(".")) "$it." else it }
+    Box(
+        modifier
+            .shadow(8.dp, RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp), ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
+            .background(AppColors.card, RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp))
+            .clickableRole(onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+    ) {
+        AppText(first, size = 13.sp, lineHeight = 18.sp, maxLines = 3)
+    }
+}
+
+/** Pip's message card: the message, quick actions, and two questions you can ask. */
+@Composable
+fun PipCard(
+    message: PipMessage,
+    answer: String?,
+    onAsk: (PipAsk) -> Unit,
+    onClose: () -> Unit,
+    onLater: () -> Unit,
+    onAction: (PipAction) -> Unit,
+) {
     Box(
         Modifier
             .fillMaxSize()
             .background(Color(0x66000000))
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClose),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Column(
             Modifier
                 .padding(start = 20.dp, end = 20.dp, bottom = 112.dp)
                 .fillMaxWidth()
-                .shadow(16.dp, RoundedCornerShape(26.dp, 26.dp, 6.dp, 26.dp), ambientColor = Color(0x33000000), spotColor = Color(0x33000000))
-                .background(AppColors.card, RoundedCornerShape(26.dp, 26.dp, 6.dp, 26.dp))
+                .shadow(16.dp, RoundedCornerShape(20.dp, 20.dp, 6.dp, 20.dp), ambientColor = Color(0x33000000), spotColor = Color(0x33000000))
+                .background(AppColors.card, RoundedCornerShape(20.dp, 20.dp, 6.dp, 20.dp))
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = {})
                 .padding(22.dp),
         ) {
@@ -76,12 +99,16 @@ fun PipCard(message: PipMessage, onDismiss: () -> Unit, onAction: (PipAction) ->
                 AppText("PIP  ${message.face}", size = 12.sp, weight = FontWeight.SemiBold, color = AppColors.muted, letterSpacing = 0.5.sp)
                 AppText("now", size = 12.sp, weight = FontWeight.SemiBold, color = AppColors.muted)
             }
-            AppText(message.text, size = 16.sp, lineHeight = 24.sp)
-            Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (message.primaryLabel != null) {
+            AppText(answer ?: message.text, size = 16.sp, lineHeight = 24.sp)
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CButton("What now?", { onAsk(PipAsk.WhatNow) }, Modifier.weight(1f), BtnKind.Soft, small = true)
+                CButton("How am I doing?", { onAsk(PipAsk.HowAmI) }, Modifier.weight(1f), BtnKind.Soft, small = true)
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (answer == null && message.primaryLabel != null) {
                     CButton(message.primaryLabel, { onAction(message.action) }, Modifier.weight(1f), BtnKind.Accent, small = true)
                 }
-                CButton(if (message.primaryLabel != null) "Later" else "Thanks", onDismiss, Modifier.weight(1f), BtnKind.Soft, small = true)
+                CButton(if (message.nudge && answer == null) "Later" else "Thanks", if (message.nudge && answer == null) onLater else onClose, Modifier.weight(1f), BtnKind.Primary, small = true)
             }
         }
     }

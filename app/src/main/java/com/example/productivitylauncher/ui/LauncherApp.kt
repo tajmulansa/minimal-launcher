@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -15,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -27,7 +29,6 @@ import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.PipAction
 import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.data.launchApp
-import com.example.productivitylauncher.data.pipMessage
 import com.example.productivitylauncher.ui.apps.AppListScreen
 import com.example.productivitylauncher.ui.apps.GatedPickerScreen
 import com.example.productivitylauncher.ui.apps.HomePickerScreen
@@ -41,6 +42,7 @@ import com.example.productivitylauncher.ui.home.HomeScreen
 import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
 import com.example.productivitylauncher.ui.pip.PipBubble
 import com.example.productivitylauncher.ui.pip.PipCard
+import com.example.productivitylauncher.ui.pip.PipPreview
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
@@ -62,6 +64,13 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     val stack = remember { ArrayList<Route>() }
     var pipOpen by remember { mutableStateOf(false) }
     var pipVariant by remember { mutableIntStateOf(0) }
+    var pipAnswer by remember { mutableStateOf<String?>(null) }
+    var previewTopic by remember { mutableStateOf<String?>(null) }
+    var previewVisible by remember { mutableStateOf(false) }
+    // Re-pick Pip's message every minute, so time-based lines stay current.
+    val minute by produceState(0L) {
+        while (true) { value = System.currentTimeMillis() / 60_000L; delay(60_000L) }
+    }
 
     val nav = remember {
         Nav(
@@ -94,6 +103,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
         withContext(Dispatchers.IO) {
             state.refreshApps(context.packageManager)
             state.refreshUsage()
+            state.refreshAgenda()
         }
         if (route != Route.Onboarding && state.consumeTimesUp()) {
             val pkg = state.sessionPkg
@@ -106,7 +116,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     LaunchedEffect(Unit) {
         while (true) {
             delay(60_000L)
-            withContext(Dispatchers.IO) { state.refreshUsage() }
+            withContext(Dispatchers.IO) { state.refreshUsage(); state.refreshAgenda() }
         }
     }
 
@@ -139,18 +149,41 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                     else WidgetsScreen(state, nav, widgetHost, page = 1)
                 }
                 if (state.pipOn) {
-                    val message = pipMessage(state.pipFacts(), pipVariant)
-                    PipBubble(message, onClick = { pipVariant++; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 28.dp, bottom = 110.dp))
+                    val message = remember(minute, pipVariant, pipOpen, state.frog, state.frogDone, state.water, state.screenTimeMs, state.gatedMs, state.activeMs45, state.dumps.size, state.focusEnd, state.nextEvent, state.pendingRemoval, state.habits) {
+                        state.pipFor(pipVariant)
+                    }
+                    // A nudge pops up as a small speech chip for a few seconds, once per topic.
+                    LaunchedEffect(message.topic, message.nudge) {
+                        if (message.nudge && previewTopic != message.topic.name) {
+                            previewTopic = message.topic.name
+                            previewVisible = true
+                            delay(9_000L)
+                            previewVisible = false
+                        }
+                    }
+                    if (previewVisible && !pipOpen) {
+                        PipPreview(
+                            message.text,
+                            onClick = { previewVisible = false; pipAnswer = null; pipOpen = true },
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 96.dp, bottom = 116.dp).widthIn(max = 230.dp),
+                        )
+                    }
+                    PipBubble(message, onClick = { pipVariant++; pipAnswer = null; previewVisible = false; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 28.dp, bottom = 110.dp))
                     if (pipOpen) {
                         PipCard(
                             message,
-                            onDismiss = { pipOpen = false },
+                            answer = pipAnswer,
+                            onAsk = { pipAnswer = state.pipAnswer(it) },
+                            onClose = { pipOpen = false; pipAnswer = null },
+                            onLater = { state.pipLater(message.topic); pipOpen = false; pipAnswer = null },
                             onAction = { action ->
+                                state.pipActedOn(message.topic)
                                 pipOpen = false
                                 when (action) {
                                     PipAction.Focus -> nav.go(Route.Focus)
                                     PipAction.Evening -> nav.go(Route.Evening)
                                     PipAction.BrainDump -> nav.go(Route.BrainDump)
+                                    PipAction.GatedApps -> nav.go(Route.GatedPicker)
                                     PipAction.SetFrog -> scope.launch { pager.animateScrollToPage(1) }
                                     PipAction.Water -> state.updateWater(state.water + 1)
                                     PipAction.None -> Unit
