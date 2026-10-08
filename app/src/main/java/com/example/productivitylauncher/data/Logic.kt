@@ -259,11 +259,15 @@ fun pickPip(
     snoozeUntil: Map<String, Long> = emptyMap(),
     dismissed: Map<String, Long> = emptyMap(),
     now: Long = System.currentTimeMillis(),
+    acted: Map<String, Long> = emptyMap(),
 ): PipMessage {
     val all = pipCandidates(f, variant)
     val usable = all.filter { it.score >= 95 || (snoozeUntil[it.topic.name] ?: 0L) <= now }
     val ranked = usable.ifEmpty { all.filter { it.topic == PipTopic.Idle } }
-    return ranked.maxByOrNull { it.score - 12 * (dismissed[it.topic.name] ?: 0L).toInt().coerceAtMost(4) } ?: all.last()
+    // Waved-away topics lose points, topics you act on gain a few.
+    fun adjusted(m: PipMessage): Int =
+        m.score - 12 * (dismissed[m.topic.name] ?: 0L).toInt().coerceAtMost(4) + 2 * (acted[m.topic.name] ?: 0L).toInt().coerceAtMost(5)
+    return ranked.maxByOrNull { adjusted(it) } ?: all.last()
 }
 
 fun pipMessage(f: PipFacts, variant: Int = 0): PipMessage = pickPip(f, variant)

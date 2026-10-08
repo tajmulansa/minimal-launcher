@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -27,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.data.PipAction
 import com.example.productivitylauncher.data.PipAsk
 import com.example.productivitylauncher.data.PipMessage
+import com.example.productivitylauncher.ui.components.AppField
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.BtnKind
 import com.example.productivitylauncher.ui.components.CButton
@@ -78,10 +83,13 @@ fun PipCard(
     onClose: () -> Unit,
     onLater: () -> Unit,
     onAction: (PipAction) -> Unit,
+    onSend: (String) -> Unit,
 ) {
+    var typed by remember { mutableStateOf("") }
     Box(
         Modifier
             .fillMaxSize()
+            .imePadding()
             .background(Color(0x66000000))
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClose),
         contentAlignment = Alignment.BottomCenter,
@@ -103,6 +111,12 @@ fun PipCard(
             Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CButton("What now?", { onAsk(PipAsk.WhatNow) }, Modifier.weight(1f), BtnKind.Soft, small = true)
                 CButton("How am I doing?", { onAsk(PipAsk.HowAmI) }, Modifier.weight(1f), BtnKind.Soft, small = true)
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) {
+                    AppField(typed, { typed = it }, "Tell Pip something…", onDone = { if (typed.isNotBlank()) { onSend(typed); typed = "" } })
+                }
+                CButton("Send", { if (typed.isNotBlank()) { onSend(typed); typed = "" } }, kind = BtnKind.Accent, small = true, enabled = typed.isNotBlank())
             }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (answer == null && message.primaryLabel != null) {
