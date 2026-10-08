@@ -476,6 +476,16 @@ class LauncherState(context: Context) {
     var widgets by mutableStateOf(readStringList("widgets").ifEmpty { DEFAULT_WIDGETS })
         private set
 
+    var widgetHeights by mutableStateOf(readLongMap("widget_heights"))
+        private set
+
+    fun widgetHeight(id: String, default: Int): Int = (widgetHeights[id] ?: default.toLong()).toInt()
+
+    fun updateWidgetHeight(id: String, dp: Int) {
+        widgetHeights = widgetHeights + (id to dp.coerceIn(80, 600).toLong())
+        writeLongMap("widget_heights", widgetHeights)
+    }
+
     fun hasWidget(id: String) = id in widgets
 
     fun toggleWidget(id: String) = updateWidgets(if (id in widgets) widgets - id else widgets + id)
@@ -568,7 +578,7 @@ class LauncherState(context: Context) {
         sessionPkg = ""; sessionEnd = 0L; sessionNotified = true
         focusEnd = 0L; focusDnd = true; focusLockGated = true
         eveningHour = 21; eveningDoneDay = ""; screenGoalMin = 180
-        widgets = DEFAULT_WIDGETS
+        widgets = DEFAULT_WIDGETS; widgetHeights = emptyMap()
         themeMode = ThemeMode.Auto; pipOn = true; onboarded = false
     }
 }
