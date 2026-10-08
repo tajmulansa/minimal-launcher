@@ -37,6 +37,8 @@ import com.example.productivitylauncher.data.letterOf
 import com.example.productivitylauncher.data.openAppInfo
 import com.example.productivitylauncher.data.sectionOf
 import com.example.productivitylauncher.ui.Nav
+import com.example.productivitylauncher.ui.Route
+import com.example.productivitylauncher.ui.components.IconButtonLarge
 import com.example.productivitylauncher.ui.components.AppBadge
 import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
@@ -68,7 +70,7 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
     val shown = filterApps(base, query)
 
     Column(Modifier.fillMaxSize()) {
-        PageHeader("All apps", onBack = nav.back)
+        PageHeader("All apps", onBack = nav.back, trailing = { IconButtonLarge(Ic.Sliders, "Settings", { nav.go(Route.Settings) }) })
         Row(
             Modifier
                 .fillMaxWidth()

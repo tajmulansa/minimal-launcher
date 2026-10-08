@@ -49,6 +49,7 @@ import com.example.productivitylauncher.ui.theme.ThemeMode
 fun SettingsScreen(state: LauncherState, nav: Nav) {
     val context = LocalContext.current
     var confirmReset by remember { mutableStateOf(false) }
+    var showPolicy by remember { mutableStateOf(false) }
     // Re-read permissions every time the user comes back from a system settings page.
     val tick = state.resumeTick
     val usage = remember(tick, state.usageAccess) { state.usageAccess }
@@ -158,6 +159,8 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             }
 
             SettingsGroup("Data and privacy") {
+                SettingRow("Privacy policy", subtitle = "What is stored and what each permission does", onClick = { showPolicy = true }) { ValueChevron("") }
+                Divider()
                 SettingRow("Stays on this phone", subtitle = "This app has no internet permission. Nothing is sent anywhere.") {}
                 Divider()
                 SettingRow("Delete all my data", titleColor = AppColors.gate, subtitle = "Resets settings, tasks, notes and gated apps", onClick = { confirmReset = true }) {}
@@ -169,6 +172,23 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             }
             Spacer(Modifier.height(16.dp))
         }
+    }
+
+    if (showPolicy) {
+        AlertDialog(
+            onDismissRequest = { showPolicy = false },
+            containerColor = AppColors.card,
+            title = { AppText("Privacy policy", size = 20.sp, weight = FontWeight.SemiBold) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    PRIVACY_SECTIONS.forEach { (title, body) ->
+                        AppText(title, size = 15.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
+                        AppText(body, size = 14.sp, color = AppColors.muted, lineHeight = 20.sp, modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showPolicy = false }) { AppText("Close", weight = FontWeight.SemiBold) } },
+        )
     }
 
     if (confirmReset) {

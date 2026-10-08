@@ -48,11 +48,11 @@ import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.theme.Inter
 
-/** Shapes from the Ceramic design: 16 / 24 / 36 / pill. */
-val RadiusSm = RoundedCornerShape(16.dp)
-val RadiusMd = RoundedCornerShape(24.dp)
-val RadiusLg = RoundedCornerShape(36.dp)
-val RadiusPill = RoundedCornerShape(100.dp)
+/** Shapes: softened from the first Ceramic draft (10 / 16 / 22 / 16) after device feedback. */
+val RadiusSm = RoundedCornerShape(10.dp)
+val RadiusMd = RoundedCornerShape(16.dp)
+val RadiusLg = RoundedCornerShape(22.dp)
+val RadiusPill = RoundedCornerShape(16.dp)
 
 fun Modifier.sizeCompat(s: Dp): Modifier = this.then(Modifier.size(s))
 
@@ -144,7 +144,7 @@ fun CButton(
         BtnKind.Soft -> AppColors.text
         BtnKind.Gate -> AppColors.onGate
     }
-    val shape = if (small) RoundedCornerShape(14.dp) else RadiusMd
+    val shape = if (small) RoundedCornerShape(12.dp) else RadiusMd
     Row(
         modifier
             .alpha(if (enabled) 1f else 0.45f)
@@ -184,8 +184,8 @@ fun IconButtonLarge(ic: Ic, description: String, onClick: () -> Unit, modifier: 
     Box(
         modifier
             .size(48.dp)
-            .shadow(4.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
-            .background(AppColors.card, CircleShape)
+            .shadow(4.dp, RoundedCornerShape(14.dp), ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+            .background(AppColors.card, RoundedCornerShape(14.dp))
             .semantics { contentDescription = description }
             .clickableRole(onClick),
         contentAlignment = Alignment.Center,
@@ -308,7 +308,7 @@ fun AppBadge(letter: String, gated: Boolean, size: Dp = 44.dp, modifier: Modifie
     Box(
         modifier
             .size(size)
-            .background(if (gated) AppColors.gate else AppColors.phone, RoundedCornerShape(size * 0.32f)),
+            .background(if (gated) AppColors.gate else AppColors.phone, RoundedCornerShape(size * 0.24f)),
         contentAlignment = Alignment.Center,
     ) {
         AppText(letter, size = fontSize, weight = FontWeight.SemiBold, color = if (gated) AppColors.onGate else AppColors.text)

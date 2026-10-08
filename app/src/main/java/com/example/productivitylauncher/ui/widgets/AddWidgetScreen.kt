@@ -107,13 +107,14 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
 
     Column(Modifier.fillMaxSize()) {
         PageHeader("Add widget", onBack = nav.back)
-        Row(Modifier.padding(horizontal = 28.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            listOf("Launcher", "From apps").forEachIndexed { i, label ->
-                Box(Modifier.heightIn(min = 44.dp).clickableRole({ tab = i; message = null }, Role.Tab), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        AppText(label, size = 16.sp, weight = if (tab == i) FontWeight.SemiBold else FontWeight.Medium, color = if (tab == i) AppColors.text else AppColors.muted)
-                        Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(2.dp).background(if (tab == i) AppColors.text else AppColors.line))
-                    }
+        Row(Modifier.fillMaxWidth().padding(horizontal = 28.dp)) {
+            listOf("From launcher", "From apps").forEachIndexed { i, label ->
+                Column(
+                    Modifier.weight(1f).heightIn(min = 44.dp).clickableRole({ tab = i; message = null }, Role.Tab),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    AppText(label, size = 16.sp, weight = if (tab == i) FontWeight.SemiBold else FontWeight.Medium, color = if (tab == i) AppColors.text else AppColors.muted, modifier = Modifier.padding(vertical = 10.dp), maxLines = 1)
+                    Box(Modifier.fillMaxWidth().height(2.dp).background(if (tab == i) AppColors.text else AppColors.line))
                 }
             }
         }

@@ -123,11 +123,20 @@ fun HomeScreen(
             if (shown.size < 6) {
                 CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 16.dp), onClick = { nav.go(Route.HomePicker) }) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Box(Modifier.size(44.dp).background(AppColors.phone, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(44.dp).background(AppColors.phone, RoundedCornerShape(11.dp)), contentAlignment = Alignment.Center) {
                             AppIcon(Ic.Plus, AppColors.muted, size = 20.dp)
                         }
                         AppText(if (shown.isEmpty()) "Choose your six apps" else "Add an app", size = 17.sp, weight = FontWeight.Medium, color = AppColors.muted)
                     }
+                }
+            }
+            CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 16.dp), onClick = { nav.go(Route.Apps) }) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Box(Modifier.size(44.dp).background(AppColors.phone, RoundedCornerShape(11.dp)), contentAlignment = Alignment.Center) {
+                        AppIcon(Ic.Search, AppColors.muted, size = 20.dp)
+                    }
+                    AppText("All apps", Modifier.weight(1f), size = 17.sp, weight = FontWeight.Medium, color = AppColors.muted)
+                    AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp)
                 }
             }
         }
@@ -210,7 +219,7 @@ private fun DockButton(ic: Ic, description: String, active: Boolean, onClick: ()
     Box(
         Modifier
             .size(44.dp)
-            .background(if (active) AppColors.phone else Color.Transparent, CircleShape)
+            .background(if (active) AppColors.phone else Color.Transparent, RoundedCornerShape(14.dp))
             .semantics { contentDescription = description }
             .clickableRole(onClick),
         contentAlignment = Alignment.Center,
@@ -221,7 +230,7 @@ private fun DockButton(ic: Ic, description: String, active: Boolean, onClick: ()
 
 /** The round clock top left. Tap it to open Settings. */
 @Composable
-fun AnalogClock(now: Date, modifier: Modifier = Modifier) {
+fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.compose.ui.unit.Dp = 76.dp) {
     val cal = Calendar.getInstance().apply { time = now }
     val minutes = cal.get(Calendar.MINUTE) + cal.get(Calendar.SECOND) / 60f
     val hours = (cal.get(Calendar.HOUR) % 12) + minutes / 60f
@@ -230,23 +239,23 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier) {
     val dot = AppColors.gate
     Box(
         modifier
-            .size(52.dp)
+            .size(diameter)
             .shadow(4.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
             .background(AppColors.card, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(52.dp)) {
+        Canvas(Modifier.size(diameter)) {
             val c = Offset(size.width / 2, size.height / 2)
-            val r = size.minDimension / 2 - 4.dp.toPx()
-            drawCircle(ring, radius = r, center = c, style = Stroke(width = 3.dp.toPx()))
+            val r = size.minDimension / 2 - 6.dp.toPx()
+            drawCircle(ring, radius = r, center = c, style = Stroke(width = 4.dp.toPx()))
             fun hand(angleDeg: Float, length: Float, width: Float) {
                 val a = Math.toRadians((angleDeg - 90).toDouble())
                 val end = Offset(c.x + (length * Math.cos(a)).toFloat(), c.y + (length * Math.sin(a)).toFloat())
                 drawLine(ink, c, end, strokeWidth = width, cap = StrokeCap.Round)
             }
-            hand(hours * 30f, r * 0.5f, 3.dp.toPx())
-            hand(minutes * 6f, r * 0.78f, 2.dp.toPx())
-            drawCircle(dot, radius = 2.5.dp.toPx(), center = c)
+            hand(hours * 30f, r * 0.5f, 4.5.dp.toPx())
+            hand(minutes * 6f, r * 0.78f, 3.dp.toPx())
+            drawCircle(dot, radius = 3.5.dp.toPx(), center = c)
         }
     }
 }

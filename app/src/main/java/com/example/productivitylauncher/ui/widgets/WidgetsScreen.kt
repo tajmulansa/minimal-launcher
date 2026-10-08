@@ -64,7 +64,10 @@ import com.example.productivitylauncher.ui.theme.AppColors
 @Composable
 fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
     Column(Modifier.fillMaxSize()) {
-        PageHeader("Widgets", trailing = { IconButtonLarge(Ic.Plus, "Add widget", { nav.go(Route.AddWidget) }) })
+        PageHeader("Widgets", trailing = {
+            IconButtonLarge(Ic.Sliders, "Settings", { nav.go(Route.Settings) })
+            IconButtonLarge(Ic.Plus, "Add widget", { nav.go(Route.AddWidget) })
+        })
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -318,8 +321,13 @@ private fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: Widget
         return
     }
     val density = context.resources.displayMetrics.density
-    val heightDp = (info.minHeight / density).coerceIn(80f, 400f)
+    val defaultHeight = (info.minHeight / density).toInt().coerceIn(80, 400)
+    val heightDp = state.widgetHeight("ext:$appWidgetId", defaultHeight)
+    val widthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp - 80
+    var resizing by remember { mutableStateOf(false) }
+    val label = remember(appWidgetId) { info.loadLabel(context.packageManager) }
     CeramicCard(padding = androidx.compose.foundation.layout.PaddingValues(12.dp)) {
+        WidgetHeader(label, link = if (resizing) "Done" else "Resize", onLink = { resizing = !resizing })
         AndroidView(
             modifier = Modifier.fillMaxWidth().height(heightDp.dp),
             factory = { ctx ->
@@ -327,6 +335,13 @@ private fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: Widget
                     view.setAppWidget(appWidgetId, info)
                 }
             },
+            update = { view -> view.updateAppWidgetSize(null, widthDp, heightDp, widthDp, heightDp) },
         )
+        if (resizing) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Stepper("${heightDp}dp", { state.updateWidgetHeight("ext:$appWidgetId", heightDp - 40) }, { state.updateWidgetHeight("ext:$appWidgetId", heightDp + 40) }, valueWidth = 64.dp)
+                CButton("Remove", { host.delete(appWidgetId); state.removeWidgetId("ext:$appWidgetId") }, kind = BtnKind.Soft, small = true, leading = Ic.Trash)
+            }
+        }
     }
 }
