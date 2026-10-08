@@ -93,7 +93,15 @@ class LauncherState(context: Context) {
     }
 
     /** Pip's current message, chosen from the facts and what it has learned about you. */
-    fun pipFor(variant: Int): PipMessage = pickPip(pipFacts(), variant, pipSnooze, pipDismissed)
+    fun pipFor(variant: Int): PipMessage =
+        pickPip(pipFacts(), variant, pipSnooze, pipDismissed, System.currentTimeMillis(), pipActed)
+
+    /** A one-time line Pip shows as a speech chip, e.g. after you back out of a gate. Not saved. */
+    var pipShout by mutableStateOf<String?>(null)
+        private set
+
+    fun pipSay(text: String) { pipShout = text }
+    fun pipShoutShown() { pipShout = null }
 
     fun pipAnswer(ask: PipAsk): String = when (ask) {
         PipAsk.WhatNow -> pipAnswerNow(pipFacts())
@@ -173,6 +181,8 @@ class LauncherState(context: Context) {
             frogDoneDay = today
             eatenDays = eatenDays + today
             eatenHours = (eatenHours + hourOf()).takeLast(14)
+            val streak = frogStreak(eatenDays)
+            pipSay(if (streak >= 2) "Frog eaten, $streak days in a row!" else "Frog eaten! The hardest thing is behind you.")
             save { putString("eaten_hours", JSONArray(eatenHours).toString()) }
         } else {
             frogDoneDay = ""
@@ -436,6 +446,7 @@ class LauncherState(context: Context) {
         private set
 
     fun recordBackOut() {
+        pipSay("Good call. Want to put that time into your frog?")
         val today = dayKey()
         backedOut = backedOut + (today to (backedOut[today] ?: 0L) + 1)
         writeLongMap("backed_out", backedOut)
