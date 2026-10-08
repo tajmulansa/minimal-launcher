@@ -11,10 +11,10 @@ A rough plan, not a promise. Priorities may change as we learn. Tick a box in a 
 
 ## M1: Solid home and apps
 
-- [ ] First CI run is green on the scaffold (fix any version issues)
+- [x] First CI run is green on the scaffold (fix any version issues)
 - [ ] Pinned apps on Home (user chooses 4 to 5)
 - [ ] Work apps shown first and in bold in the app list
-- [ ] Restyle the app to the Ceramic prototype (light and dark themes, Inter bundled)
+- [x] Restyle the app to the Ceramic prototype (light and dark themes, Inter bundled)
 - [ ] Empty states and basic accessibility pass (TalkBack labels, font scaling)
 
 ## M2: The frog

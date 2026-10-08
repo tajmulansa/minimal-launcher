@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--
       Privacy rule: this app does not request the INTERNET permission.
       Do not add network access or analytics without an accepted proposal (see CONTRIBUTING.md).
     -->
+
+    <!--
+      Optional permissions, each asked for by the user in Settings and only used on this device:
+      usage access (screen time), display over other apps (floating timer), calendar read (Agenda widget).
+      Do Not Disturb access is granted in system settings and needs no manifest permission here.
+    -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
 
     <!-- Lets us list launchable apps on Android 11+ without the broad QUERY_ALL_PACKAGES permission. -->
     <queries>
@@ -35,5 +45,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Floating timer shown over a gated app while a session runs. -->
+        <service
+            android:name=".service.SessionOverlayService"
+            android:exported="false" />
     </application>
 </manifest>

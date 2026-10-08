@@ -34,24 +34,26 @@ Warm, soft, and quiet. Light and dark themes share the same structure. In the pr
 
 ## Screens
 
-All of these are drawn in the prototype. "Built" means it exists in the Android app today.
+All of these are drawn in the prototype and now built in the Android app.
+
+Known limits: the gate only guards gated apps opened from this launcher (Android does not let a launcher block an app opened from a notification or Recents without an accessibility service). The floating timer needs "Display over other apps", screen time needs "Usage access", the Agenda widget needs calendar permission, and the Moon button needs Do Not Disturb access. Each is optional and asked for in Settings.
 
 | Screen | Status | Purpose |
 | --- | --- | --- |
-| Home | Built (basic, old look) | Round clock (opens Settings), date, today's screen time, six apps, dock with Phone, Messages, Do Not Disturb, Focus, and the floating Pip. The to-do list is **not** here |
-| All apps | Built (basic, old look) | Search, filter chips (All, Work, Gated), A to Z list |
-| Widgets (page 2) | Planned | Today's frog, water, distraction budget, agenda, habit stack, quick note, brain dump |
-| Add widget | Planned | Launcher widgets and other apps' widgets |
-| Brain dump | Planned | Capture thoughts, sort them later |
-| Gate | Planned | Three calm steps before a gated app opens (see below) |
-| App session | Planned | Small floating timer over the gated app, then Time's up |
-| Daily limit reached | Planned | Shown when a gated app's daily limit is used up |
-| Focus session | Planned | Timer ring for the frog, with Do Not Disturb and gated apps locked |
-| Evening shutdown | Planned | Review the day, set tomorrow's frog |
-| Weekly review | Planned | Screen time by day, frogs eaten, gates backed out of |
-| Welcome | Planned | Meet Pip, pick gated apps, first frog, theme |
-| Settings | Planned | Appearance, rules, gate, focus, apps, Pip, permissions, data |
-| Gated apps, Home apps | Planned | Pickers for which apps are gated and which six sit on Home |
+| Home | Built | Round clock (opens Settings), date, today's screen time, six apps, dock with Phone, Messages, Do Not Disturb, Focus, and the floating Pip. The to-do list is **not** here |
+| All apps | Built | Search, filter chips (All, Work, Gated), A to Z list |
+| Widgets (page 2) | Built | Today's frog, water, distraction budget, agenda, habit stack, quick note, brain dump |
+| Add widget | Built | Launcher widgets and other apps' widgets |
+| Brain dump | Built | Capture thoughts, sort them later |
+| Gate | Built | Three calm steps before a gated app opens (see below) |
+| App session | Built | Small floating timer over the gated app, then Time's up |
+| Daily limit reached | Built | Shown when a gated app's daily limit is used up |
+| Focus session | Built | Timer ring for the frog, with Do Not Disturb and gated apps locked |
+| Evening shutdown | Built | Review the day, set tomorrow's frog |
+| Weekly review | Built | Screen time by day, frogs eaten, gates backed out of |
+| Welcome | Built | Meet Pip, pick gated apps, first frog, theme |
+| Settings | Built | Appearance, rules, gate, focus, apps, Pip, permissions, data |
+| Gated apps, Home apps | Built | Pickers for which apps are gated and which six sit on Home |
 
 ## The frog
 

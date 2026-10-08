@@ -1,0 +1,165 @@
+package com.example.productivitylauncher.ui.widgets
+
+import android.app.Activity
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProviderInfo
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.productivitylauncher.data.LauncherState
+import com.example.productivitylauncher.data.LauncherWidget
+import com.example.productivitylauncher.data.WidgetHost
+import com.example.productivitylauncher.ui.Nav
+import com.example.productivitylauncher.ui.components.AppIcon
+import com.example.productivitylauncher.ui.components.AppText
+import com.example.productivitylauncher.ui.components.Ic
+import com.example.productivitylauncher.ui.components.PageHeader
+import com.example.productivitylauncher.ui.components.RadiusMd
+import com.example.productivitylauncher.ui.components.clickableRole
+import com.example.productivitylauncher.ui.theme.AppColors
+
+/** Add or remove widgets: the launcher's own, or widgets from other apps. */
+@Composable
+fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
+    val context = LocalContext.current
+    var tab by remember { mutableStateOf(0) }
+    var message by remember { mutableStateOf<String?>(null) }
+    var pendingInfo by remember { mutableStateOf<Pair<Int, AppWidgetProviderInfo>?>(null) }
+
+    fun finishAdd(id: Int) {
+        state.addWidgetId("ext:$id")
+        pendingInfo = null
+        message = "Added. Find it on your Widgets page."
+    }
+
+    fun cancelAdd(id: Int) {
+        host.delete(id)
+        pendingInfo = null
+    }
+
+    val configLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val p = pendingInfo
+        if (p != null) {
+            if (result.resultCode == Activity.RESULT_OK) finishAdd(p.first) else cancelAdd(p.first)
+        }
+    }
+
+    fun configureOrAdd(id: Int, info: AppWidgetProviderInfo) {
+        val cfg = info.configure
+        if (cfg == null) {
+            finishAdd(id)
+        } else {
+            pendingInfo = id to info
+            val i = Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE)
+                .setComponent(cfg)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
+            val ok = runCatching { configLauncher.launch(i) }.isSuccess
+            if (!ok) finishAdd(id)
+        }
+    }
+
+    val bindLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val p = pendingInfo
+        if (p != null) {
+            if (result.resultCode == Activity.RESULT_OK) configureOrAdd(p.first, p.second) else cancelAdd(p.first)
+        }
+    }
+
+    fun begin(info: AppWidgetProviderInfo) {
+        val id = host.allocate()
+        if (host.manager.bindAppWidgetIdIfAllowed(id, info.provider)) {
+            configureOrAdd(id, info)
+        } else {
+            pendingInfo = id to info
+            val i = Intent(AppWidgetManager.ACTION_APPWIDGET_BIND)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, info.provider)
+            val ok = runCatching { bindLauncher.launch(i) }.isSuccess
+            if (!ok) { cancelAdd(id); message = "This widget could not be added." }
+        }
+    }
+
+    Column(Modifier.fillMaxSize()) {
+        PageHeader("Add widget", onBack = nav.back)
+        Row(Modifier.padding(horizontal = 28.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            listOf("Launcher", "From apps").forEachIndexed { i, label ->
+                Box(Modifier.heightIn(min = 44.dp).clickableRole({ tab = i; message = null }, Role.Tab), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        AppText(label, size = 16.sp, weight = if (tab == i) FontWeight.SemiBold else FontWeight.Medium, color = if (tab == i) AppColors.text else AppColors.muted)
+                        Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(2.dp).background(if (tab == i) AppColors.text else AppColors.line))
+                    }
+                }
+            }
+        }
+        message?.let { AppText(it, size = 14.sp, color = AppColors.focus, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) }
+
+        if (tab == 0) {
+            LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(LauncherWidget.entries.toList(), key = { it.id }) { w ->
+                    val added = state.hasWidget(w.id)
+                    AddRow(letter = w.letter, title = w.title, subtitle = w.subtitle, added = added, onClick = { state.toggleWidget(w.id) })
+                }
+            }
+        } else {
+            val providers = remember { host.providers().sortedBy { it.loadLabel(context.packageManager).lowercase() } }
+            if (providers.isEmpty()) {
+                AppText("No widgets from other apps were found.", color = AppColors.muted, modifier = Modifier.padding(28.dp))
+            }
+            LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(providers, key = { it.provider.flattenToString() }) { info ->
+                    val label = info.loadLabel(context.packageManager)
+                    val app = runCatching {
+                        context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(info.provider.packageName, 0)).toString()
+                    }.getOrDefault(info.provider.packageName)
+                    AddRow(letter = label.firstOrNull()?.uppercaseChar()?.toString() ?: "?", title = label, subtitle = app, added = false, onClick = { begin(info) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddRow(letter: String, title: String, subtitle: String, added: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().background(AppColors.card, RadiusMd).clickableRole(onClick).padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Box(Modifier.size(40.dp).background(AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
+            AppText(letter, size = 16.sp, weight = FontWeight.SemiBold)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            AppText(title, size = 16.sp, weight = FontWeight.SemiBold, maxLines = 1)
+            AppText(subtitle, size = 13.sp, color = AppColors.muted, maxLines = 1)
+        }
+        Box(Modifier.size(44.dp).background(if (added) AppColors.focus else AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
+            AppIcon(if (added) Ic.Check else Ic.Plus, if (added) AppColors.onFocus else AppColors.text, size = 20.dp, description = if (added) "Added" else "Add")
+        }
+    }
+}
