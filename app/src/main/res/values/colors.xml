@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Placeholder palette, see docs/DESIGN.md. Compose colors live in ui/theme/Theme.kt. -->
-    <color name="background">#0E0E0E</color>
-    <color name="ic_launcher_background">#0E0E0E</color>
+    <!-- Window background shown before Compose draws. Compose colours live in ui/theme/Theme.kt. -->
+    <color name="ic_launcher_background">#4F7165</color>
 </resources>

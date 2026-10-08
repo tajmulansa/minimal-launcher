@@ -1,16 +1,22 @@
 package com.example.productivitylauncher.ui.home
 
-import android.text.format.DateFormat
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,98 +25,228 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.productivitylauncher.data.FrogStore
+import com.example.productivitylauncher.data.AppEntry
+import com.example.productivitylauncher.data.LauncherState
+import com.example.productivitylauncher.data.formatMillis
+import com.example.productivitylauncher.data.isDndOn
+import com.example.productivitylauncher.data.openDndSettings
+import com.example.productivitylauncher.data.openMessages
+import com.example.productivitylauncher.data.openPhone
+import com.example.productivitylauncher.data.setDnd
+import com.example.productivitylauncher.ui.Nav
+import com.example.productivitylauncher.ui.Route
+import com.example.productivitylauncher.ui.components.AppBadge
+import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
-import com.example.productivitylauncher.ui.components.Rule
+import com.example.productivitylauncher.ui.components.CeramicCard
+import com.example.productivitylauncher.ui.components.GatedTag
+import com.example.productivitylauncher.ui.components.Ic
+import com.example.productivitylauncher.ui.components.RadiusMd
+import com.example.productivitylauncher.ui.components.RadiusPill
+import com.example.productivitylauncher.ui.components.clickableRole
 import com.example.productivitylauncher.ui.theme.AppColors
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.delay
 
-/**
- * Home screen: clock, the one important task ("frog"), the pet's line, and a way to the app list.
- * This is a placeholder layout, see docs/DESIGN.md.
- */
+/** Home page: round clock, date, screen time, six apps and the dock. */
 @Composable
-fun HomeScreen(onOpenApps: () -> Unit) {
+fun HomeScreen(
+    state: LauncherState,
+    nav: Nav,
+    onOpenApp: (AppEntry) -> Unit,
+    page: Int,
+) {
     val context = LocalContext.current
-    val frogStore = remember { FrogStore(context) }
-    var frog by remember { mutableStateOf(frogStore.get()) }
-
-    // Ticks once per minute, aligned to the start of the minute, so we do not wake up needlessly.
     val now by produceState(initialValue = Date()) {
         while (true) {
             value = Date()
             delay(60_000L - System.currentTimeMillis() % 60_000L)
         }
     }
-    val timePattern = if (DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm a"
-    val time = SimpleDateFormat(timePattern, Locale.getDefault()).format(now)
-    val date = SimpleDateFormat("EEE dd MMM", Locale.getDefault()).format(now).lowercase()
+    val day = SimpleDateFormat("EEEE", Locale.getDefault()).format(now)
+    val month = SimpleDateFormat("d MMMM", Locale.getDefault()).format(now)
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-    ) {
-        AppText(time, size = 68.sp, weight = FontWeight.Bold, letterSpacing = (-3).sp)
-        AppText(date, size = 13.sp, color = AppColors.Muted, modifier = Modifier.padding(top = 8.dp))
-        Rule(Modifier.padding(vertical = 22.dp))
+    var dnd by remember { mutableStateOf(isDndOn(context)) }
 
-        AppText("> YOUR FROG", size = 12.sp, color = AppColors.Muted, letterSpacing = 3.sp)
-        BasicTextField(
-            value = frog,
-            onValueChange = {
-                frog = it
-                frogStore.set(it)
-            },
-            textStyle = TextStyle(
-                color = AppColors.Text,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-            ),
-            cursorBrush = SolidColor(AppColors.Text),
-            modifier = Modifier
+    Column(Modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AnalogClock(now, Modifier.semantics { contentDescription = "Clock. Opens settings." }.clickableRole({ nav.go(Route.Settings) }))
+            Column(horizontalAlignment = Alignment.End) {
+                AppText(day, size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
+                AppText(month.uppercase(), size = 13.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp))
+            }
+        }
+
+        Column(
+            Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp),
-            decorationBox = { innerTextField ->
-                Box {
-                    if (frog.isEmpty()) {
-                        AppText(
-                            "what is the one thing?",
-                            size = 26.sp,
-                            weight = FontWeight.Bold,
-                            color = AppColors.Muted,
-                        )
+                .padding(top = 30.dp, bottom = 24.dp)
+                .clickableRole({ if (state.usageAccess) nav.go(Route.Week) else nav.go(Route.Settings) }),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            val st = state.screenTimeMs
+            AppText(if (st != null) formatMillis(st) else "--", size = 56.sp, letterSpacing = (-2).sp)
+            AppText(
+                if (st != null) "SCREEN TIME TODAY" else "ALLOW USAGE ACCESS TO SEE SCREEN TIME",
+                size = 12.sp, weight = FontWeight.SemiBold, color = AppColors.muted, letterSpacing = 2.sp, align = TextAlign.Center,
+            )
+        }
+
+        Column(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            val shown = state.homeApps.mapNotNull { state.appByPackage(it) }
+            shown.forEach { app ->
+                AppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
+            }
+            if (shown.size < 6) {
+                CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 16.dp), onClick = { nav.go(Route.HomePicker) }) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Box(Modifier.size(44.dp).background(AppColors.phone, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+                            AppIcon(Ic.Plus, AppColors.muted, size = 20.dp)
+                        }
+                        AppText(if (shown.isEmpty()) "Choose your six apps" else "Add an app", size = 17.sp, weight = FontWeight.Medium, color = AppColors.muted)
                     }
-                    innerTextField()
                 }
+            }
+        }
+
+        Dots(page)
+        Dock(
+            dnd = dnd,
+            onPhone = { openPhone(context) },
+            onMessages = { openMessages(context) },
+            onDnd = {
+                if (setDnd(context, !dnd)) dnd = !dnd else openDndSettings(context)
             },
+            onFocus = { nav.go(Route.Focus) },
         )
+    }
+}
 
-        Spacer(Modifier.weight(1f))
+@Composable
+private fun AppRow(app: AppEntry, gated: Boolean, onClick: () -> Unit) {
+    CeramicCard(
+        shape = RadiusMd,
+        color = if (gated) AppColors.gateSoft else AppColors.card,
+        padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 14.dp),
+        onClick = onClick,
+    ) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            AppBadge(com.example.productivitylauncher.data.letterOf(app.label), gated)
+            AppText(
+                app.label, Modifier.weight(1f), size = 17.sp,
+                weight = if (gated) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
+            )
+            if (gated) GatedTag()
+        }
+    }
+}
 
-        // TODO(pet): replace this static line with the real pet engine, see docs/DESIGN.md.
-        AppText("[^_^] morning! start with just 2 minutes.", size = 15.sp)
-        Rule(Modifier.padding(vertical = 16.dp))
+@Composable
+fun Dots(page: Int, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        for (i in 0..1) {
+            val on = i == page
+            Box(
+                Modifier
+                    .padding(horizontal = 5.dp)
+                    .size(width = if (on) 22.dp else 8.dp, height = 8.dp)
+                    .background(if (on) AppColors.text else AppColors.dot, RoundedCornerShape(4.dp)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Dock(dnd: Boolean, onPhone: () -> Unit, onMessages: () -> Unit, onDnd: () -> Unit, onFocus: () -> Unit) {
+    Box(Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 20.dp)) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp)
-                .clickable(role = Role.Button, onClick = onOpenApps),
+                .shadow(10.dp, RadiusPill, ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
+                .background(AppColors.card, RadiusPill)
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AppText("all apps ›", size = 14.sp, color = AppColors.Muted)
+            Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                DockButton(Ic.Phone, "Phone", false, onPhone)
+                DockButton(Ic.Message, "Messages", false, onMessages)
+            }
+            Box(Modifier.width(2.dp).height(24.dp).background(AppColors.phone))
+            Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                DockButton(Ic.Moon, if (dnd) "Do not disturb, on" else "Do not disturb, off", dnd, onDnd)
+                DockButton(Ic.Target, "Focus", false, onFocus)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DockButton(ic: Ic, description: String, active: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(44.dp)
+            .background(if (active) AppColors.phone else Color.Transparent, CircleShape)
+            .semantics { contentDescription = description }
+            .clickableRole(onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        AppIcon(ic, if (active) AppColors.text else AppColors.muted, size = 24.dp)
+    }
+}
+
+/** The round clock top left. Tap it to open Settings. */
+@Composable
+fun AnalogClock(now: Date, modifier: Modifier = Modifier) {
+    val cal = Calendar.getInstance().apply { time = now }
+    val minutes = cal.get(Calendar.MINUTE) + cal.get(Calendar.SECOND) / 60f
+    val hours = (cal.get(Calendar.HOUR) % 12) + minutes / 60f
+    val ring = AppColors.line
+    val ink = AppColors.text
+    val dot = AppColors.gate
+    Box(
+        modifier
+            .size(52.dp)
+            .shadow(4.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+            .background(AppColors.card, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(52.dp)) {
+            val c = Offset(size.width / 2, size.height / 2)
+            val r = size.minDimension / 2 - 4.dp.toPx()
+            drawCircle(ring, radius = r, center = c, style = Stroke(width = 3.dp.toPx()))
+            fun hand(angleDeg: Float, length: Float, width: Float) {
+                val a = Math.toRadians((angleDeg - 90).toDouble())
+                val end = Offset(c.x + (length * Math.cos(a)).toFloat(), c.y + (length * Math.sin(a)).toFloat())
+                drawLine(ink, c, end, strokeWidth = width, cap = StrokeCap.Round)
+            }
+            hand(hours * 30f, r * 0.5f, 3.dp.toPx())
+            hand(minutes * 6f, r * 0.78f, 2.dp.toPx())
+            drawCircle(dot, radius = 2.5.dp.toPx(), center = c)
         }
     }
 }
