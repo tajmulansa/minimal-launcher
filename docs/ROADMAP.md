@@ -14,7 +14,7 @@ A rough plan, not a promise. Priorities may change as we learn. Tick a box in a 
 - [ ] First CI run is green on the scaffold (fix any version issues)
 - [ ] Pinned apps on Home (user chooses 4 to 5)
 - [ ] Work apps shown first and in bold in the app list
-- [ ] Bundle an open-license monospace font
+- [ ] Restyle the app to the Ceramic prototype (light and dark themes, Inter bundled)
 - [ ] Empty states and basic accessibility pass (TalkBack labels, font scaling)
 
 ## M2: The frog
@@ -53,7 +53,7 @@ A rough plan, not a promise. Priorities may change as we learn. Tick a box in a 
 ## M6: Release prep
 
 - [ ] Final app name and application ID (the ID can never change after first upload)
-- [ ] Final visual style and icon
+- [ ] Final app icon
 - [ ] Privacy policy page
 - [ ] Play listing (no third-party brand names in title, description or screenshots)
 - [ ] Signed release build, internal testing track, then production
@@ -73,6 +73,6 @@ Small, well-defined tasks for new contributors:
 ## Open questions
 
 - App name and application ID
-- Pet species and name
-- Final visual style
+- Pip's lines and exact behavior
+- App icon
 - Whether the pet should ever use AI, or stay fully rule-based and offline (current answer: offline)

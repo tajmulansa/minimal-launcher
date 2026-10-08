@@ -5,7 +5,7 @@
 
 A minimal, text-first Android launcher that helps students focus. It is built on ideas from productivity books: do the hardest task first, start small, and make distracting apps harder to open than useful ones.
 
-> **Status: pre-alpha.** This is an early scaffold. The home screen and app list are written, but **the project has not been through its first CI build yet**, so expect small build fixes first (roadmap M1). The gate, pet, and widgets described below are planned and not built yet. The UI is a **placeholder style** and will change. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Status: pre-alpha.** This is an early scaffold. The home screen and app list are written, but **the project has not been through its first CI build yet**, so expect small build fixes first (roadmap M1). The gate, pet, and widgets described below are planned and not built yet. The visual direction is the **Ceramic prototype** in [docs/design](docs/design/README.md) (open it in a browser). The app does not use it yet. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Why this exists
 
@@ -119,8 +119,8 @@ These are intentionally unset, so please do not hard-code guesses:
 
 - **App name.** "Launcher" is a working title.
 - **Application ID.** `com.example.productivitylauncher` is a placeholder that Google Play rejects. It can never change after the first Play upload.
-- **Final visual style.** The current dark terminal look is a placeholder.
-- **Pet species and name.** Currently a plain `[^_^]` face.
+- **Final icon and name.** The look is chosen (Ceramic, Inter, light and dark), but the app icon and name are not.
+- **Pip.** The pet is a text face named Pip. More lines and behavior still to design.
 
 ## Inspiration
 
