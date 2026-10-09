@@ -44,6 +44,7 @@ import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
 import com.example.productivitylauncher.ui.pip.PipBubble
 import com.example.productivitylauncher.ui.pip.PipCard
 import com.example.productivitylauncher.ui.pip.PipChip
+import com.example.productivitylauncher.ui.pip.PipDock
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
@@ -66,6 +67,9 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     var pipOpen by remember { mutableStateOf(false) }
     var pipVariant by remember { mutableIntStateOf(0) }
     var pipChip by remember { mutableStateOf<String?>(null) }
+    // Pip tucks against the screen edge when nobody touches it. pipTouch restarts the idle timer.
+    var pipDocked by remember { mutableStateOf(false) }
+    var pipTouch by remember { mutableIntStateOf(0) }
     // Pip always knows the time: this ticks every minute so greetings and reminders stay current.
     val minute by produceState(System.currentTimeMillis() / 60_000L) {
         while (true) { delay(60_000L - System.currentTimeMillis() % 60_000L); value = System.currentTimeMillis() / 60_000L }
@@ -163,10 +167,30 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                         }
                     }
                     val chip = pipChip
-                    if (chip != null && !pipOpen) {
+
+                    // A chip needs Pip out beside it. Otherwise, after a quiet moment, Pip tucks itself away.
+                    val chipShowing = chip != null
+                    LaunchedEffect(chipShowing) { if (chipShowing) pipDocked = false }
+                    LaunchedEffect(pipDocked, pipOpen, chipShowing, pipTouch) {
+                        if (!pipDocked && !pipOpen && !chipShowing) {
+                            delay(PipDock.IdleMillis)
+                            pipDocked = true
+                        }
+                    }
+
+                    if (chip != null && !pipOpen && !pipDocked) {
                         PipChip(chip, onClick = { pipChip = null; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 96.dp, bottom = 116.dp).widthIn(max = 240.dp))
                     }
-                    PipBubble(message, onClick = { pipVariant++; pipChip = null; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 28.dp, bottom = 110.dp))
+                    PipBubble(
+                        message,
+                        docked = pipDocked,
+                        onClick = {
+                            pipTouch++
+                            // First touch brings a tucked-away Pip out; the next one opens its message.
+                            if (pipDocked) pipDocked = false else { pipVariant++; pipChip = null; pipOpen = true }
+                        },
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 110.dp),
+                    )
                     if (pipOpen) {
                         PipCard(
                             message,

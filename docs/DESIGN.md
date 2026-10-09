@@ -84,7 +84,7 @@ All numbers are defaults the user can change.
 
 ## The pet
 
-A plain text face, `[^_^]`, named **Pip**. Pip floats on Home and Widgets as a small bubble, and tapping it opens a message.
+A plain text face, `[^_^]`, named **Pip**. Pip floats on Home and Widgets as a small bubble, and tapping it opens a message. If nobody touches it for a few seconds it tucks itself against the right edge of the screen, half hidden and faded. A red dot on the tucked-away icon means Pip has something to say. Touch it and it slides back out; touch it again to read the message.
 
 **Voice:** friendly, short, specific, encouraging. Never guilt, never scary, no "failure" state, nothing dies or gets sad forever.
 
