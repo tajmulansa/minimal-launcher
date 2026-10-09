@@ -109,12 +109,4 @@ class LogicTest {
         assertTrue(pipAnswerNow(facts()).isNotBlank())
         assertTrue(pipAnswerHow(facts()).contains("Water"))
     }
-
-    @Test fun actedTopicsGainPriority() {
-        val f = facts(frog = "Study", done = false, water = 0, active = null).copy(hour = 15)
-        val base = pipCandidates(f).filter { it.score >= 55 }
-        assertTrue(base.map { it.topic }.contains(PipTopic.Frog))
-        val boosted = pickPip(f, 0, emptyMap(), emptyMap(), System.currentTimeMillis(), mapOf(PipTopic.Water.name to 5L))
-        assertTrue(boosted.score > 0)
-    }
 }

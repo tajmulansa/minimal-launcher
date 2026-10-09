@@ -43,7 +43,6 @@ import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
 import com.example.productivitylauncher.ui.pip.PipBubble
 import com.example.productivitylauncher.ui.pip.PipCard
 import com.example.productivitylauncher.ui.pip.PipPreview
-import com.example.productivitylauncher.ui.pip.runPipCommand
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
@@ -68,7 +67,6 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     var pipAnswer by remember { mutableStateOf<String?>(null) }
     var previewTopic by remember { mutableStateOf<String?>(null) }
     var previewVisible by remember { mutableStateOf(false) }
-    var shoutText by remember { mutableStateOf<String?>(null) }
     // Re-pick Pip's message every minute, so time-based lines stay current.
     val minute by produceState(0L) {
         while (true) { value = System.currentTimeMillis() / 60_000L; delay(60_000L) }
@@ -163,21 +161,9 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                             previewVisible = false
                         }
                     }
-                    // One-time reactions, e.g. after backing out of a gate or eating the frog.
-                    LaunchedEffect(state.pipShout) {
-                        val line = state.pipShout
-                        if (line != null) {
-                            shoutText = line
-                            state.pipShoutShown()
-                            previewVisible = true
-                            delay(8_000L)
-                            previewVisible = false
-                            shoutText = null
-                        }
-                    }
                     if (previewVisible && !pipOpen) {
                         PipPreview(
-                            shoutText ?: message.text,
+                            message.text,
                             onClick = { previewVisible = false; pipAnswer = null; pipOpen = true },
                             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 96.dp, bottom = 116.dp).widthIn(max = 230.dp),
                         )
@@ -190,9 +176,6 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                             onAsk = { pipAnswer = state.pipAnswer(it) },
                             onClose = { pipOpen = false; pipAnswer = null },
                             onLater = { state.pipLater(message.topic); pipOpen = false; pipAnswer = null },
-                            onSend = { text ->
-                                pipAnswer = runPipCommand(text, state, nav, { scope.launch { pager.animateScrollToPage(1) } }, { pipOpen = false })
-                            },
                             onAction = { action ->
                                 state.pipActedOn(message.topic)
                                 pipOpen = false
