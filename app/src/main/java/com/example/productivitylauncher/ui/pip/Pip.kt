@@ -53,9 +53,23 @@ fun PipBubble(message: PipMessage, onClick: () -> Unit, modifier: Modifier = Mod
     }
 }
 
+/** A small speech chip beside the bubble, shown briefly right after something good happens. */
+@Composable
+fun PipChip(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .shadow(8.dp, RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp), ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
+            .background(AppColors.card, RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp))
+            .clickableRole(onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+    ) {
+        AppText(text, size = 13.sp, lineHeight = 18.sp, maxLines = 4)
+    }
+}
+
 /** Pip's message card, shown over a soft scrim. */
 @Composable
-fun PipCard(message: PipMessage, onDismiss: () -> Unit, onAction: (PipAction) -> Unit) {
+fun PipCard(message: PipMessage, timeLabel: String, onDismiss: () -> Unit, onAction: (PipAction) -> Unit) {
     Box(
         Modifier
             .fillMaxSize()
@@ -74,7 +88,7 @@ fun PipCard(message: PipMessage, onDismiss: () -> Unit, onAction: (PipAction) ->
         ) {
             Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 AppText("PIP  ${message.face}", size = 12.sp, weight = FontWeight.SemiBold, color = AppColors.muted, letterSpacing = 0.5.sp)
-                AppText("now", size = 12.sp, weight = FontWeight.SemiBold, color = AppColors.muted)
+                AppText(timeLabel, size = 12.sp, weight = FontWeight.SemiBold, color = AppColors.muted)
             }
             AppText(message.text, size = 16.sp, lineHeight = 24.sp)
             Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -15,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -41,6 +43,7 @@ import com.example.productivitylauncher.ui.home.HomeScreen
 import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
 import com.example.productivitylauncher.ui.pip.PipBubble
 import com.example.productivitylauncher.ui.pip.PipCard
+import com.example.productivitylauncher.ui.pip.PipChip
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
@@ -62,6 +65,11 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     val stack = remember { ArrayList<Route>() }
     var pipOpen by remember { mutableStateOf(false) }
     var pipVariant by remember { mutableIntStateOf(0) }
+    var pipChip by remember { mutableStateOf<String?>(null) }
+    // Pip always knows the time: this ticks every minute so greetings and reminders stay current.
+    val minute by produceState(System.currentTimeMillis() / 60_000L) {
+        while (true) { delay(60_000L - System.currentTimeMillis() % 60_000L); value = System.currentTimeMillis() / 60_000L }
+    }
 
     val nav = remember {
         Nav(
@@ -139,11 +147,30 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                     else WidgetsScreen(state, nav, widgetHost, page = 1)
                 }
                 if (state.pipOn) {
+                    // Reading these makes Pip choose again when the minute, the resume or the frog changes.
+                    @Suppress("UNUSED_VARIABLE") val clockTick = minute + state.resumeTick
                     val message = pipMessage(state.pipFacts(), pipVariant)
-                    PipBubble(message, onClick = { pipVariant++; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 28.dp, bottom = 110.dp))
+
+                    // The moment the frog is eaten, Pip says well done in a small speech chip.
+                    var wasDone by remember { mutableStateOf(state.frogDone) }
+                    LaunchedEffect(state.frogDone) {
+                        val justEaten = state.frogDone && !wasDone
+                        wasDone = state.frogDone
+                        if (justEaten) {
+                            pipChip = pipMessage(state.pipFacts(), 0).text
+                            delay(9_000L)
+                            pipChip = null
+                        }
+                    }
+                    val chip = pipChip
+                    if (chip != null && !pipOpen) {
+                        PipChip(chip, onClick = { pipChip = null; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 96.dp, bottom = 116.dp).widthIn(max = 240.dp))
+                    }
+                    PipBubble(message, onClick = { pipVariant++; pipChip = null; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 28.dp, bottom = 110.dp))
                     if (pipOpen) {
                         PipCard(
                             message,
+                            timeLabel = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault()).format(java.util.Date()),
                             onDismiss = { pipOpen = false },
                             onAction = { action ->
                                 pipOpen = false

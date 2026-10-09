@@ -48,6 +48,7 @@ class LauncherState(context: Context) {
         eveningDone = eveningDone,
         dumpCount = dumps.size,
         focusActive = focusActive,
+        frogJustDone = frogDone && System.currentTimeMillis() - frogDoneAt < 45 * 60_000L,
     )
 
     // ------------------------------------------------------------ apps
@@ -85,6 +86,9 @@ class LauncherState(context: Context) {
         private set
     var frogDoneDay by mutableStateOf(str("frog_done_day"))
         private set
+    /** When the frog was marked eaten (milliseconds), so Pip can react right away. */
+    var frogDoneAt by mutableStateOf(long("frog_done_at", 0L))
+        private set
     var tomorrowFrog by mutableStateOf(str("tomorrow_frog"))
         private set
     var frogMinutes by mutableStateOf(int("frog_minutes", 25))
@@ -102,12 +106,15 @@ class LauncherState(context: Context) {
         val today = dayKey()
         if (done) {
             frogDoneDay = today
+            frogDoneAt = System.currentTimeMillis()
             eatenDays = eatenDays + today
         } else {
             frogDoneDay = ""
+            frogDoneAt = 0L
             eatenDays = eatenDays - today
         }
         save {
+            putLong("frog_done_at", frogDoneAt)
             putString("frog_done_day", frogDoneDay)
             putStringSet("eaten_days", eatenDays)
         }
@@ -569,7 +576,7 @@ class LauncherState(context: Context) {
     /** Deletes everything this app stored. */
     fun resetAll() {
         prefs.edit().clear().apply()
-        frog = ""; frogDoneDay = ""; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
+        frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
         habits = emptyList(); dumps = emptyList()
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()

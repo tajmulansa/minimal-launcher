@@ -70,4 +70,49 @@ class LogicTest {
     @Test fun pipCelebratesFrog() {
         assertEquals("[^o^]", pipMessage(facts(done = true, water = 8)).face)
     }
+
+    @Test fun dayPartsFollowTheClock() {
+        assertEquals(DayPart.Night, dayPartOf(3))
+        assertEquals(DayPart.Morning, dayPartOf(5))
+        assertEquals(DayPart.Morning, dayPartOf(11))
+        assertEquals(DayPart.Afternoon, dayPartOf(12))
+        assertEquals(DayPart.Afternoon, dayPartOf(16))
+        assertEquals(DayPart.Evening, dayPartOf(17))
+        assertEquals(DayPart.Evening, dayPartOf(20))
+        assertEquals(DayPart.Night, dayPartOf(21))
+    }
+
+    @Test fun saysGoodMorningOnlyInTheMorning() {
+        for (h in 0..23) {
+            val text = pipMessage(facts(hour = h, frog = "Study")).text
+            if (h in 5..11) assertTrue("hour $h: $text", text.contains("Good morning"))
+            else assertTrue("hour $h: $text", !text.contains("Good morning", ignoreCase = true))
+        }
+    }
+
+    @Test fun afternoonAndEveningGreetings() {
+        assertTrue(pipMessage(facts(hour = 14, frog = "Study")).text.contains("Good afternoon"))
+        assertTrue(pipMessage(facts(hour = 18, frog = "Study")).text.contains("Good evening"))
+    }
+
+    @Test fun justAteFrogGetsPraiseAndWaterReminder() {
+        val m = pipMessage(facts(hour = 10, done = true, water = 0).copy(frogJustDone = true))
+        assertTrue(m.text.contains("ate the frog"))
+        assertTrue(m.text.contains("water"))
+        assertEquals(PipAction.Water, m.action)
+    }
+
+    @Test fun justAteFrogWithEnoughWaterSuggestsABreak() {
+        val m = pipMessage(facts(hour = 10, done = true, water = 8).copy(frogJustDone = true))
+        assertTrue(m.text.contains("break"))
+    }
+
+    @Test fun frogEatenEarlierIsStillAppreciated() {
+        val m = pipMessage(facts(hour = 14, done = true, water = 8))
+        assertTrue(m.text.contains("ate your frog"))
+    }
+
+    @Test fun nightTalksAboutSleep() {
+        assertTrue(pipMessage(facts(hour = 1)).text.contains("Sleep", ignoreCase = true))
+    }
 }
