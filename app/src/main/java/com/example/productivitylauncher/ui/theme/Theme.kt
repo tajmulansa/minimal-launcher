@@ -50,8 +50,8 @@ val LightPalette = Palette(
 )
 
 val DarkPalette = Palette(
-    phone = Color(0xFF1B1A18),
-    card = Color(0xFF252320),
+    phone = Color(0xFF0E0D0C),
+    card = Color(0xFF1A1917),
     text = Color(0xFFEDEAE3),
     muted = Color(0xFFA09B92),
     focus = Color(0xFF8DB8A7),
@@ -59,10 +59,10 @@ val DarkPalette = Palette(
     gate = Color(0xFFE58E7E),
     gateSoft = Color(0xFF3A2723),
     onGate = Color(0xFF2A1511),
-    line = Color(0xFF33302C),
-    dot = Color(0xFF4A4641),
+    line = Color(0xFF2A2825),
+    dot = Color(0xFF45413C),
     primary = Color(0xFFEDEAE3),
-    onPrimary = Color(0xFF1B1A18),
+    onPrimary = Color(0xFF0E0D0C),
     dark = true,
 )
 

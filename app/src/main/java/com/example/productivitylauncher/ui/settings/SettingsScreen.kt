@@ -129,7 +129,11 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Weekly review", onClick = { nav.go(Route.Week) }) { ValueChevron("") }
             }
 
-            SettingsGroup("Apps") {
+            SettingsGroup("Apps and widgets") {
+                SettingRow("All apps", subtitle = "Search and open any app", onClick = { nav.go(Route.Apps) }) { ValueChevron("") }
+                Divider()
+                SettingRow("Widgets", subtitle = "Add or remove launcher and app widgets", onClick = { nav.go(Route.AddWidget) }) { ValueChevron("") }
+                Divider()
                 SettingRow("Gated apps", subtitle = "Apps that get a gate", onClick = { nav.go(Route.GatedPicker) }) {
                     ValueChevron("${state.gated.size}", AppColors.gate)
                 }
@@ -160,7 +164,11 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             SettingsGroup("Data and privacy") {
                 SettingRow("Stays on this phone", subtitle = "This app has no internet permission. Nothing is sent anywhere.") {}
                 Divider()
-                SettingRow("Delete all my data", titleColor = AppColors.gate, subtitle = "Resets settings, tasks, notes and gated apps", onClick = { confirmReset = true }) {}
+                SettingRow("Privacy policy", subtitle = "What is stored and why each permission is asked", onClick = { nav.go(Route.Privacy) }) { ValueChevron("") }
+                Divider()
+                SettingRow("Run setup again", subtitle = "Review privacy and permissions", onClick = { nav.go(Route.Onboarding) }) { ValueChevron("") }
+                Divider()
+                SettingRow("Delete all my data", titleColor = AppColors.gate, subtitle = "Clears tasks, notes and settings. Gated apps are released after 24 hours", onClick = { confirmReset = true }) {}
             }
 
             SettingsGroup("About") {
@@ -176,7 +184,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             onDismissRequest = { confirmReset = false },
             containerColor = AppColors.card,
             title = { AppText("Delete all data?", size = 20.sp, weight = FontWeight.SemiBold) },
-            text = { AppText("This removes your frog, notes, habits, brain dump, gated apps and settings from this phone. It can't be undone.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp) },
+            text = { AppText("This removes your frog, notes, habits, brain dump and settings from this phone. Your gated apps and gate rules stay for 24 hours first, so a weak moment can't switch them off. It can't be undone.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp) },
             confirmButton = {
                 TextButton(onClick = { state.resetAll(); confirmReset = false; nav.go(Route.Onboarding) }) {
                     AppText("Delete", color = AppColors.gate, weight = FontWeight.SemiBold)

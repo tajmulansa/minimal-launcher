@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,8 +52,9 @@ import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.CeramicCard
 import com.example.productivitylauncher.ui.components.GatedTag
 import com.example.productivitylauncher.ui.components.Ic
+import com.example.productivitylauncher.ui.components.IconButtonLarge
+import com.example.productivitylauncher.ui.components.RadiusLg
 import com.example.productivitylauncher.ui.components.RadiusMd
-import com.example.productivitylauncher.ui.components.RadiusPill
 import com.example.productivitylauncher.ui.components.clickableRole
 import com.example.productivitylauncher.ui.theme.AppColors
 import java.text.SimpleDateFormat
@@ -90,9 +90,12 @@ fun HomeScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AnalogClock(now, Modifier.semantics { contentDescription = "Clock. Opens settings." }.clickableRole({ nav.go(Route.Settings) }))
-            Column(horizontalAlignment = Alignment.End) {
-                AppText(day, size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
-                AppText(month.uppercase(), size = 13.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(horizontalAlignment = Alignment.End) {
+                    AppText(day, size = 24.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp, maxLines = 1)
+                    AppText(month.uppercase(), size = 13.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp))
+                }
+                IconButtonLarge(Ic.Gear, "Settings", { nav.go(Route.Settings) })
             }
         }
 
@@ -123,11 +126,20 @@ fun HomeScreen(
             if (shown.size < 6) {
                 CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 16.dp), onClick = { nav.go(Route.HomePicker) }) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Box(Modifier.size(44.dp).background(AppColors.phone, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(44.dp).background(AppColors.phone, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
                             AppIcon(Ic.Plus, AppColors.muted, size = 20.dp)
                         }
                         AppText(if (shown.isEmpty()) "Choose your six apps" else "Add an app", size = 17.sp, weight = FontWeight.Medium, color = AppColors.muted)
                     }
+                }
+            }
+            CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 16.dp), onClick = { nav.go(Route.Apps) }) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Box(Modifier.size(44.dp).background(AppColors.phone, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
+                        AppIcon(Ic.Grid, AppColors.text, size = 20.dp)
+                    }
+                    AppText("All apps", Modifier.weight(1f), size = 17.sp, weight = FontWeight.Medium)
+                    AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp)
                 }
             }
         }
@@ -141,6 +153,7 @@ fun HomeScreen(
                 if (setDnd(context, !dnd)) dnd = !dnd else openDndSettings(context)
             },
             onFocus = { nav.go(Route.Focus) },
+            onApps = { nav.go(Route.Apps) },
         )
     }
 }
@@ -181,27 +194,38 @@ fun Dots(page: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Dock(dnd: Boolean, onPhone: () -> Unit, onMessages: () -> Unit, onDnd: () -> Unit, onFocus: () -> Unit) {
+private fun Dock(dnd: Boolean, onPhone: () -> Unit, onMessages: () -> Unit, onDnd: () -> Unit, onFocus: () -> Unit, onApps: () -> Unit) {
     Box(Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 20.dp)) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .shadow(10.dp, RadiusPill, ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
-                .background(AppColors.card, RadiusPill)
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+                .shadow(10.dp, RadiusLg, ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
+                .background(AppColors.card, RadiusLg)
+                .padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-                DockButton(Ic.Phone, "Phone", false, onPhone)
-                DockButton(Ic.Message, "Messages", false, onMessages)
-            }
-            Box(Modifier.width(2.dp).height(24.dp).background(AppColors.phone))
-            Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-                DockButton(Ic.Moon, if (dnd) "Do not disturb, on" else "Do not disturb, off", dnd, onDnd)
-                DockButton(Ic.Target, "Focus", false, onFocus)
-            }
+            DockButton(Ic.Phone, "Phone", false, onPhone)
+            DockButton(Ic.Message, "Messages", false, onMessages)
+            AppsDockButton(onApps)
+            DockButton(Ic.Moon, if (dnd) "Do not disturb, on" else "Do not disturb, off", dnd, onDnd)
+            DockButton(Ic.Target, "Focus", false, onFocus)
         }
+    }
+}
+
+/** The centre dock button that opens the All apps page. */
+@Composable
+private fun AppsDockButton(onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(48.dp)
+            .background(AppColors.primary, RoundedCornerShape(14.dp))
+            .semantics { contentDescription = "All apps" }
+            .clickableRole(onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        AppIcon(Ic.Grid, AppColors.onPrimary, size = 22.dp)
     }
 }
 
@@ -230,23 +254,23 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier) {
     val dot = AppColors.gate
     Box(
         modifier
-            .size(52.dp)
-            .shadow(4.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+            .size(84.dp)
+            .shadow(6.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
             .background(AppColors.card, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(52.dp)) {
+        Canvas(Modifier.size(84.dp)) {
             val c = Offset(size.width / 2, size.height / 2)
-            val r = size.minDimension / 2 - 4.dp.toPx()
-            drawCircle(ring, radius = r, center = c, style = Stroke(width = 3.dp.toPx()))
+            val r = size.minDimension / 2 - 6.dp.toPx()
+            drawCircle(ring, radius = r, center = c, style = Stroke(width = 4.dp.toPx()))
             fun hand(angleDeg: Float, length: Float, width: Float) {
                 val a = Math.toRadians((angleDeg - 90).toDouble())
                 val end = Offset(c.x + (length * Math.cos(a)).toFloat(), c.y + (length * Math.sin(a)).toFloat())
                 drawLine(ink, c, end, strokeWidth = width, cap = StrokeCap.Round)
             }
-            hand(hours * 30f, r * 0.5f, 3.dp.toPx())
-            hand(minutes * 6f, r * 0.78f, 2.dp.toPx())
-            drawCircle(dot, radius = 2.5.dp.toPx(), center = c)
+            hand(hours * 30f, r * 0.5f, 4.dp.toPx())
+            hand(minutes * 6f, r * 0.78f, 3.dp.toPx())
+            drawCircle(dot, radius = 3.5.dp.toPx(), center = c)
         }
     }
 }

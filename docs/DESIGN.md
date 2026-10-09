@@ -17,8 +17,8 @@ Warm, soft, and quiet. Light and dark themes share the same structure. In the pr
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `bg-phone` | `#F2F0E9` | `#1B1A18` | Screen background |
-| `bg-card` | `#FFFFFF` | `#252320` | Cards, rows, dock |
+| `bg-phone` | `#F2F0E9` | `#0E0D0C` | Screen background |
+| `bg-card` | `#FFFFFF` | `#1A1917` | Cards, rows, dock |
 | `text-main` | `#363431` | `#EDEAE3` | Main text, primary button |
 | `text-muted` | `#6F6C66` | `#A09B92` | Labels, secondary text |
 | `accent-focus` | `#4F7165` | `#8DB8A7` | Frog, focus, done states (sage) |
@@ -27,7 +27,7 @@ Warm, soft, and quiet. Light and dark themes share the same structure. In the pr
 | `line` | `#EAE8E3` | `#33302C` | Dividers, tracks |
 
 - **Typeface:** Inter only, weights 400 to 700. Bundle it in the app (SIL Open Font License). Use tabular figures for the clock, timers, and screen time.
-- **Shape:** large radii (16, 24, and 36 dp, plus full pills), soft shadows, no hard outlines.
+- **Shape:** radii of 12, 16 and 24 dp, plus full pills for toggles and chips, soft shadows, no hard outlines.
 - **Themes:** Light, Dark, and Auto (follows the system). The choice is in Settings and on the Welcome screen.
 - **App icons:** a rounded square showing the app's first letter. Gated apps use the terracotta fill.
 - **Accessibility:** red is never the only signal. Gated apps also carry a "Locked" tag. Touch targets are at least 44dp. Text meets 4.5:1 contrast in both themes.

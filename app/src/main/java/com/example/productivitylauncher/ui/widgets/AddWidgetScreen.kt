@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,6 +39,7 @@ import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.PageHeader
 import com.example.productivitylauncher.ui.components.RadiusMd
+import com.example.productivitylauncher.ui.components.Segmented
 import com.example.productivitylauncher.ui.components.clickableRole
 import com.example.productivitylauncher.ui.theme.AppColors
 
@@ -107,16 +106,17 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
 
     Column(Modifier.fillMaxSize()) {
         PageHeader("Add widget", onBack = nav.back)
-        Row(Modifier.padding(horizontal = 28.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            listOf("Launcher", "From apps").forEachIndexed { i, label ->
-                Box(Modifier.heightIn(min = 44.dp).clickableRole({ tab = i; message = null }, Role.Tab), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        AppText(label, size = 16.sp, weight = if (tab == i) FontWeight.SemiBold else FontWeight.Medium, color = if (tab == i) AppColors.text else AppColors.muted)
-                        Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(2.dp).background(if (tab == i) AppColors.text else AppColors.line))
-                    }
-                }
-            }
-        }
+        Segmented(
+            listOf("From launcher", "From apps"),
+            tab,
+            { tab = it; message = null },
+            Modifier.padding(horizontal = 28.dp),
+        )
+        AppText(
+            if (tab == 0) "Made for focus. They live inside this launcher and work offline." else "Widgets from the apps installed on your phone.",
+            size = 14.sp, color = AppColors.muted, lineHeight = 20.sp,
+            modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 12.dp),
+        )
         message?.let { AppText(it, size = 14.sp, color = AppColors.focus, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) }
 
         if (tab == 0) {

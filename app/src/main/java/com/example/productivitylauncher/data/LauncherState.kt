@@ -478,6 +478,18 @@ class LauncherState(context: Context) {
 
     fun hasWidget(id: String) = id in widgets
 
+    /** Height in dp the user gave to another app's widget (null means "use the widget's own size"). */
+    var widgetHeights by mutableStateOf(readLongMap("widget_heights"))
+        private set
+
+    fun widgetHeightDp(appWidgetId: Int): Float? = widgetHeights[appWidgetId.toString()]?.toFloat()
+
+    fun setWidgetHeightDp(appWidgetId: Int, dp: Float?) {
+        val key = appWidgetId.toString()
+        widgetHeights = if (dp == null) widgetHeights - key else widgetHeights + (key to dp.toLong())
+        writeLongMap("widget_heights", widgetHeights)
+    }
+
     fun toggleWidget(id: String) = updateWidgets(if (id in widgets) widgets - id else widgets + id)
 
     fun addWidgetId(id: String) { if (id !in widgets) updateWidgets(widgets + id) }
@@ -568,7 +580,7 @@ class LauncherState(context: Context) {
         sessionPkg = ""; sessionEnd = 0L; sessionNotified = true
         focusEnd = 0L; focusDnd = true; focusLockGated = true
         eveningHour = 21; eveningDoneDay = ""; screenGoalMin = 180
-        widgets = DEFAULT_WIDGETS
+        widgets = DEFAULT_WIDGETS; widgetHeights = emptyMap()
         themeMode = ThemeMode.Auto; pipOn = true; onboarded = false
     }
 }

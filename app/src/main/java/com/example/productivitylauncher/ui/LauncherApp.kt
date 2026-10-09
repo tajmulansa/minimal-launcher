@@ -41,6 +41,7 @@ import com.example.productivitylauncher.ui.home.HomeScreen
 import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
 import com.example.productivitylauncher.ui.pip.PipBubble
 import com.example.productivitylauncher.ui.pip.PipCard
+import com.example.productivitylauncher.ui.settings.PrivacyScreen
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
@@ -171,6 +172,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             Route.Evening -> EveningScreen(state, nav)
             Route.Week -> WeekScreen(state, nav)
             Route.Settings -> SettingsScreen(state, nav)
+            Route.Privacy -> PrivacyScreen(nav)
             Route.GatedPicker -> GatedPickerScreen(state, nav)
             Route.HomePicker -> HomePickerScreen(state, nav)
             is Route.Locked -> LockedScreen(state, r.reason, state.appByPackage(r.pkg), nav)

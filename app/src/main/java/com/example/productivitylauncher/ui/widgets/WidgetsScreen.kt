@@ -22,12 +22,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,7 +70,10 @@ import com.example.productivitylauncher.ui.theme.AppColors
 @Composable
 fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
     Column(Modifier.fillMaxSize()) {
-        PageHeader("Widgets", trailing = { IconButtonLarge(Ic.Plus, "Add widget", { nav.go(Route.AddWidget) }) })
+        PageHeader("Widgets", trailing = {
+            IconButtonLarge(Ic.Gear, "Settings", { nav.go(Route.Settings) })
+            IconButtonLarge(Ic.Plus, "Add widget", { nav.go(Route.AddWidget) })
+        })
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -164,7 +173,7 @@ private fun WaterWidget(state: LauncherState) {
                     row.forEach { i ->
                         val on = i < state.water
                         Box(
-                            Modifier.weight(1f).height(34.dp).background(if (on) AppColors.focus.copy(alpha = 0.2f) else AppColors.phone, RoundedCornerShape(10.dp))
+                            Modifier.weight(1f).height(34.dp).background(if (on) AppColors.focus.copy(alpha = 0.2f) else AppColors.phone, RoundedCornerShape(8.dp))
                                 .clickableRole({ state.updateWater(if (on && i == state.water - 1) i else i + 1) }),
                             contentAlignment = Alignment.Center,
                         ) { AppIcon(Ic.Drop, if (on) AppColors.focus else AppColors.dot, size = 16.dp) }
@@ -227,7 +236,7 @@ private fun AgendaWidget() {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         AppText(if (e.allDay) "All day" else clockLabel(e.begin), Modifier.width(52.dp), size = 13.sp, weight = FontWeight.SemiBold, color = AppColors.muted)
                         Box(
-                            Modifier.weight(1f).background(if (active) AppColors.primary else AppColors.phone, RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
+                            Modifier.weight(1f).background(if (active) AppColors.primary else AppColors.phone, RoundedCornerShape(8.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
                             AppText(e.title, size = 15.sp, weight = FontWeight.Medium, color = if (active) AppColors.onPrimary else AppColors.text, maxLines = 2)
                         }
@@ -254,7 +263,7 @@ private fun HabitsWidget(state: LauncherState) {
         state.habits.forEach { h ->
             val done = today in h.doneDays
             Row(
-                Modifier.fillMaxWidth().background(AppColors.phone, RoundedCornerShape(14.dp)).clickableRole({ state.toggleHabit(h.id) }).padding(horizontal = 14.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().background(AppColors.phone, RoundedCornerShape(10.dp)).clickableRole({ state.toggleHabit(h.id) }).padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
@@ -304,6 +313,9 @@ private fun DumpWidget(state: LauncherState, nav: Nav) {
 
 // ------------------------------------------------------------------ other apps' widgets
 
+private const val MAX_WIDGET_DP = 640f
+
+/** An app's widget. Drag the handle (or use Smaller / Larger) to change its height; the size is remembered. */
 @Composable
 private fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: WidgetHost) {
     val context = LocalContext.current
@@ -318,7 +330,13 @@ private fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: Widget
         return
     }
     val density = context.resources.displayMetrics.density
-    val heightDp = (info.minHeight / density).coerceIn(80f, 400f)
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val defaultDp = (info.minHeight / density).coerceIn(80f, 400f)
+    val smallestDp = ((if (info.minResizeHeight > 0) info.minResizeHeight else info.minHeight) / density).coerceIn(48f, 200f)
+    var heightDp by remember(appWidgetId) { mutableFloatStateOf(state.widgetHeightDp(appWidgetId) ?: defaultDp) }
+    fun resize(to: Float) { heightDp = to.coerceIn(smallestDp, MAX_WIDGET_DP) }
+    fun save() { state.setWidgetHeightDp(appWidgetId, heightDp) }
+
     CeramicCard(padding = androidx.compose.foundation.layout.PaddingValues(12.dp)) {
         AndroidView(
             modifier = Modifier.fillMaxWidth().height(heightDp.dp),
@@ -327,6 +345,36 @@ private fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: Widget
                     view.setAppWidget(appWidgetId, info)
                 }
             },
+            update = { view ->
+                // Tell the widget its new size so it can re-lay itself out.
+                val w = (screenWidthDp - 80).coerceAtLeast(80)
+                val h = heightDp.toInt()
+                runCatching { view.updateAppWidgetSize(null, w, h, w, h) }
+            },
         )
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextLink("Smaller", { resize(heightDp - 40f); save() })
+            Box(
+                Modifier
+                    .weight(1f)
+                    .height(44.dp)
+                    .background(AppColors.phone, RoundedCornerShape(10.dp))
+                    .semantics { contentDescription = "Drag up or down to resize this widget" }
+                    .pointerInput(appWidgetId) {
+                        detectVerticalDragGestures(onDragEnd = { save() }) { change, dy ->
+                            change.consume()
+                            resize(heightDp + dy / density)
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(Modifier.size(width = 36.dp, height = 4.dp).background(AppColors.dot, RoundedCornerShape(2.dp)))
+            }
+            TextLink("Larger", { resize(heightDp + 40f); save() })
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            TextLink("Reset size", { resize(defaultDp); state.setWidgetHeightDp(appWidgetId, null) })
+            TextLink("Remove", { host.delete(appWidgetId); state.removeWidgetId("ext:$appWidgetId") })
+        }
     }
 }

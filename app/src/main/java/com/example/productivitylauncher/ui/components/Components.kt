@@ -48,10 +48,10 @@ import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.theme.Inter
 
-/** Shapes from the Ceramic design: 16 / 24 / 36 / pill. */
-val RadiusSm = RoundedCornerShape(16.dp)
-val RadiusMd = RoundedCornerShape(24.dp)
-val RadiusLg = RoundedCornerShape(36.dp)
+/** Shapes: 12 / 16 / 24 dp, plus full pills for toggles, chips and the segmented control. */
+val RadiusSm = RoundedCornerShape(12.dp)
+val RadiusMd = RoundedCornerShape(16.dp)
+val RadiusLg = RoundedCornerShape(24.dp)
 val RadiusPill = RoundedCornerShape(100.dp)
 
 fun Modifier.sizeCompat(s: Dp): Modifier = this.then(Modifier.size(s))
@@ -144,7 +144,7 @@ fun CButton(
         BtnKind.Soft -> AppColors.text
         BtnKind.Gate -> AppColors.onGate
     }
-    val shape = if (small) RoundedCornerShape(14.dp) else RadiusMd
+    val shape = if (small) RoundedCornerShape(10.dp) else RadiusMd
     Row(
         modifier
             .alpha(if (enabled) 1f else 0.45f)
@@ -308,7 +308,7 @@ fun AppBadge(letter: String, gated: Boolean, size: Dp = 44.dp, modifier: Modifie
     Box(
         modifier
             .size(size)
-            .background(if (gated) AppColors.gate else AppColors.phone, RoundedCornerShape(size * 0.32f)),
+            .background(if (gated) AppColors.gate else AppColors.phone, RoundedCornerShape(size * 0.24f)),
         contentAlignment = Alignment.Center,
     ) {
         AppText(letter, size = fontSize, weight = FontWeight.SemiBold, color = if (gated) AppColors.onGate else AppColors.text)
@@ -357,7 +357,7 @@ fun AppField(
         modifier = modifier.fillMaxWidth(),
         decorationBox = { inner ->
             Box(
-                Modifier.fillMaxWidth().heightIn(min = 52.dp).background(fill, RoundedCornerShape(14.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().heightIn(min = 52.dp).background(fill, RoundedCornerShape(10.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
                 contentAlignment = if (center) Alignment.Center else Alignment.CenterStart,
             ) {
                 if (value.isEmpty()) AppText(placeholder, color = AppColors.muted, mono = mono)

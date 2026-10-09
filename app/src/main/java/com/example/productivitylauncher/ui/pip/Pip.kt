@@ -67,8 +67,8 @@ fun PipCard(message: PipMessage, onDismiss: () -> Unit, onAction: (PipAction) ->
             Modifier
                 .padding(start = 20.dp, end = 20.dp, bottom = 112.dp)
                 .fillMaxWidth()
-                .shadow(16.dp, RoundedCornerShape(26.dp, 26.dp, 6.dp, 26.dp), ambientColor = Color(0x33000000), spotColor = Color(0x33000000))
-                .background(AppColors.card, RoundedCornerShape(26.dp, 26.dp, 6.dp, 26.dp))
+                .shadow(16.dp, RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp), ambientColor = Color(0x33000000), spotColor = Color(0x33000000))
+                .background(AppColors.card, RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp))
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = {})
                 .padding(22.dp),
         ) {

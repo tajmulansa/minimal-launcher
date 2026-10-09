@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,7 +28,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.Manifest
 import com.example.productivitylauncher.data.LauncherState
+import com.example.productivitylauncher.data.UsageReader
+import com.example.productivitylauncher.data.canDrawOverlays
+import com.example.productivitylauncher.data.hasCalendarPermission
+import com.example.productivitylauncher.data.hasDndAccess
+import com.example.productivitylauncher.data.openDndSettings
+import com.example.productivitylauncher.data.openOverlaySettings
+import com.example.productivitylauncher.data.openUsageAccessSettings
 import com.example.productivitylauncher.data.isDefaultLauncher
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
 import com.example.productivitylauncher.ui.Nav
@@ -35,18 +47,20 @@ import com.example.productivitylauncher.ui.components.AppField
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.BtnKind
 import com.example.productivitylauncher.ui.components.CButton
+import com.example.productivitylauncher.ui.components.CeramicCard
 import com.example.productivitylauncher.ui.components.Segmented
 import com.example.productivitylauncher.ui.components.TextLink
+import com.example.productivitylauncher.ui.settings.PrivacyBody
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.theme.ThemeMode
 
-/** First run: meet Pip, pick gated apps, pick six Home apps, set the first frog, choose a theme. */
+/** First run: meet Pip, read the privacy policy, choose permissions, pick gated and Home apps, set the first frog, choose a theme. */
 @Composable
 fun OnboardingScreen(state: LauncherState, nav: Nav) {
     val context = LocalContext.current
     var step by remember { mutableIntStateOf(0) }
     var frog by remember { mutableStateOf(state.frog) }
-    val last = 4
+    val last = 6
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp), horizontalArrangement = Arrangement.Center) {
@@ -70,14 +84,19 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                     )
                 }
                 1 -> Column(Modifier.weight(1f)) {
+                    AppText("Your privacy", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
+                    PrivacyBody(Modifier.weight(1f))
+                }
+                2 -> PermissionsStep(state, Modifier.weight(1f))
+                3 -> Column(Modifier.weight(1f)) {
                     AppText("Gate your distractions", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
                     GatedPickerBody(state, Modifier.weight(1f))
                 }
-                2 -> Column(Modifier.weight(1f)) {
+                4 -> Column(Modifier.weight(1f)) {
                     AppText("Pick your six", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
                     HomePickerBody(state, Modifier.weight(1f))
                 }
-                3 -> Column(Modifier.weight(1f).padding(28.dp), verticalArrangement = Arrangement.Center) {
+                5 -> Column(Modifier.weight(1f).padding(28.dp), verticalArrangement = Arrangement.Center) {
                     AppText("What's your frog today?", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
                     AppText("The one task that matters most. Do it first and the day is already a win.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
                     AppField(frog, { frog = it }, "e.g. Finish chemistry chapter 4", fill = AppColors.card)
@@ -99,9 +118,9 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
         }
         Column(Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             CButton(
-                if (step == last) "Start" else "Next",
+                when (step) { last -> "Start"; 1 -> "I understand"; else -> "Next" },
                 {
-                    if (step == 3 && frog.isNotBlank()) state.updateFrog(frog.trim())
+                    if (step == 5 && frog.isNotBlank()) state.updateFrog(frog.trim())
                     if (step == last) {
                         state.finishOnboarding()
                         nav.go(Route.Main)
@@ -112,5 +131,42 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
             if (step > 0) TextLink("Back", { step -= 1 })
             else if (step == 0) TextLink("Skip setup", { state.finishOnboarding(); nav.go(Route.Main) })
         }
+    }
+}
+
+/** Asks, one by one, for the optional permissions the launcher can use, and says why. */
+@Composable
+private fun PermissionsStep(state: LauncherState, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    // Re-check every time the user comes back from a system settings page.
+    val tick = state.resumeTick
+    val usage = remember(tick) { UsageReader(context).hasAccess() }
+    val overlay = remember(tick) { canDrawOverlays(context) }
+    val dnd = remember(tick) { hasDndAccess(context) }
+    var calendar by remember(tick) { mutableStateOf(hasCalendarPermission(context)) }
+    val calendarLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { calendar = it }
+
+    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        AppText("Permissions", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
+        AppText(
+            "All of these are optional and used only on this phone. Allow what you want now, or change it later in Settings. Each one only switches on the feature that needs it.",
+            size = 15.sp, color = AppColors.muted, lineHeight = 22.sp,
+        )
+        PermissionCard("Usage access", "Shows your real screen time and how long you spend in gated apps.", usage) { openUsageAccessSettings(context) }
+        PermissionCard("Display over other apps", "Shows the small floating timer on top of a gated app, so you know when your time is up.", overlay) { openOverlaySettings(context) }
+        PermissionCard("Do Not Disturb access", "Silences notifications during a focus session and powers the Moon button.", dnd) { openDndSettings(context) }
+        PermissionCard("Calendar", "Shows today's events in the Agenda widget. Read only.", calendar) { calendarLauncher.launch(Manifest.permission.READ_CALENDAR) }
+    }
+}
+
+@Composable
+private fun PermissionCard(title: String, why: String, granted: Boolean, onAllow: () -> Unit) {
+    CeramicCard(padding = androidx.compose.foundation.layout.PaddingValues(20.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            AppText(title, Modifier.weight(1f), size = 17.sp, weight = FontWeight.SemiBold)
+            if (granted) AppText("Allowed", size = 14.sp, weight = FontWeight.SemiBold, color = AppColors.focus)
+        }
+        AppText(why, size = 14.sp, color = AppColors.muted, lineHeight = 20.sp)
+        if (!granted) CButton("Allow", onAllow, Modifier.fillMaxWidth(), BtnKind.Soft, small = true)
     }
 }
