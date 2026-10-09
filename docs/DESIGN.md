@@ -88,7 +88,9 @@ A plain text face, `[^_^]`, named **Pip**. Pip floats on Home and Widgets as a s
 
 **Voice:** friendly, short, specific, encouraging. Never guilt, never scary, no "failure" state, nothing dies or gets sad forever.
 
-**Behavior-driven reminders** (planned):
+**Pip's job:** reminder, supporter and motivator. It always knows the time of day: "Good morning" only in the morning, an afternoon check-in, an evening wind-down and sleep talk at night. It appreciates what you finish, and right after you eat the frog it says well done and suggests water and a short break. Pip runs on the phone with no network and is not an AI model.
+
+**Behavior-driven reminders:**
 
 | Trigger | Example line |
 | --- | --- |
