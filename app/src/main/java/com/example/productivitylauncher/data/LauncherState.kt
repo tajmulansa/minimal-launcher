@@ -35,97 +35,21 @@ class LauncherState(context: Context) {
 
     fun onResume() { resumeTick++ }
 
-    fun pipFacts(): PipFacts {
-        val now = System.currentTimeMillis()
-        val top = opens.maxByOrNull { it.value }
-        val soonest = pendingRemoval.minByOrNull { it.value }
-        val event = nextEvent
-        return PipFacts(
-            hour = hourOf(),
-            frog = frog,
-            frogDone = frogDone,
-            water = water,
-            waterGoal = waterGoal,
-            gatedMin = gatedMs?.let { it / 60_000L },
-            limitMin = dailyLimitMin,
-            activeMin45 = activeMs45?.let { it / 60_000L },
-            eveningHour = eveningHour,
-            eveningDone = eveningDone,
-            dumpCount = dumps.size,
-            focusActive = focusActive,
-            frogStreak = frogStreak(eatenDays, now),
-            usualFinishHour = usualHour(eatenHours),
-            nextEventTitle = event?.title,
-            nextEventInMin = event?.let { ((it.begin - now) / 60_000L).toInt() },
-            topGateApp = top?.let { appByPackage(it.key)?.label },
-            topGateOpens = if (opensDay == dayKey()) (top?.value ?: 0L).toInt() else 0,
-            pendingRemovalApp = soonest?.let { appByPackage(it.key)?.label },
-            pendingRemovalHours = soonest?.let { ((it.value - now) / 3_600_000L).toInt() + 1 } ?: 0,
-            screenTimeMin = screenTimeMs?.let { it / 60_000L },
-            screenGoalMin = screenGoalMin,
-            backedOutToday = backedOutOn(dayKey()),
-            habitsTotal = habits.size,
-            habitsDone = habits.count { dayKey() in it.doneDays },
-        )
-    }
-
-    // ------------------------------------------------------------ Pip memory (what you act on, what you wave away)
-
-    private var pipSnooze by mutableStateOf(readLongMap("pip_snooze"))
-    private var pipDismissed by mutableStateOf(readLongMap("pip_dismissed"))
-    private var pipActed by mutableStateOf(readLongMap("pip_acted"))
-
-    var eatenHours by mutableStateOf(readHours())
-        private set
-
-    private fun readHours(): List<Int> = runCatching {
-        val arr = JSONArray(str("eaten_hours", "[]"))
-        (0 until arr.length()).map { arr.getInt(it) }
-    }.getOrDefault(emptyList())
-
-    var nextEvent by mutableStateOf<AgendaItem?>(null)
-        private set
-
-    /** Reads the next calendar event (needs the optional calendar permission). Call off the main thread. */
-    fun refreshAgenda() {
-        val now = System.currentTimeMillis()
-        nextEvent = todayEvents(appContext).firstOrNull { !it.allDay && it.begin > now }
-    }
-
-    /** Pip's current message, chosen from the facts and what it has learned about you. */
-    fun pipFor(variant: Int): PipMessage =
-        pickPip(pipFacts(), variant, pipSnooze, pipDismissed, System.currentTimeMillis(), pipActed)
-
-    /** A one-time line Pip shows as a speech chip, e.g. after you back out of a gate. Not saved. */
-    var pipShout by mutableStateOf<String?>(null)
-        private set
-
-    fun pipSay(text: String) { pipShout = text }
-    fun pipShoutShown() { pipShout = null }
-
-    fun pipAnswer(ask: PipAsk): String = when (ask) {
-        PipAsk.WhatNow -> pipAnswerNow(pipFacts())
-        PipAsk.HowAmI -> pipAnswerHow(pipFacts())
-    }
-
-    /** "Later": stay quiet about this topic for a while, longer each time. */
-    fun pipLater(topic: PipTopic) {
-        val n = (pipDismissed[topic.name] ?: 0L) + 1
-        pipDismissed = pipDismissed + (topic.name to n)
-        pipSnooze = pipSnooze + (topic.name to System.currentTimeMillis() + pipSnoozeMs(n.toInt()))
-        writeLongMap("pip_dismissed", pipDismissed)
-        writeLongMap("pip_snooze", pipSnooze)
-    }
-
-    /** The user acted on a nudge, so Pip trusts that topic again. */
-    fun pipActedOn(topic: PipTopic) {
-        pipActed = pipActed + (topic.name to (pipActed[topic.name] ?: 0L) + 1)
-        pipDismissed = pipDismissed - topic.name
-        pipSnooze = pipSnooze - topic.name
-        writeLongMap("pip_acted", pipActed)
-        writeLongMap("pip_dismissed", pipDismissed)
-        writeLongMap("pip_snooze", pipSnooze)
-    }
+    fun pipFacts(): PipFacts = PipFacts(
+        hour = hourOf(),
+        frog = frog,
+        frogDone = frogDone,
+        water = water,
+        waterGoal = waterGoal,
+        gatedMin = gatedMs?.let { it / 60_000L },
+        limitMin = dailyLimitMin,
+        activeMin45 = activeMs45?.let { it / 60_000L },
+        eveningHour = eveningHour,
+        eveningDone = eveningDone,
+        dumpCount = dumps.size,
+        focusActive = focusActive,
+        frogJustDone = frogDone && System.currentTimeMillis() - frogDoneAt < 45 * 60_000L,
+    )
 
     // ------------------------------------------------------------ apps
 
@@ -162,6 +86,9 @@ class LauncherState(context: Context) {
         private set
     var frogDoneDay by mutableStateOf(str("frog_done_day"))
         private set
+    /** When the frog was marked eaten (milliseconds), so Pip can react right away. */
+    var frogDoneAt by mutableStateOf(long("frog_done_at", 0L))
+        private set
     var tomorrowFrog by mutableStateOf(str("tomorrow_frog"))
         private set
     var frogMinutes by mutableStateOf(int("frog_minutes", 25))
@@ -179,16 +106,15 @@ class LauncherState(context: Context) {
         val today = dayKey()
         if (done) {
             frogDoneDay = today
+            frogDoneAt = System.currentTimeMillis()
             eatenDays = eatenDays + today
-            eatenHours = (eatenHours + hourOf()).takeLast(14)
-            val streak = frogStreak(eatenDays)
-            pipSay(if (streak >= 2) "Frog eaten, $streak days in a row!" else "Frog eaten! The hardest thing is behind you.")
-            save { putString("eaten_hours", JSONArray(eatenHours).toString()) }
         } else {
             frogDoneDay = ""
+            frogDoneAt = 0L
             eatenDays = eatenDays - today
         }
         save {
+            putLong("frog_done_at", frogDoneAt)
             putString("frog_done_day", frogDoneDay)
             putStringSet("eaten_days", eatenDays)
         }
@@ -446,7 +372,6 @@ class LauncherState(context: Context) {
         private set
 
     fun recordBackOut() {
-        pipSay("Good call. Want to put that time into your frog?")
         val today = dayKey()
         backedOut = backedOut + (today to (backedOut[today] ?: 0L) + 1)
         writeLongMap("backed_out", backedOut)
@@ -651,7 +576,7 @@ class LauncherState(context: Context) {
     /** Deletes everything this app stored. */
     fun resetAll() {
         prefs.edit().clear().apply()
-        frog = ""; frogDoneDay = ""; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
+        frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
         habits = emptyList(); dumps = emptyList()
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
@@ -661,7 +586,6 @@ class LauncherState(context: Context) {
         focusEnd = 0L; focusDnd = true; focusLockGated = true
         eveningHour = 21; eveningDoneDay = ""; screenGoalMin = 180
         widgets = DEFAULT_WIDGETS; widgetHeights = emptyMap()
-        pipSnooze = emptyMap(); pipDismissed = emptyMap(); pipActed = emptyMap(); eatenHours = emptyList(); nextEvent = null
         themeMode = ThemeMode.Auto; pipOn = true; onboarded = false
     }
 }

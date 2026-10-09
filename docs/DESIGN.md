@@ -88,12 +88,7 @@ A plain text face, `[^_^]`, named **Pip**. Pip floats on Home and Widgets as a s
 
 **Voice:** friendly, short, specific, encouraging. Never guilt, never scary, no "failure" state, nothing dies or gets sad forever.
 
-**How Pip thinks (built):** Pip is not an AI model. It runs on the phone with no network. Each moment it lists every message that fits, scores them, and says the best one that is not snoozed.
-
-- It learns per topic: tapping Later snoozes that topic for longer each time, and acting on a nudge restores trust. Urgent topics (long phone use, an event starting soon) always get through.
-- It knows your frog streak, the hour you usually finish your frog, your next calendar event, repeated gate opens, a pending gate removal, screen time against your goal, water pacing and habits.
-- It reacts to events with a speech chip, for example after you back out of a gate or eat the frog.
-- You can type to Pip: "drank 2 glasses", "frog: finish chapter 4", "focus 30", "dump: buy milk", "how am I doing?", "open settings". This is pattern matching in `data/PipBrain.kt`, covered by unit tests.
+**Pip's job:** reminder, supporter and motivator. It always knows the time of day: "Good morning" only in the morning, an afternoon check-in, an evening wind-down and sleep talk at night. It appreciates what you finish, and right after you eat the frog it says well done and suggests water and a short break. Pip runs on the phone with no network and is not an AI model.
 
 **Behavior-driven reminders:**
 

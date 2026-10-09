@@ -29,6 +29,7 @@ import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.PipAction
 import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.data.launchApp
+import com.example.productivitylauncher.data.pipMessage
 import com.example.productivitylauncher.ui.apps.AppListScreen
 import com.example.productivitylauncher.ui.apps.GatedPickerScreen
 import com.example.productivitylauncher.ui.apps.HomePickerScreen
@@ -42,8 +43,7 @@ import com.example.productivitylauncher.ui.home.HomeScreen
 import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
 import com.example.productivitylauncher.ui.pip.PipBubble
 import com.example.productivitylauncher.ui.pip.PipCard
-import com.example.productivitylauncher.ui.pip.PipPreview
-import com.example.productivitylauncher.ui.pip.runPipCommand
+import com.example.productivitylauncher.ui.pip.PipChip
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
@@ -65,13 +65,10 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     val stack = remember { ArrayList<Route>() }
     var pipOpen by remember { mutableStateOf(false) }
     var pipVariant by remember { mutableIntStateOf(0) }
-    var pipAnswer by remember { mutableStateOf<String?>(null) }
-    var previewTopic by remember { mutableStateOf<String?>(null) }
-    var previewVisible by remember { mutableStateOf(false) }
-    var shoutText by remember { mutableStateOf<String?>(null) }
-    // Re-pick Pip's message every minute, so time-based lines stay current.
-    val minute by produceState(0L) {
-        while (true) { value = System.currentTimeMillis() / 60_000L; delay(60_000L) }
+    var pipChip by remember { mutableStateOf<String?>(null) }
+    // Pip always knows the time: this ticks every minute so greetings and reminders stay current.
+    val minute by produceState(System.currentTimeMillis() / 60_000L) {
+        while (true) { delay(60_000L - System.currentTimeMillis() % 60_000L); value = System.currentTimeMillis() / 60_000L }
     }
 
     val nav = remember {
@@ -105,7 +102,6 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
         withContext(Dispatchers.IO) {
             state.refreshApps(context.packageManager)
             state.refreshUsage()
-            state.refreshAgenda()
         }
         if (route != Route.Onboarding && state.consumeTimesUp()) {
             val pkg = state.sessionPkg
@@ -118,7 +114,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     LaunchedEffect(Unit) {
         while (true) {
             delay(60_000L)
-            withContext(Dispatchers.IO) { state.refreshUsage(); state.refreshAgenda() }
+            withContext(Dispatchers.IO) { state.refreshUsage() }
         }
     }
 
@@ -151,56 +147,37 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                     else WidgetsScreen(state, nav, widgetHost, page = 1)
                 }
                 if (state.pipOn) {
-                    val message = remember(minute, pipVariant, pipOpen, state.frog, state.frogDone, state.water, state.screenTimeMs, state.gatedMs, state.activeMs45, state.dumps.size, state.focusEnd, state.nextEvent, state.pendingRemoval, state.habits) {
-                        state.pipFor(pipVariant)
-                    }
-                    // A nudge pops up as a small speech chip for a few seconds, once per topic.
-                    LaunchedEffect(message.topic, message.nudge) {
-                        if (message.nudge && previewTopic != message.topic.name) {
-                            previewTopic = message.topic.name
-                            previewVisible = true
+                    // Reading these makes Pip choose again when the minute, the resume or the frog changes.
+                    @Suppress("UNUSED_VARIABLE") val clockTick = minute + state.resumeTick
+                    val message = pipMessage(state.pipFacts(), pipVariant)
+
+                    // The moment the frog is eaten, Pip says well done in a small speech chip.
+                    var wasDone by remember { mutableStateOf(state.frogDone) }
+                    LaunchedEffect(state.frogDone) {
+                        val justEaten = state.frogDone && !wasDone
+                        wasDone = state.frogDone
+                        if (justEaten) {
+                            pipChip = pipMessage(state.pipFacts(), 0).text
                             delay(9_000L)
-                            previewVisible = false
+                            pipChip = null
                         }
                     }
-                    // One-time reactions, e.g. after backing out of a gate or eating the frog.
-                    LaunchedEffect(state.pipShout) {
-                        val line = state.pipShout
-                        if (line != null) {
-                            shoutText = line
-                            state.pipShoutShown()
-                            previewVisible = true
-                            delay(8_000L)
-                            previewVisible = false
-                            shoutText = null
-                        }
+                    val chip = pipChip
+                    if (chip != null && !pipOpen) {
+                        PipChip(chip, onClick = { pipChip = null; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 96.dp, bottom = 116.dp).widthIn(max = 240.dp))
                     }
-                    if (previewVisible && !pipOpen) {
-                        PipPreview(
-                            shoutText ?: message.text,
-                            onClick = { previewVisible = false; pipAnswer = null; pipOpen = true },
-                            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 96.dp, bottom = 116.dp).widthIn(max = 230.dp),
-                        )
-                    }
-                    PipBubble(message, onClick = { pipVariant++; pipAnswer = null; previewVisible = false; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 28.dp, bottom = 110.dp))
+                    PipBubble(message, onClick = { pipVariant++; pipChip = null; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 28.dp, bottom = 110.dp))
                     if (pipOpen) {
                         PipCard(
                             message,
-                            answer = pipAnswer,
-                            onAsk = { pipAnswer = state.pipAnswer(it) },
-                            onClose = { pipOpen = false; pipAnswer = null },
-                            onLater = { state.pipLater(message.topic); pipOpen = false; pipAnswer = null },
-                            onSend = { text ->
-                                pipAnswer = runPipCommand(text, state, nav, { scope.launch { pager.animateScrollToPage(1) } }, { pipOpen = false })
-                            },
+                            timeLabel = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault()).format(java.util.Date()),
+                            onDismiss = { pipOpen = false },
                             onAction = { action ->
-                                state.pipActedOn(message.topic)
                                 pipOpen = false
                                 when (action) {
                                     PipAction.Focus -> nav.go(Route.Focus)
                                     PipAction.Evening -> nav.go(Route.Evening)
                                     PipAction.BrainDump -> nav.go(Route.BrainDump)
-                                    PipAction.GatedApps -> nav.go(Route.GatedPicker)
                                     PipAction.SetFrog -> scope.launch { pager.animateScrollToPage(1) }
                                     PipAction.Water -> state.updateWater(state.water + 1)
                                     PipAction.None -> Unit

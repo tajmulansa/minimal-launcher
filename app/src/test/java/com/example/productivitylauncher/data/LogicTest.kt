@@ -71,50 +71,48 @@ class LogicTest {
         assertEquals("[^o^]", pipMessage(facts(done = true, water = 8)).face)
     }
 
-    @Test fun streakCountsConsecutiveDays() {
-        val now = System.currentTimeMillis()
-        val days = setOf(dayKey(now), dayKey(now - DAY_MS), dayKey(now - 2 * DAY_MS), dayKey(now - 4 * DAY_MS))
-        assertEquals(3, frogStreak(days, now))
-        assertEquals(2, frogStreak(setOf(dayKey(now - DAY_MS), dayKey(now - 2 * DAY_MS)), now))
-        assertEquals(0, frogStreak(emptySet(), now))
+    @Test fun dayPartsFollowTheClock() {
+        assertEquals(DayPart.Night, dayPartOf(3))
+        assertEquals(DayPart.Morning, dayPartOf(5))
+        assertEquals(DayPart.Morning, dayPartOf(11))
+        assertEquals(DayPart.Afternoon, dayPartOf(12))
+        assertEquals(DayPart.Afternoon, dayPartOf(16))
+        assertEquals(DayPart.Evening, dayPartOf(17))
+        assertEquals(DayPart.Evening, dayPartOf(20))
+        assertEquals(DayPart.Night, dayPartOf(21))
     }
 
-    @Test fun usualHourNeedsThreeSamples() {
-        assertEquals(null, usualHour(listOf(10, 11)))
-        assertEquals(11, usualHour(listOf(9, 11, 16)))
+    @Test fun saysGoodMorningOnlyInTheMorning() {
+        for (h in 0..23) {
+            val text = pipMessage(facts(hour = h, frog = "Study")).text
+            if (h in 5..11) assertTrue("hour $h: $text", text.contains("Good morning"))
+            else assertTrue("hour $h: $text", !text.contains("Good morning", ignoreCase = true))
+        }
     }
 
-    @Test fun snoozeGrowsEachTime() {
-        assertTrue(pipSnoozeMs(3) > pipSnoozeMs(1))
+    @Test fun afternoonAndEveningGreetings() {
+        assertTrue(pipMessage(facts(hour = 14, frog = "Study")).text.contains("Good afternoon"))
+        assertTrue(pipMessage(facts(hour = 18, frog = "Study")).text.contains("Good evening"))
     }
 
-    @Test fun snoozedTopicIsSkipped() {
-        val f = facts(frog = "")
-        val now = System.currentTimeMillis()
-        val picked = pickPip(f, 0, mapOf(PipTopic.Frog.name to now + 100_000L), emptyMap(), now)
-        assertTrue(picked.topic != PipTopic.Frog)
+    @Test fun justAteFrogGetsPraiseAndWaterReminder() {
+        val m = pipMessage(facts(hour = 10, done = true, water = 0).copy(frogJustDone = true))
+        assertTrue(m.text.contains("ate the frog"))
+        assertTrue(m.text.contains("water"))
+        assertEquals(PipAction.Water, m.action)
     }
 
-    @Test fun calendarEventBeatsRoutineNudges() {
-        val f = facts().copy(nextEventTitle = "Physics lab", nextEventInMin = 15)
-        assertEquals(PipTopic.Calendar, pickPip(f).topic)
+    @Test fun justAteFrogWithEnoughWaterSuggestsABreak() {
+        val m = pipMessage(facts(hour = 10, done = true, water = 8).copy(frogJustDone = true))
+        assertTrue(m.text.contains("break"))
     }
 
-    @Test fun repeatedGateOpensAreNoticed() {
-        val f = facts(frog = "Study", done = true, water = 8).copy(topGateApp = "Instagram", topGateOpens = 3)
-        assertEquals(PipTopic.GateOpens, pickPip(f).topic)
+    @Test fun frogEatenEarlierIsStillAppreciated() {
+        val m = pipMessage(facts(hour = 14, done = true, water = 8))
+        assertTrue(m.text.contains("ate your frog"))
     }
 
-    @Test fun answersAreNotEmpty() {
-        assertTrue(pipAnswerNow(facts()).isNotBlank())
-        assertTrue(pipAnswerHow(facts()).contains("Water"))
-    }
-
-    @Test fun actedTopicsGainPriority() {
-        val f = facts(frog = "Study", done = false, water = 0, active = null).copy(hour = 15)
-        val base = pipCandidates(f).filter { it.score >= 55 }
-        assertTrue(base.map { it.topic }.contains(PipTopic.Frog))
-        val boosted = pickPip(f, 0, emptyMap(), emptyMap(), System.currentTimeMillis(), mapOf(PipTopic.Water.name to 5L))
-        assertTrue(boosted.score > 0)
+    @Test fun nightTalksAboutSleep() {
+        assertTrue(pipMessage(facts(hour = 1)).text.contains("Sleep", ignoreCase = true))
     }
 }
