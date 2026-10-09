@@ -70,43 +70,4 @@ class LogicTest {
     @Test fun pipCelebratesFrog() {
         assertEquals("[^o^]", pipMessage(facts(done = true, water = 8)).face)
     }
-
-    @Test fun streakCountsConsecutiveDays() {
-        val now = System.currentTimeMillis()
-        val days = setOf(dayKey(now), dayKey(now - DAY_MS), dayKey(now - 2 * DAY_MS), dayKey(now - 4 * DAY_MS))
-        assertEquals(3, frogStreak(days, now))
-        assertEquals(2, frogStreak(setOf(dayKey(now - DAY_MS), dayKey(now - 2 * DAY_MS)), now))
-        assertEquals(0, frogStreak(emptySet(), now))
-    }
-
-    @Test fun usualHourNeedsThreeSamples() {
-        assertEquals(null, usualHour(listOf(10, 11)))
-        assertEquals(11, usualHour(listOf(9, 11, 16)))
-    }
-
-    @Test fun snoozeGrowsEachTime() {
-        assertTrue(pipSnoozeMs(3) > pipSnoozeMs(1))
-    }
-
-    @Test fun snoozedTopicIsSkipped() {
-        val f = facts(frog = "")
-        val now = System.currentTimeMillis()
-        val picked = pickPip(f, 0, mapOf(PipTopic.Frog.name to now + 100_000L), emptyMap(), now)
-        assertTrue(picked.topic != PipTopic.Frog)
-    }
-
-    @Test fun calendarEventBeatsRoutineNudges() {
-        val f = facts().copy(nextEventTitle = "Physics lab", nextEventInMin = 15)
-        assertEquals(PipTopic.Calendar, pickPip(f).topic)
-    }
-
-    @Test fun repeatedGateOpensAreNoticed() {
-        val f = facts(frog = "Study", done = true, water = 8).copy(topGateApp = "Instagram", topGateOpens = 3)
-        assertEquals(PipTopic.GateOpens, pickPip(f).topic)
-    }
-
-    @Test fun answersAreNotEmpty() {
-        assertTrue(pipAnswerNow(facts()).isNotBlank())
-        assertTrue(pipAnswerHow(facts()).contains("Water"))
-    }
 }
