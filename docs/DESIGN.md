@@ -52,7 +52,7 @@ Known limits: the gate only guards gated apps opened from this launcher (Android
 | Evening shutdown | Built | Review the day, set tomorrow's frog |
 | Weekly review | Built | Screen time by day, frogs eaten, gates backed out of |
 | Welcome | Built | Meet Pip, pick gated apps, first frog, theme |
-| Settings | Built | Appearance (five themes: Auto, Light, Dark, Pen blue, Midnight, on their own Themes screen), rules, gate, focus, apps, Pip, permissions, data |
+| Settings | Built | Appearance (**Vibes**: ready-made looks (Classic, Lock In, Soft Study, Dark Academia, Night Owl) that set colours, accent, clock face, Home app layout and how Pip talks. Every part can be changed and saved as your own Vibe. A Vibe never changes gate rules), rules, gate, focus, apps, Pip, permissions, data |
 | Gated apps, Home apps | Built | Pickers for which apps are gated and which six sit on Home |
 
 ## The frog

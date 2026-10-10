@@ -115,4 +115,32 @@ class LogicTest {
     @Test fun nightTalksAboutSleep() {
         assertTrue(pipMessage(facts(hour = 1)).text.contains("Sleep", ignoreCase = true))
     }
+
+    @Test fun everyToneSpeaksAtEveryHourAndOnlySaysMorningInTheMorning() {
+        for (tone in PipTone.entries) {
+            for (h in 0..23) {
+                val m = pipMessage(facts(hour = h, frog = "Study").copy(tone = tone))
+                assertTrue("$tone hour $h", m.text.isNotBlank())
+                if (h !in 5..11) assertTrue("$tone hour $h: ${m.text}", !m.text.contains("morning", ignoreCase = true))
+            }
+        }
+    }
+
+    @Test fun tonesSoundDifferent() {
+        val f = facts(hour = 14, frog = "Study")
+        val texts = PipTone.entries.map { pipMessage(f.copy(tone = it)).text }.toSet()
+        assertEquals(3, texts.size)
+    }
+
+    @Test fun everyToneKeepsTheSameActions() {
+        val f = facts(hour = 14, frog = "Study")
+        val actions = PipTone.entries.map { pipMessage(f.copy(tone = it)).action }.toSet()
+        assertEquals(setOf(PipAction.Focus), actions)
+    }
+
+    @Test fun presetVibesAreUniqueAndComplete() {
+        assertEquals(PRESET_VIBES.size, PRESET_VIBES.map { it.id }.toSet().size)
+        assertEquals(PRESET_VIBES.size, PRESET_VIBES.map { it.look }.toSet().size)
+        assertEquals(DEFAULT_LOOK, PRESET_VIBES.first().look)
+    }
 }

@@ -41,6 +41,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.data.AppEntry
+import com.example.productivitylauncher.data.ClockFace
+import com.example.productivitylauncher.data.HomeLayout
 import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.formatMillis
 import com.example.productivitylauncher.data.isDndOn
@@ -97,6 +99,7 @@ fun HomeScreen(
                 now,
                 Modifier.semantics { contentDescription = "Clock. Opens settings." }.clickableRole({ nav.go(Route.Settings) }),
                 diameter = 124.dp,
+                face = state.look.clock,
             )
             Row(Modifier.padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 AppText(day, size = 22.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.6).sp)
@@ -125,8 +128,21 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             val shown = state.homeApps.mapNotNull { state.appByPackage(it) }
-            shown.forEach { app ->
-                AppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
+            when (state.look.layout) {
+                HomeLayout.Cards -> shown.forEach { app ->
+                    AppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
+                }
+                HomeLayout.Text -> shown.forEach { app ->
+                    TextAppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
+                }
+                HomeLayout.Grid -> shown.chunked(2).forEach { pair ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        pair.forEach { app ->
+                            GridAppTile(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) }, modifier = Modifier.weight(1f))
+                        }
+                        if (pair.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
             }
             if (shown.size < 6) {
                 CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 16.dp), onClick = { nav.go(Route.HomePicker) }) {
@@ -178,6 +194,42 @@ private fun AppRow(app: AppEntry, gated: Boolean, onClick: () -> Unit) {
                 color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
             )
             if (gated) GatedTag()
+        }
+    }
+}
+
+/** Text layout: just the app name, big, with no card around it. */
+@Composable
+private fun TextAppRow(app: AppEntry, gated: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickableRole(onClick).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        AppText(
+            app.label, Modifier.weight(1f, fill = false), size = 26.sp, weight = if (gated) FontWeight.SemiBold else FontWeight.Medium,
+            letterSpacing = (-0.6).sp, color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
+        )
+        if (gated) GatedTag()
+    }
+}
+
+/** Grid layout: two tiles per row, badge on top and name below. */
+@Composable
+private fun GridAppTile(app: AppEntry, gated: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    CeramicCard(
+        modifier = modifier,
+        shape = RadiusMd,
+        color = if (gated) AppColors.gateSoft else AppColors.card,
+        padding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+        onClick = onClick,
+    ) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            AppBadge(com.example.productivitylauncher.data.letterOf(app.label), gated, size = 48.dp)
+            AppText(
+                app.label, size = 16.sp, weight = if (gated) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
+            )
         }
     }
 }
@@ -236,9 +288,22 @@ private fun DockButton(ic: Ic, description: String, active: Boolean, onClick: ()
     }
 }
 
-/** The round clock. */
+/** The round clock, drawn in one of four faces. */
 @Composable
-fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.compose.ui.unit.Dp = 76.dp) {
+fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.compose.ui.unit.Dp = 76.dp, face: ClockFace = ClockFace.Classic) {
+    val shell = modifier
+        .size(diameter)
+        .shadow(4.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+        .background(AppColors.card, CircleShape)
+    if (face == ClockFace.Digital) {
+        Box(shell, contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                AppText(SimpleDateFormat("h:mm", Locale.getDefault()).format(now), size = (diameter.value * 0.3f).sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
+                AppText(SimpleDateFormat("a", Locale.getDefault()).format(now).uppercase(), size = (diameter.value * 0.095f).sp, weight = FontWeight.SemiBold, color = AppColors.muted, letterSpacing = 1.5.sp)
+            }
+        }
+        return
+    }
     val cal = Calendar.getInstance().apply { time = now }
     val minutes = cal.get(Calendar.MINUTE) + cal.get(Calendar.SECOND) / 60f
     val hours = (cal.get(Calendar.HOUR) % 12) + minutes / 60f
@@ -247,47 +312,50 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.com
     val dot = AppColors.gate
     val muted = AppColors.muted
     val tick = AppColors.dot
-    val face = AppColors.card
-    Box(
-        modifier
-            .size(diameter)
-            .shadow(4.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
-            .background(AppColors.card, CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
+    val faceColor = AppColors.card
+    Box(shell, contentAlignment = Alignment.Center) {
         val measurer = rememberTextMeasurer()
-        val numeralStyle = TextStyle(color = AppColors.muted, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = (diameter.value * 0.095f).sp)
+        val numeralStyle = TextStyle(color = muted, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = (diameter.value * (if (face == ClockFace.Numbers) 0.085f else 0.095f)).sp)
         Canvas(Modifier.size(diameter)) {
             val c = Offset(size.width / 2, size.height / 2)
             val outer = size.minDimension / 2 - 6.dp.toPx()
-            drawCircle(ring, radius = outer, center = c, style = Stroke(width = 2.dp.toPx()))
-            // Sixty tiny marks, a longer one for each hour, a bold one at 12, 3, 6 and 9.
-            for (i in 0 until 60) {
-                val a = Math.toRadians((i * 6 - 90).toDouble())
-                val hour = i % 5 == 0
-                val quarter = i % 15 == 0
-                val len = if (quarter) 7.dp.toPx() else if (hour) 5.dp.toPx() else 2.dp.toPx()
-                val from = Offset(c.x + ((outer - len) * Math.cos(a)).toFloat(), c.y + ((outer - len) * Math.sin(a)).toFloat())
-                val to = Offset(c.x + (outer * Math.cos(a)).toFloat(), c.y + (outer * Math.sin(a)).toFloat())
-                drawLine(if (quarter) ink else if (hour) muted else tick, from, to, strokeWidth = if (quarter) 2.5.dp.toPx() else if (hour) 1.5.dp.toPx() else 1.dp.toPx(), cap = StrokeCap.Round)
+            drawCircle(ring, radius = outer, center = c, style = Stroke(width = (if (face == ClockFace.Minimal) 4.dp else 2.dp).toPx()))
+            if (face == ClockFace.Classic) {
+                // Sixty tiny marks, a longer one for each hour, a bold one at 12, 3, 6 and 9.
+                for (i in 0 until 60) {
+                    val a = Math.toRadians((i * 6 - 90).toDouble())
+                    val hour = i % 5 == 0
+                    val quarter = i % 15 == 0
+                    val len = if (quarter) 7.dp.toPx() else if (hour) 5.dp.toPx() else 2.dp.toPx()
+                    val from = Offset(c.x + ((outer - len) * Math.cos(a)).toFloat(), c.y + ((outer - len) * Math.sin(a)).toFloat())
+                    val to = Offset(c.x + (outer * Math.cos(a)).toFloat(), c.y + (outer * Math.sin(a)).toFloat())
+                    drawLine(if (quarter) ink else if (hour) muted else tick, from, to, strokeWidth = if (quarter) 2.5.dp.toPx() else if (hour) 1.5.dp.toPx() else 1.dp.toPx(), cap = StrokeCap.Round)
+                }
             }
-            // Numerals at 12, 3, 6 and 9.
-            val numeralRadius = outer - 17.dp.toPx()
-            listOf("12" to 0, "3" to 90, "6" to 180, "9" to 270).forEach { (label, deg) ->
+            // Numerals: 12, 3, 6 and 9 on Classic, all twelve on Numbers.
+            val numerals = when (face) {
+                ClockFace.Classic -> listOf("12" to 0, "3" to 90, "6" to 180, "9" to 270)
+                ClockFace.Numbers -> (1..12).map { it.toString() to it * 30 }
+                else -> emptyList()
+            }
+            val numeralRadius = outer - (if (face == ClockFace.Numbers) 13.dp else 17.dp).toPx()
+            numerals.forEach { (label, deg) ->
                 val a = Math.toRadians((deg - 90).toDouble())
                 val m = measurer.measure(label, numeralStyle)
                 val p = Offset(c.x + (numeralRadius * Math.cos(a)).toFloat() - m.size.width / 2f, c.y + (numeralRadius * Math.sin(a)).toFloat() - m.size.height / 2f)
                 drawText(m, topLeft = p)
             }
-            fun hand(angleDeg: Float, length: Float, width: Float, color: Color = ink) {
+            fun hand(angleDeg: Float, length: Float, width: Float) {
                 val a = Math.toRadians((angleDeg - 90).toDouble())
                 val end = Offset(c.x + (length * Math.cos(a)).toFloat(), c.y + (length * Math.sin(a)).toFloat())
-                drawLine(color, c, end, strokeWidth = width, cap = StrokeCap.Round)
+                drawLine(ink, c, end, strokeWidth = width, cap = StrokeCap.Round)
             }
-            hand(hours * 30f, outer * 0.45f, 5.dp.toPx())
-            hand(minutes * 6f, outer * 0.72f, 3.dp.toPx())
+            val long = if (face == ClockFace.Numbers) 0.6f else 0.72f
+            val short = if (face == ClockFace.Numbers) 0.38f else 0.45f
+            hand(hours * 30f, outer * short, 5.dp.toPx())
+            hand(minutes * 6f, outer * long, 3.dp.toPx())
             drawCircle(dot, radius = 4.5.dp.toPx(), center = c)
-            drawCircle(face, radius = 1.5.dp.toPx(), center = c)
+            drawCircle(faceColor, radius = 1.5.dp.toPx(), center = c)
         }
     }
 }

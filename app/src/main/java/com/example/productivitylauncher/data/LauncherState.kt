@@ -49,6 +49,7 @@ class LauncherState(context: Context) {
         dumpCount = dumps.size,
         focusActive = focusActive,
         frogJustDone = frogDone && System.currentTimeMillis() - frogDoneAt < 45 * 60_000L,
+        tone = look.tone,
     )
 
     // ------------------------------------------------------------ apps
@@ -70,10 +71,82 @@ class LauncherState(context: Context) {
 
     fun finishOnboarding() { onboarded = true; save { putBoolean("onboarded", true) } }
 
-    var themeMode by mutableStateOf(runCatching { ThemeMode.valueOf(str("theme", "Auto")) }.getOrDefault(ThemeMode.Auto))
+    // ------------------------------------------------------------ Vibe (the look and feel)
+
+    /** What the launcher looks like and how Pip talks right now. Saved as separate fields. */
+    var look by mutableStateOf(readLook())
         private set
 
-    fun setTheme(m: ThemeMode) { themeMode = m; save { putString("theme", m.name) } }
+    private fun <E : Enum<E>> enumOf(values: Array<E>, name: String, default: E): E =
+        values.firstOrNull { it.name == name } ?: default
+
+    private fun readLook() = Look(
+        theme = enumOf(ThemeMode.entries.toTypedArray(), str("theme", "Auto"), DEFAULT_LOOK.theme),
+        accent = enumOf(Accent.entries.toTypedArray(), str("accent", "Default"), DEFAULT_LOOK.accent),
+        clock = enumOf(ClockFace.entries.toTypedArray(), str("clock_face", "Classic"), DEFAULT_LOOK.clock),
+        layout = enumOf(HomeLayout.entries.toTypedArray(), str("home_layout", "Cards"), DEFAULT_LOOK.layout),
+        tone = enumOf(PipTone.entries.toTypedArray(), str("pip_tone", "Friendly"), DEFAULT_LOOK.tone),
+    )
+
+    fun updateLook(l: Look) {
+        look = l
+        save {
+            putString("theme", l.theme.name)
+            putString("accent", l.accent.name)
+            putString("clock_face", l.clock.name)
+            putString("home_layout", l.layout.name)
+            putString("pip_tone", l.tone.name)
+        }
+    }
+
+    var customVibes by mutableStateOf(readCustomVibes())
+        private set
+
+    private fun readCustomVibes(): List<Vibe> = runCatching {
+        val arr = JSONArray(str("custom_vibes", "[]"))
+        (0 until arr.length()).map { i ->
+            val o = arr.getJSONObject(i)
+            Vibe(
+                id = o.getString("id"),
+                name = o.getString("name"),
+                tagline = "Made by you",
+                look = Look(
+                    enumOf(ThemeMode.entries.toTypedArray(), o.optString("theme"), DEFAULT_LOOK.theme),
+                    enumOf(Accent.entries.toTypedArray(), o.optString("accent"), DEFAULT_LOOK.accent),
+                    enumOf(ClockFace.entries.toTypedArray(), o.optString("clock"), DEFAULT_LOOK.clock),
+                    enumOf(HomeLayout.entries.toTypedArray(), o.optString("layout"), DEFAULT_LOOK.layout),
+                    enumOf(PipTone.entries.toTypedArray(), o.optString("tone"), DEFAULT_LOOK.tone),
+                ),
+                custom = true,
+            )
+        }
+    }.getOrDefault(emptyList())
+
+    private fun writeCustomVibes(list: List<Vibe>) {
+        customVibes = list
+        val arr = JSONArray()
+        list.forEach { v ->
+            arr.put(
+                JSONObject().put("id", v.id).put("name", v.name)
+                    .put("theme", v.look.theme.name).put("accent", v.look.accent.name)
+                    .put("clock", v.look.clock.name).put("layout", v.look.layout.name).put("tone", v.look.tone.name),
+            )
+        }
+        save { putString("custom_vibes", arr.toString()) }
+    }
+
+    /** The Vibe the current look matches, or null when the look has been changed by hand. */
+    val activeVibe: Vibe? get() = (PRESET_VIBES + customVibes).firstOrNull { it.look == look }
+
+    fun saveVibe(name: String) {
+        val n = name.trim().take(24)
+        if (n.isBlank()) return
+        writeCustomVibes(customVibes + Vibe(System.nanoTime().toString(), n, "Made by you", look, custom = true))
+    }
+
+    fun deleteVibe(id: String) = writeCustomVibes(customVibes.filterNot { it.id == id })
+
+    val themeMode: ThemeMode get() = look.theme
 
     var pipOn by mutableStateOf(bool("pip_on", true))
         private set
@@ -633,6 +706,6 @@ class LauncherState(context: Context) {
         focusEnd = 0L; focusDnd = true; focusLockGated = true
         eveningHour = 21; eveningDoneDay = ""; screenGoalMin = 180
         widgets = DEFAULT_WIDGETS; widgetHeights = emptyMap()
-        themeMode = ThemeMode.Auto; pipOn = true; onboarded = false
+        look = DEFAULT_LOOK; customVibes = emptyList(); pipOn = true; onboarded = false
     }
 }
