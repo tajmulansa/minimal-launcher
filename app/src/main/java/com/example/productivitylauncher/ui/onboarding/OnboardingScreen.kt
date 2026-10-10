@@ -51,7 +51,8 @@ import com.example.productivitylauncher.ui.components.BtnKind
 import com.example.productivitylauncher.ui.components.CButton
 import com.example.productivitylauncher.ui.components.TextLink
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.components.ThemePicker
+import com.example.productivitylauncher.ui.components.VibeCard
+import com.example.productivitylauncher.data.PRESET_VIBES
 
 /** First run: meet Pip, pick gated apps, pick six Home apps, set the first frog, choose a theme. */
 @Composable
@@ -96,10 +97,10 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                     AppField(frog, { frog = it }, "e.g. Finish chemistry chapter 4", fill = AppColors.card)
                 }
                 5 -> PermissionsStep(state, Modifier.weight(1f))
-                else -> Column(Modifier.weight(1f).padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    AppText("Make it yours", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
-                    AppText("Choose a look. You can change it any time in Settings.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
-                    ThemePicker(state.themeMode, { state.setTheme(it) })
+                else -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    AppText("Pick your vibe", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
+                    AppText("A vibe sets the colours, the clock, how your apps look and how Pip talks. Change any part later in Settings.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(bottom = 8.dp))
+                    PRESET_VIBES.forEach { v -> VibeCard(v, state.activeVibe?.id == v.id, { state.updateLook(v.look) }) }
                 }
             }
         }

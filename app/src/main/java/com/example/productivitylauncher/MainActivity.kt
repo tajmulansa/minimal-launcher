@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
         state = LauncherState(this)
         widgetHost = WidgetHost(this)
         setContent {
-            val palette = resolvePalette(state.themeMode)
+            val palette = resolvePalette(state.look.theme, state.look.accent)
             val dark = palette.dark
             // Keep the system bar icons readable on both themes, including a manual theme choice.
             DisposableEffect(dark) {

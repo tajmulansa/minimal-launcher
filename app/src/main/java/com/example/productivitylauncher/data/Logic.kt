@@ -109,11 +109,25 @@ fun dayPartOf(hour: Int): DayPart = when (hour) {
     else -> DayPart.Night
 }
 
-fun greetingFor(part: DayPart): String = when (part) {
-    DayPart.Morning -> "Good morning!"
-    DayPart.Afternoon -> "Good afternoon!"
-    DayPart.Evening -> "Good evening!"
-    DayPart.Night -> "Hey, still up?"
+fun greetingFor(part: DayPart, tone: PipTone = PipTone.Friendly): String = when (tone) {
+    PipTone.Friendly -> when (part) {
+        DayPart.Morning -> "Good morning!"
+        DayPart.Afternoon -> "Good afternoon!"
+        DayPart.Evening -> "Good evening!"
+        DayPart.Night -> "Hey, still up?"
+    }
+    PipTone.Hype -> when (part) {
+        DayPart.Morning -> "Good morning, let's go!"
+        DayPart.Afternoon -> "Good afternoon, keep the energy up!"
+        DayPart.Evening -> "Good evening, you're still in this!"
+        DayPart.Night -> "Hey, night owl!"
+    }
+    PipTone.Teasing -> when (part) {
+        DayPart.Morning -> "Morning. Look who's up."
+        DayPart.Afternoon -> "Afternoon. Still alive?"
+        DayPart.Evening -> "Evening. The day is almost over, no pressure."
+        DayPart.Night -> "Still up? Bold of you."
+    }
 }
 
 data class PipMessage(
@@ -140,6 +154,8 @@ data class PipFacts(
     val focusActive: Boolean,
     /** True for 45 minutes after the frog was marked eaten. */
     val frogJustDone: Boolean = false,
+    /** How Pip talks. Chosen in the Vibe. */
+    val tone: PipTone = PipTone.Friendly,
 )
 
 private fun pick(options: List<String>, variant: Int): String = options[Math.floorMod(variant, options.size)]
@@ -149,74 +165,223 @@ private fun waterBehind(f: PipFacts): Boolean =
 
 fun pipMessage(f: PipFacts, variant: Int = 0): PipMessage {
     val part = dayPartOf(f.hour)
-    val hello = greetingFor(part)
+    val tone = f.tone
+    val hello = greetingFor(part, tone)
+    // One line per tone: friendly, hype, teasing.
+    fun say(friendly: String, hype: String, teasing: String) = when (tone) {
+        PipTone.Friendly -> friendly
+        PipTone.Hype -> hype
+        PipTone.Teasing -> teasing
+    }
+    fun sayAny(friendly: List<String>, hype: List<String>, teasing: List<String>) = pick(
+        when (tone) { PipTone.Friendly -> friendly; PipTone.Hype -> hype; PipTone.Teasing -> teasing }, variant,
+    )
 
     // 1. Focus: stay quiet and encourage.
     if (f.focusActive) {
-        return PipMessage("[-_-]", pick(listOf("Shh. I'm quiet while you focus. You've got this.", "Deep work. I'll be here when you're done."), variant), null, PipAction.None, false)
+        return PipMessage(
+            "[-_-]",
+            sayAny(
+                listOf("Shh. I'm quiet while you focus. You've got this.", "Deep work. I'll be here when you're done."),
+                listOf("Locked in. Go go go.", "Deep work mode. Crush it."),
+                listOf("Shh. Phone down. I'll judge silently.", "Focus time. I'll behave, you behave."),
+            ),
+            null, PipAction.None, false,
+        )
     }
 
     // 2. Just ate the frog: appreciate it, then look after yourself.
     if (f.frogJustDone) {
         return if (waterBehind(f) || f.water == 0) {
-            PipMessage("[^o^]", "You ate the frog! I'm really proud of you. Reward yourself: drink a glass of water and stretch for a minute.", "Drank one", PipAction.Water, true)
+            PipMessage(
+                "[^o^]",
+                say(
+                    "You ate the frog! I'm really proud of you. Reward yourself: drink a glass of water and stretch for a minute.",
+                    "FROG EATEN! Huge. Go drink a glass of water and stretch, you earned it.",
+                    "Oh wow, you actually ate the frog. Proud of you. Now drink some water, hydrate, legend.",
+                ),
+                "Drank one", PipAction.Water, true,
+            )
         } else {
-            PipMessage("[^o^]", "You ate the frog! Amazing work. You've earned a 5 minute break, stand up and stretch.", null, PipAction.None, true)
+            PipMessage(
+                "[^o^]",
+                say(
+                    "You ate the frog! Amazing work. You've earned a 5 minute break, stand up and stretch.",
+                    "FROG EATEN! Massive. Take a 5 minute break, stand up and stretch.",
+                    "Frog eaten. Okay, I'm impressed. Take 5 minutes, stand up, stretch like a cat.",
+                ),
+                null, PipAction.None, true,
+            )
         }
     }
 
     // 3. Long phone stretch.
     if ((f.activeMin45 ?: 0) >= 40) {
-        return PipMessage("[o_o]", "You've been on your phone for a long stretch. Stand up, look far away for a minute, then pick one thing.", null, PipAction.None, true)
+        return PipMessage(
+            "[o_o]",
+            say(
+                "You've been on your phone for a long stretch. Stand up, look far away for a minute, then pick one thing.",
+                "Long scroll alert! Stand up, look far away for a minute, then smash one thing.",
+                "That was a long scroll. Stand up, look at something far away, then pick one thing. Just one.",
+            ),
+            null, PipAction.None, true,
+        )
     }
 
     // 4. Time to wind down, or time to sleep.
     if (f.hour >= f.eveningHour && !f.eveningDone && f.hour < 23) {
-        return PipMessage("[-_-]", "Good evening! The day is nearly over. Let's close it and pick tomorrow's frog.", "Close the day", PipAction.Evening, true)
+        return PipMessage(
+            "[-_-]",
+            say(
+                "Good evening! The day is nearly over. Let's close it and pick tomorrow's frog.",
+                "The day is almost done. Let's close it strong and pick tomorrow's frog.",
+                "The day is almost over. Close it, pick tomorrow's frog, and go be a person.",
+            ),
+            "Close the day", PipAction.Evening, true,
+        )
     }
     if (f.hour >= 23 || f.hour < 5) {
-        return PipMessage("[-_-]", "It's late. Sleep helps you remember what you studied. Put the phone down and rest well.", null, PipAction.None, true)
+        return PipMessage(
+            "[-_-]",
+            say(
+                "It's late. Sleep helps you remember what you studied. Put the phone down and rest well.",
+                "It's late. Sleep is part of the plan, champions rest. Phone down.",
+                "It's late. Your notes will still be there tomorrow. Sleep, it's literally free.",
+            ),
+            null, PipAction.None, true,
+        )
     }
 
     // 5. The frog.
     if (f.frog.isBlank()) {
         return if (part == DayPart.Evening) {
-            PipMessage("[^_^]", "$hello What will tomorrow's frog be? Pick it tonight and you can start fast.", "Close the day", PipAction.Evening, true)
+            PipMessage(
+                "[^_^]",
+                say(
+                    "$hello What will tomorrow's frog be? Pick it tonight and you can start fast.",
+                    "$hello Pick tomorrow's frog tonight and start fast!",
+                    "$hello Pick tomorrow's frog now so future you doesn't have to think.",
+                ),
+                "Close the day", PipAction.Evening, true,
+            )
         } else {
-            PipMessage("[^_^]", "$hello What's the one thing that matters most today? Set your frog.", "Set my frog", PipAction.SetFrog, true)
+            PipMessage(
+                "[^_^]",
+                say(
+                    "$hello What's the one thing that matters most today? Set your frog.",
+                    "$hello What's the big one today? Set your frog and go get it!",
+                    "$hello What's the one thing you keep avoiding? That's your frog.",
+                ),
+                "Set my frog", PipAction.SetFrog, true,
+            )
         }
     }
     if (!f.frogDone) {
         return when (part) {
-            DayPart.Morning -> PipMessage("[^_^]", "$hello Your frog today: \"${f.frog}\". Start with just two minutes.", "Start focus", PipAction.Focus, true)
-            DayPart.Afternoon -> PipMessage("[>_<]", "$hello Your frog \"${f.frog}\" is still waiting. Two minutes to start?", "Start focus", PipAction.Focus, true)
-            else -> PipMessage("[>_<]", "$hello \"${f.frog}\" is still not done. A short focus session now, or tomorrow is fine too.", "Start focus", PipAction.Focus, true)
+            DayPart.Morning -> PipMessage(
+                "[^_^]",
+                say(
+                    "$hello Your frog today: \"${f.frog}\". Start with just two minutes.",
+                    "$hello Your frog: \"${f.frog}\". Start now, two minutes, let's go!",
+                    "$hello Your frog \"${f.frog}\" is not going to eat itself. Just two minutes.",
+                ),
+                "Start focus", PipAction.Focus, true,
+            )
+            DayPart.Afternoon -> PipMessage(
+                "[>_<]",
+                say(
+                    "$hello Your frog \"${f.frog}\" is still waiting. Two minutes to start?",
+                    "$hello \"${f.frog}\" is waiting. Two minutes and you're rolling!",
+                    "$hello \"${f.frog}\" is still sitting there. Two minutes? I'll wait.",
+                ),
+                "Start focus", PipAction.Focus, true,
+            )
+            else -> PipMessage(
+                "[>_<]",
+                say(
+                    "$hello \"${f.frog}\" is still not done. A short focus session now, or tomorrow is fine too.",
+                    "$hello \"${f.frog}\" isn't done yet. A short focus now and you win the day!",
+                    "$hello \"${f.frog}\" still isn't done. Short focus now, or forgive yourself and try tomorrow.",
+                ),
+                "Start focus", PipAction.Focus, true,
+            )
         }
     }
 
     // 6. Water.
     if (waterBehind(f) || (part == DayPart.Morning && f.water == 0)) {
-        return PipMessage("[^o^]", if (part == DayPart.Morning && f.water == 0) "$hello Start the day with a glass of water." else "Time for some water. A glass now keeps the headache away.", "Drank one", PipAction.Water, true)
+        val text = if (part == DayPart.Morning && f.water == 0) {
+            say(
+                "$hello Start the day with a glass of water.",
+                "$hello Glass of water first, then conquer.",
+                "$hello Water first. Coffee is not a hydration plan.",
+            )
+        } else {
+            say(
+                "Time for some water. A glass now keeps the headache away.",
+                "Water break! One glass and you're topped up.",
+                "Your water bottle is feeling ignored. One glass?",
+            )
+        }
+        return PipMessage("[^o^]", text, "Drank one", PipAction.Water, true)
     }
 
     // 7. Gated apps almost used up.
     if (f.gatedMin != null && f.limitMin > 0 && f.gatedMin * 100 >= f.limitMin * 80L) {
-        return PipMessage("[o_o]", "Your gated apps are almost used up for today. Save the rest for something you'll enjoy.", null, PipAction.None, true)
+        return PipMessage(
+            "[o_o]",
+            say(
+                "Your gated apps are almost used up for today. Save the rest for something you'll enjoy.",
+                "Gated apps are almost used up. Save the rest, you've got goals!",
+                "Your gated apps are nearly out of time today. Spend the last bit wisely.",
+            ),
+            null, PipAction.None, true,
+        )
     }
 
     // 8. The frog is eaten: appreciate.
     if (f.frogDone) {
         val text = when (part) {
-            DayPart.Morning -> "$hello Your frog is already eaten. What a great start."
-            DayPart.Afternoon -> "$hello You ate your frog today. Be proud of that, and enjoy the rest of your day."
-            else -> "$hello You ate your frog today. Well done. Time to relax."
+            DayPart.Morning -> say(
+                "$hello Your frog is already eaten. What a great start.",
+                "$hello Frog already eaten. What a start!",
+                "$hello Frog already eaten? Show-off. Nice.",
+            )
+            DayPart.Afternoon -> say(
+                "$hello You ate your frog today. Be proud of that, and enjoy the rest of your day.",
+                "$hello Frog eaten today. Be proud, you crushed it.",
+                "$hello You ate your frog today. I'm not saying I'm proud, but I'm proud.",
+            )
+            else -> say(
+                "$hello You ate your frog today. Well done. Time to relax.",
+                "$hello Frog eaten. Great day. Now relax, you earned it.",
+                "$hello Frog eaten. You can relax now, you've earned it.",
+            )
         }
         return PipMessage("[^o^]", text, null, PipAction.None, false)
     }
 
     if (f.dumpCount > 0) {
-        return PipMessage("[^_^]", "You have ${f.dumpCount} thought${if (f.dumpCount == 1) "" else "s"} in your brain dump. Sort them when you're ready.", "Open it", PipAction.BrainDump, false)
+        val n = f.dumpCount
+        val s = if (n == 1) "" else "s"
+        return PipMessage(
+            "[^_^]",
+            say(
+                "You have $n thought$s in your brain dump. Sort them when you're ready.",
+                "You've got $n thought$s in your brain dump. Clear them out when you're ready!",
+                "$n thought$s living in your brain dump. They'd like to be sorted.",
+            ),
+            "Open it", PipAction.BrainDump, false,
+        )
     }
 
-    return PipMessage("[^_^]", "$hello " + pick(listOf("I'm here if you need a nudge.", "One small step is enough."), variant), null, PipAction.None, false)
+    return PipMessage(
+        "[^_^]",
+        "$hello " + sayAny(
+            listOf("I'm here if you need a nudge.", "One small step is enough."),
+            listOf("Ready when you are.", "One step. Then another."),
+            listOf("Nothing to nag about. Suspicious.", "All quiet. I'm just here being cute."),
+        ),
+        null, PipAction.None, false,
+    )
 }

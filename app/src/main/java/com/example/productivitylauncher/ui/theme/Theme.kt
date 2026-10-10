@@ -13,9 +13,10 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.example.productivitylauncher.R
+import com.example.productivitylauncher.data.Accent
 
 /** The Ceramic palette (see docs/DESIGN.md). Screens read colours only through [AppColors]. */
-class Palette(
+data class Palette(
     val phone: Color,
     val card: Color,
     val text: Color,
@@ -102,6 +103,24 @@ val MidnightPalette = Palette(
     dark = true,
 )
 
+/** Dark brown and old gold, like a library at night. */
+val AcademiaPalette = Palette(
+    phone = Color(0xFF17130F),
+    card = Color(0xFF221C16),
+    text = Color(0xFFEADFC8),
+    muted = Color(0xFFA6987F),
+    focus = Color(0xFFC9A24B),
+    onFocus = Color(0xFF1A1407),
+    gate = Color(0xFFE0846F),
+    gateSoft = Color(0xFF3A2520),
+    onGate = Color(0xFF2A1511),
+    line = Color(0xFF2E261D),
+    dot = Color(0xFF4A3F31),
+    primary = Color(0xFFEADFC8),
+    onPrimary = Color(0xFF17130F),
+    dark = true,
+)
+
 val LocalPalette = staticCompositionLocalOf { LightPalette }
 
 /** Short accessors, e.g. AppColors.text. */
@@ -136,6 +155,7 @@ enum class ThemeMode(val label: String) {
     Dark("Dark"),
     PenBlue("Pen blue"),
     Midnight("Midnight"),
+    Academia("Academia"),
 }
 
 /** The palette for a theme, or null for Auto (which depends on the phone). */
@@ -145,11 +165,16 @@ fun paletteOf(mode: ThemeMode): Palette? = when (mode) {
     ThemeMode.Dark -> DarkPalette
     ThemeMode.PenBlue -> PenBluePalette
     ThemeMode.Midnight -> MidnightPalette
+    ThemeMode.Academia -> AcademiaPalette
 }
 
+/** The palette for a theme, with the accent colour swapped in when one is chosen. */
 @Composable
-fun resolvePalette(mode: ThemeMode): Palette =
-    paletteOf(mode) ?: if (isSystemInDarkTheme()) DarkPalette else LightPalette
+fun resolvePalette(mode: ThemeMode, accent: Accent = Accent.Default): Palette {
+    val base = paletteOf(mode) ?: if (isSystemInDarkTheme()) DarkPalette else LightPalette
+    val c = (if (base.dark) accent.dark else accent.light) ?: return base
+    return base.copy(focus = Color(c), onFocus = if (base.dark) Color(0xFF101418) else Color.White)
+}
 
 @Composable
 fun LauncherTheme(palette: Palette, content: @Composable () -> Unit) {

@@ -44,7 +44,6 @@ import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.ui.components.Toggle
 import com.example.productivitylauncher.ui.components.ValueChevron
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.components.ThemePicker
 
 @Composable
 fun SettingsScreen(state: LauncherState, nav: Nav) {
@@ -65,7 +64,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             SettingsGroup("Appearance") {
-                SettingRow("Theme", subtitle = state.themeMode.label, onClick = { nav.go(Route.Themes) }) {
+                SettingRow("Vibe", subtitle = state.activeVibe?.name ?: "Custom", onClick = { nav.go(Route.Vibes) }) {
                     AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp)
                 }
                 Divider()
