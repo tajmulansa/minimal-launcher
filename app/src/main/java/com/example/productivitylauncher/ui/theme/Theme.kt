@@ -66,6 +66,78 @@ val DarkPalette = Palette(
     dark = true,
 )
 
+/** Paper white with blue pen ink. */
+val PaperPalette = Palette(
+    phone = Color(0xFFFAF9F5),
+    card = Color(0xFFFFFFFF),
+    text = Color(0xFF1C2B4B),
+    muted = Color(0xFF5E6A86),
+    focus = Color(0xFF2548B5),
+    onFocus = Color(0xFFFFFFFF),
+    gate = Color(0xFFB4412F),
+    gateSoft = Color(0xFFFBEAE6),
+    onGate = Color(0xFFFFFFFF),
+    line = Color(0xFFE6E7EC),
+    dot = Color(0xFFCFD3DE),
+    primary = Color(0xFF1C2B4B),
+    onPrimary = Color(0xFFFFFFFF),
+    dark = false,
+)
+
+/** A pale blue notebook page, written on with a blue pen. */
+val PenBluePalette = Palette(
+    phone = Color(0xFFE9F0FB),
+    card = Color(0xFFF7FAFF),
+    text = Color(0xFF14284F),
+    muted = Color(0xFF51648C),
+    focus = Color(0xFF1F4FD1),
+    onFocus = Color(0xFFFFFFFF),
+    gate = Color(0xFFB8452F),
+    gateSoft = Color(0xFFFBE9E4),
+    onGate = Color(0xFFFFFFFF),
+    line = Color(0xFFD3DEF2),
+    dot = Color(0xFFB5C5E4),
+    primary = Color(0xFF14284F),
+    onPrimary = Color(0xFFFFFFFF),
+    dark = false,
+)
+
+/** Dark navy, like ink at night. */
+val MidnightPalette = Palette(
+    phone = Color(0xFF0B1020),
+    card = Color(0xFF141B30),
+    text = Color(0xFFE6EAF5),
+    muted = Color(0xFF8F9ABB),
+    focus = Color(0xFF7FA2FF),
+    onFocus = Color(0xFF0B1530),
+    gate = Color(0xFFFF8C7A),
+    gateSoft = Color(0xFF3A2025),
+    onGate = Color(0xFF2A1511),
+    line = Color(0xFF222B45),
+    dot = Color(0xFF34406A),
+    primary = Color(0xFFE6EAF5),
+    onPrimary = Color(0xFF0B1020),
+    dark = true,
+)
+
+/** Old yellowed paper and brown ink. */
+val SepiaPalette = Palette(
+    phone = Color(0xFFF3E9D6),
+    card = Color(0xFFFBF4E6),
+    text = Color(0xFF3B2F22),
+    muted = Color(0xFF7A6A55),
+    focus = Color(0xFF8A5A2B),
+    onFocus = Color(0xFFFFFFFF),
+    gate = Color(0xFFB04A3A),
+    gateSoft = Color(0xFFF6E0D8),
+    onGate = Color(0xFFFFFFFF),
+    line = Color(0xFFE6D9C0),
+    dot = Color(0xFFD3C4A5),
+    primary = Color(0xFF3B2F22),
+    onPrimary = Color(0xFFFBF4E6),
+    dark = false,
+)
+
 val LocalPalette = staticCompositionLocalOf { LightPalette }
 
 /** Short accessors, e.g. AppColors.text. */
@@ -93,18 +165,36 @@ val Inter = FontFamily(
     Font(R.font.inter_bold, FontWeight.Bold),
 )
 
-/** Theme choice saved in settings. */
-enum class ThemeMode { Auto, Light, Dark }
+/** Theme choice saved in settings. Auto follows the phone's light or dark setting. */
+enum class ThemeMode(val label: String) {
+    Auto("Auto"),
+    Light("Light"),
+    Dark("Dark"),
+    Paper("Paper"),
+    PenBlue("Pen blue"),
+    Midnight("Midnight"),
+    Sepia("Sepia"),
+}
+
+/** The palette for a theme, or null for Auto (which depends on the phone). */
+fun paletteOf(mode: ThemeMode): Palette? = when (mode) {
+    ThemeMode.Auto -> null
+    ThemeMode.Light -> LightPalette
+    ThemeMode.Dark -> DarkPalette
+    ThemeMode.Paper -> PaperPalette
+    ThemeMode.PenBlue -> PenBluePalette
+    ThemeMode.Midnight -> MidnightPalette
+    ThemeMode.Sepia -> SepiaPalette
+}
 
 @Composable
-fun LauncherTheme(mode: ThemeMode, content: @Composable () -> Unit) {
-    val dark = when (mode) {
-        ThemeMode.Auto -> isSystemInDarkTheme()
-        ThemeMode.Light -> false
-        ThemeMode.Dark -> true
-    }
-    val p = if (dark) DarkPalette else LightPalette
-    val scheme = if (dark) {
+fun resolvePalette(mode: ThemeMode): Palette =
+    paletteOf(mode) ?: if (isSystemInDarkTheme()) DarkPalette else LightPalette
+
+@Composable
+fun LauncherTheme(palette: Palette, content: @Composable () -> Unit) {
+    val p = palette
+    val scheme = if (p.dark) {
         darkColorScheme(primary = p.primary, background = p.phone, surface = p.phone, onBackground = p.text, onSurface = p.text)
     } else {
         lightColorScheme(primary = p.primary, background = p.phone, surface = p.phone, onBackground = p.text, onSurface = p.text)

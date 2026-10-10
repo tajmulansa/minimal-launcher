@@ -11,7 +11,7 @@ A minimal, text-first Android launcher that helps students focus. It is built on
 
 Phones are designed to pull attention away from what matters. Most "focus" apps either block everything (and get uninstalled) or only report screen time (and change nothing). This launcher takes a middle path:
 
-- **One important task per day.** Not a to-do list, just a single "frog" (the idea from *Eat That Frog*). It sits at the top of the home screen.
+- **A normal to-do list with one frog.** Add as many tasks as you like, but mark just one as the day's "frog" (the idea from *Eat That Frog*). Check the frog first, then the other tasks unlock. It lives in the to-do widget, nowhere else.
 - **Friction where it counts.** Apps the *user* marks as distracting are slow to open. Work apps open in one tap.
 - **Gentle, never shaming.** A small text-face pet nudges the user based on what they are doing. It cheers wins and never punishes.
 - **Private by design.** No account, no ads, no analytics, no internet permission. Everything stays on the device.

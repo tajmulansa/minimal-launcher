@@ -36,14 +36,13 @@ import com.example.productivitylauncher.ui.Route
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.Divider
 import com.example.productivitylauncher.ui.components.PageHeader
-import com.example.productivitylauncher.ui.components.Segmented
 import com.example.productivitylauncher.ui.components.SettingRow
 import com.example.productivitylauncher.ui.components.SettingsGroup
 import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.ui.components.Toggle
 import com.example.productivitylauncher.ui.components.ValueChevron
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.theme.ThemeMode
+import com.example.productivitylauncher.ui.components.ThemePicker
 
 @Composable
 fun SettingsScreen(state: LauncherState, nav: Nav) {
@@ -65,12 +64,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
         ) {
             SettingsGroup("Appearance") {
                 SettingRow("Theme", Modifier.padding(bottom = 4.dp)) {}
-                Segmented(
-                    listOf("Auto", "Light", "Dark"),
-                    when (state.themeMode) { ThemeMode.Auto -> 0; ThemeMode.Light -> 1; ThemeMode.Dark -> 2 },
-                    { state.setTheme(ThemeMode.entries[it]) },
-                    Modifier.padding(bottom = 16.dp),
-                )
+                ThemePicker(state.themeMode, { state.setTheme(it) }, Modifier.padding(bottom = 16.dp))
                 Divider()
                 SettingRow("Pip", subtitle = "The little [^_^] helper on your Home and Widgets pages") {
                     Toggle(state.pipOn, { state.updatePipOn(it) }, "Show Pip")

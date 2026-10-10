@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -128,22 +130,68 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
                 }
             }
         } else {
-            val providers = remember { host.providers().sortedBy { it.loadLabel(context.packageManager).lowercase() } }
-            if (providers.isEmpty()) {
+            // One row per app. Tap an app to see the widgets it has, then add the one you want.
+            val groups = remember {
+                val pm = context.packageManager
+                host.providers()
+                    .groupBy { it.provider.packageName }
+                    .map { (pkg, list) ->
+                        val appLabel = runCatching { pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString() }.getOrDefault(pkg)
+                        AppWidgets(pkg, appLabel, list.sortedBy { it.loadLabel(pm).lowercase() })
+                    }
+                    .sortedBy { it.label.lowercase() }
+            }
+            var openPkg by remember { mutableStateOf<String?>(null) }
+            if (groups.isEmpty()) {
                 AppText("No widgets from other apps were found.", color = AppColors.muted, modifier = Modifier.padding(28.dp))
             }
+            val density = context.resources.displayMetrics.density
             LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(providers, key = { it.provider.flattenToString() }) { info ->
-                    val label = info.loadLabel(context.packageManager)
-                    val app = runCatching {
-                        context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(info.provider.packageName, 0)).toString()
-                    }.getOrDefault(info.provider.packageName)
-                    AddRow(letter = label.firstOrNull()?.uppercaseChar()?.toString() ?: "?", title = label, subtitle = app, added = false, onClick = { begin(info) })
+                items(groups, key = { it.pkg }) { g ->
+                    val open = openPkg == g.pkg
+                    Column(Modifier.fillMaxWidth().background(AppColors.card, RadiusMd)) {
+                        Row(
+                            Modifier.fillMaxWidth().clickableRole({ openPkg = if (open) null else g.pkg }, Role.Button).padding(horizontal = 20.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            Box(Modifier.size(40.dp).background(AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
+                                AppText(g.label.firstOrNull()?.uppercaseChar()?.toString() ?: "?", size = 16.sp, weight = FontWeight.SemiBold)
+                            }
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                AppText(g.label, size = 16.sp, weight = FontWeight.SemiBold, maxLines = 1)
+                                AppText(if (g.widgets.size == 1) "1 widget" else "${g.widgets.size} widgets", size = 13.sp, color = AppColors.muted, maxLines = 1)
+                            }
+                            Box(Modifier.rotate(if (open) 90f else 0f)) { AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp) }
+                        }
+                        if (open) {
+                            g.widgets.forEach { info ->
+                                val cols = ((info.minWidth / density + 30) / 70).toInt().coerceAtLeast(1)
+                                val rows = ((info.minHeight / density + 30) / 70).toInt().coerceAtLeast(1)
+                                Row(
+                                    Modifier.fillMaxWidth().clickableRole({ begin(info) }).padding(start = 74.dp, end = 20.dp, top = 12.dp, bottom = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                ) {
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        AppText(info.loadLabel(context.packageManager), size = 15.sp, weight = FontWeight.Medium, maxLines = 2)
+                                        AppText("$cols × $rows", size = 12.sp, color = AppColors.muted)
+                                    }
+                                    Box(Modifier.size(40.dp).background(AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
+                                        AppIcon(Ic.Plus, AppColors.text, size = 18.dp, description = "Add ${info.loadLabel(context.packageManager)}")
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.height(6.dp))
+                        }
+                    }
                 }
             }
         }
     }
 }
+
+private class AppWidgets(val pkg: String, val label: String, val widgets: List<AppWidgetProviderInfo>)
 
 @Composable
 private fun AddRow(letter: String, title: String, subtitle: String, added: Boolean, onClick: () -> Unit) {

@@ -192,8 +192,10 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                         modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 110.dp),
                     )
                     if (pipOpen) {
+                        // Keep the text Pip started with, so it does not change while it is typing.
+                        val cardMessage = remember(pipOpen) { message }
                         PipCard(
-                            message,
+                            cardMessage,
                             timeLabel = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault()).format(java.util.Date()),
                             onDismiss = { pipOpen = false },
                             onAction = { action ->

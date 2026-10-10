@@ -40,9 +40,9 @@ Known limits: the gate only guards gated apps opened from this launcher (Android
 
 | Screen | Status | Purpose |
 | --- | --- | --- |
-| Home | Built | Round clock (opens Settings), date, today's screen time, six apps, dock with Phone, Messages, Do Not Disturb, Focus, and the floating Pip. The to-do list is **not** here |
+| Home | Built | Big centred round clock (opens Settings), date, today's screen time, six apps, dock with Phone, Messages, Do Not Disturb, Focus, and the floating Pip. The to-do list is **not** here |
 | All apps | Built | Search, filter chips (All, Work, Gated), A to Z list |
-| Widgets (page 2) | Built | Today's frog, water, distraction budget, agenda, habit stack, quick note, brain dump |
+| Widgets (page 2) | Built | To-do list (many tasks, one frog first), water, distraction budget, agenda, habit stack, quick note, brain dump |
 | Add widget | Built | Launcher widgets and other apps' widgets |
 | Brain dump | Built | Capture thoughts, sort them later |
 | Gate | Built | Three calm steps before a gated app opens (see below) |
@@ -52,7 +52,7 @@ Known limits: the gate only guards gated apps opened from this launcher (Android
 | Evening shutdown | Built | Review the day, set tomorrow's frog |
 | Weekly review | Built | Screen time by day, frogs eaten, gates backed out of |
 | Welcome | Built | Meet Pip, pick gated apps, first frog, theme |
-| Settings | Built | Appearance, rules, gate, focus, apps, Pip, permissions, data |
+| Settings | Built | Appearance (seven themes: Auto, Light, Dark, Paper, Pen blue, Midnight, Sepia), rules, gate, focus, apps, Pip, permissions, data |
 | Gated apps, Home apps | Built | Pickers for which apps are gated and which six sit on Home |
 
 ## The frog
@@ -84,7 +84,7 @@ All numbers are defaults the user can change.
 
 ## The pet
 
-A plain text face, `[^_^]`, named **Pip**. Pip floats on Home and Widgets as a small bubble, and tapping it opens a message. If nobody touches it for a few seconds it tucks itself against the right edge of the screen, half hidden and faded. A red dot on the tucked-away icon means Pip has something to say. Touch it and it slides back out; touch it again to read the message.
+A plain text face, `[^_^]`, named **Pip**. Pip floats on Home and Widgets as a small bubble that blinks now and then. Tapping it opens a chat-style call-out: typing dots first, then the message types itself out. If nobody touches it for a few seconds it tucks itself against the right edge of the screen, half hidden and faded. A red dot on the tucked-away icon means Pip has something to say. Touch it and it slides back out; touch it again to read the message.
 
 **Voice:** friendly, short, specific, encouraging. Never guilt, never scary, no "failure" state, nothing dies or gets sad forever.
 

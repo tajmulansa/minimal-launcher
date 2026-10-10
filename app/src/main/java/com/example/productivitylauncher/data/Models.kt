@@ -8,12 +8,15 @@ data class Habit(
     val doneDays: Set<String> = emptySet(),
 )
 
+/** One ordinary task in the to-do list. The frog is kept separately: there is only one per day. */
+data class Task(val id: String, val text: String, val done: Boolean = false)
+
 /** One line in the brain dump. */
 data class Dump(val id: String, val text: String, val createdAt: Long)
 
 /** The widgets the launcher itself provides. Hosted app widgets use ids like "ext:12". */
 enum class LauncherWidget(val id: String, val title: String, val subtitle: String, val letter: String) {
-    Frog("frog", "Today's frog", "Your one important task", "F"),
+    Frog("frog", "To-do list", "Many tasks, one frog first", "T"),
     Water("water", "Water reminder", "Count glasses", "W"),
     Budget("budget", "Distraction budget", "Time left in gated apps", "D"),
     Agenda("agenda", "Agenda", "Today's calendar events", "A"),

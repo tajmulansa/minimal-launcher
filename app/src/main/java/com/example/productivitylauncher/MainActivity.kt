@@ -7,7 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -16,7 +15,7 @@ import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.ui.LauncherApp
 import com.example.productivitylauncher.ui.theme.LauncherTheme
-import com.example.productivitylauncher.ui.theme.ThemeMode
+import com.example.productivitylauncher.ui.theme.resolvePalette
 
 /**
  * The single activity of the app. It is registered as a HOME activity in the manifest,
@@ -35,12 +34,8 @@ class MainActivity : ComponentActivity() {
         state = LauncherState(this)
         widgetHost = WidgetHost(this)
         setContent {
-            val mode = state.themeMode
-            val dark = when (mode) {
-                ThemeMode.Auto -> isSystemInDarkTheme()
-                ThemeMode.Light -> false
-                ThemeMode.Dark -> true
-            }
+            val palette = resolvePalette(state.themeMode)
+            val dark = palette.dark
             // Keep the system bar icons readable on both themes, including a manual theme choice.
             DisposableEffect(dark) {
                 enableEdgeToEdge(
@@ -49,7 +44,7 @@ class MainActivity : ComponentActivity() {
                 )
                 onDispose { }
             }
-            LauncherTheme(mode) {
+            LauncherTheme(palette) {
                 LauncherApp(state = state, widgetHost = widgetHost, homeSignal = homeSignal)
             }
         }

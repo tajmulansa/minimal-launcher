@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -79,7 +80,7 @@ fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
                 when {
                     id.startsWith("ext:") -> ExternalWidget(id.removePrefix("ext:").toIntOrNull(), state, host)
                     else -> when (LauncherWidget.byId(id)) {
-                        LauncherWidget.Frog -> FrogWidget(state, nav)
+                        LauncherWidget.Frog -> TodoWidget(state, nav)
                         LauncherWidget.Water -> WaterWidget(state)
                         LauncherWidget.Budget -> BudgetWidget(state)
                         LauncherWidget.Agenda -> AgendaWidget()
@@ -110,19 +111,24 @@ private fun WidgetHeader(label: String, accent: Boolean = false, link: String? =
     }
 }
 
-// ------------------------------------------------------------------ frog
+// ------------------------------------------------------------------ to-do list
 
+/** A normal to-do list. One task is the frog for the day, and the others unlock once the frog is checked. */
 @Composable
-private fun FrogWidget(state: LauncherState, nav: Nav) {
+private fun TodoWidget(state: LauncherState, nav: Nav) {
     var editing by remember { mutableStateOf(false) }
     var draft by remember { mutableStateOf(state.frog) }
-    CeramicCard(borderColor = AppColors.focus.copy(alpha = 0.25f)) {
-        WidgetHeader("Today's frog", accent = true)
+    var newTask by remember { mutableStateOf("") }
+    val locked = state.tasksLocked
+    CeramicCard {
+        WidgetHeader("To-do")
+        // The frog: the one task that matters most today.
         if (state.frog.isBlank() || editing) {
+            AppText("Pick today's frog, the one task that matters most. Do it first.", size = 14.sp, color = AppColors.muted, lineHeight = 20.sp)
             AppField(
                 value = draft,
                 onChange = { draft = it },
-                placeholder = "What is the one thing that matters most?",
+                placeholder = "e.g. Finish chemistry chapter 4",
                 onDone = { state.updateFrog(draft.trim()); editing = false },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -131,21 +137,54 @@ private fun FrogWidget(state: LauncherState, nav: Nav) {
             }
         } else {
             Row(
-                Modifier.fillMaxWidth().clickableRole({ state.setFrogDone(!state.frogDone) }),
+                Modifier.fillMaxWidth().background(AppColors.focus.copy(alpha = 0.10f), RoundedCornerShape(14.dp)).clickableRole({ state.setFrogDone(!state.frogDone) }).padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 CheckCircle(state.frogDone)
-                AppText(
-                    state.frog, Modifier.weight(1f), size = 21.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.5).sp, lineHeight = 26.sp,
-                    color = if (state.frogDone) AppColors.muted else AppColors.text, strike = state.frogDone,
-                )
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    AppText("FROG", size = 10.sp, weight = FontWeight.ExtraBold, color = AppColors.focus, letterSpacing = 1.5.sp)
+                    AppText(
+                        state.frog, size = 18.sp, weight = FontWeight.SemiBold, lineHeight = 24.sp,
+                        color = if (state.frogDone) AppColors.muted else AppColors.text, strike = state.frogDone,
+                    )
+                }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                CButton("Focus ${state.frogMinutes} min", { nav.go(Route.Focus) }, Modifier.weight(1f), BtnKind.Accent, small = true, leading = Ic.Target)
-                CButton("Edit", { draft = state.frog; editing = true }, Modifier.weight(1f), BtnKind.Soft, small = true)
+            if (!state.frogDone) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    CButton("Focus ${state.frogMinutes} min", { nav.go(Route.Focus) }, Modifier.weight(1f), BtnKind.Accent, small = true, leading = Ic.Target)
+                    CButton("Edit", { draft = state.frog; editing = true }, Modifier.weight(1f), BtnKind.Soft, small = true)
+                }
             }
         }
+
+        // The other tasks.
+        if (locked && state.tasks.isNotEmpty()) {
+            AppText("Check your frog first. Then the rest unlock.", size = 13.sp, color = AppColors.muted)
+        }
+        state.tasks.forEach { t ->
+            Row(
+                Modifier.fillMaxWidth().alpha(if (locked && !t.done) 0.5f else 1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Row(
+                    Modifier.weight(1f).clickableRole({ state.toggleTask(t.id) }).padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    CheckCircle(t.done, size = 26.dp)
+                    AppText(t.text, Modifier.weight(1f), size = 16.sp, color = if (t.done) AppColors.muted else AppColors.text, strike = t.done)
+                }
+                if (!state.frogDone && !t.done && !editing) {
+                    TextLink("Make frog", { state.makeFrog(t.id) })
+                }
+                Box(Modifier.size(36.dp).clickableRole({ state.removeTask(t.id) }), contentAlignment = Alignment.Center) {
+                    AppIcon(Ic.Close, AppColors.muted, size = 16.dp, description = "Remove task")
+                }
+            }
+        }
+        AppField(newTask, { newTask = it }, "Add a task", onDone = { state.addTask(newTask); newTask = "" })
     }
 }
 
