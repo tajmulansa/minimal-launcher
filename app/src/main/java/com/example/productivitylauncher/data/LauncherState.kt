@@ -120,6 +120,51 @@ class LauncherState(context: Context) {
         }
     }
 
+    // ------------------------------------------------------------ the other tasks in the to-do list
+
+    var tasks by mutableStateOf(readTasks())
+        private set
+
+    private fun readTasks(): List<Task> = runCatching {
+        val arr = JSONArray(str("tasks", "[]"))
+        (0 until arr.length()).map { i ->
+            val o = arr.getJSONObject(i)
+            Task(o.getString("id"), o.getString("text"), o.optBoolean("done", false))
+        }
+    }.getOrDefault(emptyList())
+
+    private fun writeTasks(list: List<Task>) {
+        tasks = list
+        val arr = JSONArray()
+        list.forEach { t -> arr.put(JSONObject().put("id", t.id).put("text", t.text).put("done", t.done)) }
+        save { putString("tasks", arr.toString()) }
+    }
+
+    /** The other tasks wait until the frog is eaten. With no frog set, nothing waits. */
+    val tasksLocked: Boolean get() = frog.isNotBlank() && !frogDone
+
+    fun addTask(text: String) {
+        if (text.isBlank()) return
+        writeTasks(tasks + Task(System.nanoTime().toString(), text.trim()))
+    }
+
+    fun toggleTask(id: String) {
+        if (tasksLocked) return
+        writeTasks(tasks.map { if (it.id == id) it.copy(done = !it.done) else it })
+    }
+
+    fun removeTask(id: String) = writeTasks(tasks.filterNot { it.id == id })
+
+    /** Makes a task today's frog. A frog that is not done yet goes back into the list. Not allowed once the frog is eaten. */
+    fun makeFrog(id: String) {
+        if (frogDone) return
+        val t = tasks.firstOrNull { it.id == id } ?: return
+        val old = frog
+        val rest = tasks.filterNot { it.id == id }
+        writeTasks(if (old.isNotBlank()) listOf(Task(System.nanoTime().toString(), old)) + rest else rest)
+        updateFrog(t.text)
+    }
+
     // ------------------------------------------------------------ water, note
 
     var water by mutableStateOf(int("water", 0))
@@ -569,6 +614,8 @@ class LauncherState(context: Context) {
                 updateFrog("")
             }
         }
+        // Finished tasks are cleared for the new day. Unfinished ones carry over.
+        if (last.isNotEmpty() && tasks.any { it.done }) writeTasks(tasks.filterNot { it.done })
         updateWater(0)
         save { putString("last_day", today) }
     }
@@ -578,7 +625,7 @@ class LauncherState(context: Context) {
         prefs.edit().clear().apply()
         frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
-        habits = emptyList(); dumps = emptyList()
+        habits = emptyList(); dumps = emptyList(); tasks = emptyList()
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
         limitValue = 120; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L

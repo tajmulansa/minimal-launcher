@@ -49,10 +49,9 @@ import com.example.productivitylauncher.ui.components.AppField
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.BtnKind
 import com.example.productivitylauncher.ui.components.CButton
-import com.example.productivitylauncher.ui.components.Segmented
 import com.example.productivitylauncher.ui.components.TextLink
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.theme.ThemeMode
+import com.example.productivitylauncher.ui.components.ThemePicker
 
 /** First run: meet Pip, pick gated apps, pick six Home apps, set the first frog, choose a theme. */
 @Composable
@@ -92,19 +91,15 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                     HomePickerBody(state, Modifier.weight(1f))
                 }
                 3 -> Column(Modifier.weight(1f).padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    AppText("What's your frog today?", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
-                    AppText("The one task that matters most. Do it first and the day is already a win.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
+                    AppText("Your first task", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
+                    AppText("Your to-do list starts with one frog: the task that matters most today. Check it first, then your other tasks unlock.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
                     AppField(frog, { frog = it }, "e.g. Finish chemistry chapter 4", fill = AppColors.card)
                 }
                 5 -> PermissionsStep(state, Modifier.weight(1f))
                 else -> Column(Modifier.weight(1f).padding(28.dp), verticalArrangement = Arrangement.Center) {
                     AppText("Make it yours", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
                     AppText("Choose a look. You can change it any time in Settings.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
-                    Segmented(
-                        listOf("Auto", "Light", "Dark"),
-                        when (state.themeMode) { ThemeMode.Auto -> 0; ThemeMode.Light -> 1; ThemeMode.Dark -> 2 },
-                        { state.setTheme(ThemeMode.entries[it]) },
-                    )
+                    ThemePicker(state.themeMode, { state.setTheme(it) })
                 }
             }
         }

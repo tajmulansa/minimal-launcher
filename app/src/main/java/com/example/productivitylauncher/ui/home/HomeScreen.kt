@@ -84,28 +84,32 @@ fun HomeScreen(
     var dnd by remember { mutableStateOf(isDndOn(context)) }
 
     Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+        // A big round clock in the middle, with the date under it. Tap the clock to open Settings.
+        Column(
+            Modifier.fillMaxWidth().padding(top = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            AnalogClock(now, Modifier.semantics { contentDescription = "Clock. Opens settings." }.clickableRole({ nav.go(Route.Settings) }))
-            Column(horizontalAlignment = Alignment.End) {
-                AppText(day, size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
-                AppText(month.uppercase(), size = 13.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp))
+            AnalogClock(
+                now,
+                Modifier.semantics { contentDescription = "Clock. Opens settings." }.clickableRole({ nav.go(Route.Settings) }),
+                diameter = 124.dp,
+            )
+            Row(Modifier.padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                AppText(day, size = 22.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.6).sp)
+                AppText(month.uppercase(), size = 12.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.5.sp)
             }
         }
 
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(top = 30.dp, bottom = 24.dp)
+                .padding(top = 18.dp, bottom = 18.dp)
                 .clickableRole({ if (state.usageAccess) nav.go(Route.Week) else nav.go(Route.Settings) }),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             val st = state.screenTimeMs
-            AppText(if (st != null) formatMillis(st) else "--", size = 56.sp, letterSpacing = (-2).sp)
+            AppText(if (st != null) formatMillis(st) else "--", size = 48.sp, letterSpacing = (-2).sp)
             AppText(
                 if (st != null) "SCREEN TIME TODAY" else "ALLOW USAGE ACCESS TO SEE SCREEN TIME",
                 size = 12.sp, weight = FontWeight.SemiBold, color = AppColors.muted, letterSpacing = 2.sp, align = TextAlign.Center,
@@ -228,7 +232,7 @@ private fun DockButton(ic: Ic, description: String, active: Boolean, onClick: ()
     }
 }
 
-/** The round clock top left. Tap it to open Settings. */
+/** The round clock. */
 @Composable
 fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.compose.ui.unit.Dp = 76.dp) {
     val cal = Calendar.getInstance().apply { time = now }
