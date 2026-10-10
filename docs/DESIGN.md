@@ -52,7 +52,7 @@ Known limits: the gate only guards gated apps opened from this launcher (Android
 | Evening shutdown | Built | Review the day, set tomorrow's frog |
 | Weekly review | Built | Screen time by day, frogs eaten, gates backed out of |
 | Welcome | Built | Meet Pip, pick gated apps, first frog, theme |
-| Settings | Built | Appearance (seven themes: Auto, Light, Dark, Paper, Pen blue, Midnight, Sepia), rules, gate, focus, apps, Pip, permissions, data |
+| Settings | Built | Appearance (five themes: Auto, Light, Dark, Pen blue, Midnight, on their own Themes screen), rules, gate, focus, apps, Pip, permissions, data |
 | Gated apps, Home apps | Built | Pickers for which apps are gated and which six sit on Home |
 
 ## The frog

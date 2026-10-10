@@ -11,6 +11,7 @@ sealed interface Route {
     data object Evening : Route
     data object Week : Route
     data object Settings : Route
+    data object Themes : Route
     data object GatedPicker : Route
     data object HomePicker : Route
     data class Locked(val reason: LockReason, val pkg: String) : Route

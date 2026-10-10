@@ -33,7 +33,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +60,7 @@ import com.example.productivitylauncher.ui.components.RadiusMd
 import com.example.productivitylauncher.ui.components.RadiusPill
 import com.example.productivitylauncher.ui.components.clickableRole
 import com.example.productivitylauncher.ui.theme.AppColors
+import com.example.productivitylauncher.ui.theme.Inter
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -248,18 +252,39 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.com
             .background(AppColors.card, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
+        val measurer = rememberTextMeasurer()
+        val numeralStyle = TextStyle(color = AppColors.muted, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = (diameter.value * 0.095f).sp)
         Canvas(Modifier.size(diameter)) {
             val c = Offset(size.width / 2, size.height / 2)
-            val r = size.minDimension / 2 - 6.dp.toPx()
-            drawCircle(ring, radius = r, center = c, style = Stroke(width = 4.dp.toPx()))
-            fun hand(angleDeg: Float, length: Float, width: Float) {
+            val outer = size.minDimension / 2 - 6.dp.toPx()
+            drawCircle(ring, radius = outer, center = c, style = Stroke(width = 2.dp.toPx()))
+            // Sixty tiny marks, a longer one for each hour, a bold one at 12, 3, 6 and 9.
+            for (i in 0 until 60) {
+                val a = Math.toRadians((i * 6 - 90).toDouble())
+                val hour = i % 5 == 0
+                val quarter = i % 15 == 0
+                val len = if (quarter) 7.dp.toPx() else if (hour) 5.dp.toPx() else 2.dp.toPx()
+                val from = Offset(c.x + ((outer - len) * Math.cos(a)).toFloat(), c.y + ((outer - len) * Math.sin(a)).toFloat())
+                val to = Offset(c.x + (outer * Math.cos(a)).toFloat(), c.y + (outer * Math.sin(a)).toFloat())
+                drawLine(if (quarter) ink else if (hour) AppColors.muted else AppColors.dot, from, to, strokeWidth = if (quarter) 2.5.dp.toPx() else if (hour) 1.5.dp.toPx() else 1.dp.toPx(), cap = StrokeCap.Round)
+            }
+            // Numerals at 12, 3, 6 and 9.
+            val numeralRadius = outer - 17.dp.toPx()
+            listOf("12" to 0, "3" to 90, "6" to 180, "9" to 270).forEach { (label, deg) ->
+                val a = Math.toRadians((deg - 90).toDouble())
+                val m = measurer.measure(label, numeralStyle)
+                val p = Offset(c.x + (numeralRadius * Math.cos(a)).toFloat() - m.size.width / 2f, c.y + (numeralRadius * Math.sin(a)).toFloat() - m.size.height / 2f)
+                drawText(m, topLeft = p)
+            }
+            fun hand(angleDeg: Float, length: Float, width: Float, color: Color = ink) {
                 val a = Math.toRadians((angleDeg - 90).toDouble())
                 val end = Offset(c.x + (length * Math.cos(a)).toFloat(), c.y + (length * Math.sin(a)).toFloat())
-                drawLine(ink, c, end, strokeWidth = width, cap = StrokeCap.Round)
+                drawLine(color, c, end, strokeWidth = width, cap = StrokeCap.Round)
             }
-            hand(hours * 30f, r * 0.5f, 4.5.dp.toPx())
-            hand(minutes * 6f, r * 0.78f, 3.dp.toPx())
-            drawCircle(dot, radius = 3.5.dp.toPx(), center = c)
+            hand(hours * 30f, outer * 0.45f, 5.dp.toPx())
+            hand(minutes * 6f, outer * 0.72f, 3.dp.toPx())
+            drawCircle(dot, radius = 4.5.dp.toPx(), center = c)
+            drawCircle(AppColors.card, radius = 1.5.dp.toPx(), center = c)
         }
     }
 }

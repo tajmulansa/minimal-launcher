@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,11 +31,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
 import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.LauncherWidget
 import com.example.productivitylauncher.data.WidgetHost
@@ -168,17 +173,39 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
                             g.widgets.forEach { info ->
                                 val cols = ((info.minWidth / density + 30) / 70).toInt().coerceAtLeast(1)
                                 val rows = ((info.minHeight / density + 30) / 70).toInt().coerceAtLeast(1)
-                                Row(
-                                    Modifier.fillMaxWidth().clickableRole({ begin(info) }).padding(start = 74.dp, end = 20.dp, top = 12.dp, bottom = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                val name = info.loadLabel(context.packageManager)
+                                // The picture the widget's app made for this widget, so you can see what you are adding.
+                                val preview = remember(info) {
+                                    runCatching {
+                                        val d = info.loadPreviewImage(context, 0) ?: info.loadIcon(context, 0)
+                                        d?.toBitmap(
+                                            width = d.intrinsicWidth.coerceIn(1, 1200),
+                                            height = d.intrinsicHeight.coerceIn(1, 1200),
+                                        )?.asImageBitmap()
+                                    }.getOrNull()
+                                }
+                                Column(
+                                    Modifier.fillMaxWidth().clickableRole({ begin(info) }).padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
                                 ) {
-                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        AppText(info.loadLabel(context.packageManager), size = 15.sp, weight = FontWeight.Medium, maxLines = 2)
-                                        AppText("$cols × $rows", size = 12.sp, color = AppColors.muted)
+                                    Box(
+                                        Modifier.fillMaxWidth().heightIn(min = 72.dp, max = 190.dp).background(AppColors.phone, RoundedCornerShape(14.dp)).padding(10.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        if (preview != null) {
+                                            Image(preview, contentDescription = "Preview of $name", Modifier.fillMaxWidth().heightIn(max = 170.dp), contentScale = ContentScale.Fit)
+                                        } else {
+                                            AppText("No preview", size = 13.sp, color = AppColors.muted)
+                                        }
                                     }
-                                    Box(Modifier.size(40.dp).background(AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
-                                        AppIcon(Ic.Plus, AppColors.text, size = 18.dp, description = "Add ${info.loadLabel(context.packageManager)}")
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                            AppText(name, size = 15.sp, weight = FontWeight.Medium, maxLines = 2)
+                                            AppText("$cols × $rows", size = 12.sp, color = AppColors.muted)
+                                        }
+                                        Box(Modifier.size(40.dp).background(AppColors.focus, CircleShape), contentAlignment = Alignment.Center) {
+                                            AppIcon(Ic.Plus, AppColors.onFocus, size = 18.dp, description = "Add $name")
+                                        }
                                     }
                                 }
                             }
