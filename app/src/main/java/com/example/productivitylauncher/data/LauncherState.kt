@@ -314,7 +314,7 @@ class LauncherState(context: Context) {
 
     // ------------------------------------------------------------ gate settings (weakening waits 24h)
 
-    private var limitValue by mutableStateOf(int("limit", 120))
+    private var limitValue by mutableStateOf(int("limit", 60))
     private var breathsValue by mutableStateOf(int("breaths", 3))
     private var wordsValue by mutableStateOf(int("phrase_words", 5))
     private var growingValue by mutableStateOf(int("growing_wait", 1))
@@ -627,7 +627,7 @@ class LauncherState(context: Context) {
         water = 0; waterGoal = 8; note = ""
         habits = emptyList(); dumps = emptyList(); tasks = emptyList()
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
-        limitValue = 120; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
+        limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L
         sessionPkg = ""; sessionEnd = 0L; sessionNotified = true
         focusEnd = 0L; focusDnd = true; focusLockGated = true

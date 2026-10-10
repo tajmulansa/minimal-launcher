@@ -33,6 +33,8 @@ import com.example.productivitylauncher.data.openOverlaySettings
 import com.example.productivitylauncher.data.openUsageAccessSettings
 import com.example.productivitylauncher.ui.Nav
 import com.example.productivitylauncher.ui.Route
+import com.example.productivitylauncher.ui.components.Ic
+import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.Divider
 import com.example.productivitylauncher.ui.components.PageHeader
@@ -63,8 +65,9 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             SettingsGroup("Appearance") {
-                SettingRow("Theme", Modifier.padding(bottom = 4.dp)) {}
-                ThemePicker(state.themeMode, { state.setTheme(it) }, Modifier.padding(bottom = 16.dp))
+                SettingRow("Theme", subtitle = state.themeMode.label, onClick = { nav.go(Route.Themes) }) {
+                    AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp)
+                }
                 Divider()
                 SettingRow("Pip", subtitle = "The little [^_^] helper on your Home and Widgets pages") {
                     Toggle(state.pipOn, { state.updatePipOn(it) }, "Show Pip")

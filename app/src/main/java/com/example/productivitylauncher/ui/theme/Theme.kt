@@ -66,24 +66,6 @@ val DarkPalette = Palette(
     dark = true,
 )
 
-/** Paper white with blue pen ink. */
-val PaperPalette = Palette(
-    phone = Color(0xFFFAF9F5),
-    card = Color(0xFFFFFFFF),
-    text = Color(0xFF1C2B4B),
-    muted = Color(0xFF5E6A86),
-    focus = Color(0xFF2548B5),
-    onFocus = Color(0xFFFFFFFF),
-    gate = Color(0xFFB4412F),
-    gateSoft = Color(0xFFFBEAE6),
-    onGate = Color(0xFFFFFFFF),
-    line = Color(0xFFE6E7EC),
-    dot = Color(0xFFCFD3DE),
-    primary = Color(0xFF1C2B4B),
-    onPrimary = Color(0xFFFFFFFF),
-    dark = false,
-)
-
 /** A pale blue notebook page, written on with a blue pen. */
 val PenBluePalette = Palette(
     phone = Color(0xFFE9F0FB),
@@ -120,24 +102,6 @@ val MidnightPalette = Palette(
     dark = true,
 )
 
-/** Old yellowed paper and brown ink. */
-val SepiaPalette = Palette(
-    phone = Color(0xFFF3E9D6),
-    card = Color(0xFFFBF4E6),
-    text = Color(0xFF3B2F22),
-    muted = Color(0xFF7A6A55),
-    focus = Color(0xFF8A5A2B),
-    onFocus = Color(0xFFFFFFFF),
-    gate = Color(0xFFB04A3A),
-    gateSoft = Color(0xFFF6E0D8),
-    onGate = Color(0xFFFFFFFF),
-    line = Color(0xFFE6D9C0),
-    dot = Color(0xFFD3C4A5),
-    primary = Color(0xFF3B2F22),
-    onPrimary = Color(0xFFFBF4E6),
-    dark = false,
-)
-
 val LocalPalette = staticCompositionLocalOf { LightPalette }
 
 /** Short accessors, e.g. AppColors.text. */
@@ -170,10 +134,8 @@ enum class ThemeMode(val label: String) {
     Auto("Auto"),
     Light("Light"),
     Dark("Dark"),
-    Paper("Paper"),
     PenBlue("Pen blue"),
     Midnight("Midnight"),
-    Sepia("Sepia"),
 }
 
 /** The palette for a theme, or null for Auto (which depends on the phone). */
@@ -181,10 +143,8 @@ fun paletteOf(mode: ThemeMode): Palette? = when (mode) {
     ThemeMode.Auto -> null
     ThemeMode.Light -> LightPalette
     ThemeMode.Dark -> DarkPalette
-    ThemeMode.Paper -> PaperPalette
     ThemeMode.PenBlue -> PenBluePalette
     ThemeMode.Midnight -> MidnightPalette
-    ThemeMode.Sepia -> SepiaPalette
 }
 
 @Composable
