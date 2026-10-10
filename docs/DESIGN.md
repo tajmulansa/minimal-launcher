@@ -73,7 +73,7 @@ The user picks which apps are gated. Planned friction, in order:
 4. **Step 3, set a limit:** the user chooses 5, 10, 15, or 30 minutes, or a custom time.
 5. A small timer floats over the app. When time is up, the user returns to the launcher.
 6. The **wait before the next open grows** (for example 1 minute, then 2, then 4).
-7. A **daily limit** (default 2 hours) locks gated apps until the next morning, with no override button.
+7. A **daily limit** (default 1 hour) locks gated apps until the next morning, with no override button.
 
 Two rules keep this fair:
 

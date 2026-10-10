@@ -245,6 +245,9 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.com
     val ring = AppColors.line
     val ink = AppColors.text
     val dot = AppColors.gate
+    val muted = AppColors.muted
+    val tick = AppColors.dot
+    val face = AppColors.card
     Box(
         modifier
             .size(diameter)
@@ -266,7 +269,7 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.com
                 val len = if (quarter) 7.dp.toPx() else if (hour) 5.dp.toPx() else 2.dp.toPx()
                 val from = Offset(c.x + ((outer - len) * Math.cos(a)).toFloat(), c.y + ((outer - len) * Math.sin(a)).toFloat())
                 val to = Offset(c.x + (outer * Math.cos(a)).toFloat(), c.y + (outer * Math.sin(a)).toFloat())
-                drawLine(if (quarter) ink else if (hour) AppColors.muted else AppColors.dot, from, to, strokeWidth = if (quarter) 2.5.dp.toPx() else if (hour) 1.5.dp.toPx() else 1.dp.toPx(), cap = StrokeCap.Round)
+                drawLine(if (quarter) ink else if (hour) muted else tick, from, to, strokeWidth = if (quarter) 2.5.dp.toPx() else if (hour) 1.5.dp.toPx() else 1.dp.toPx(), cap = StrokeCap.Round)
             }
             // Numerals at 12, 3, 6 and 9.
             val numeralRadius = outer - 17.dp.toPx()
@@ -284,7 +287,7 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.com
             hand(hours * 30f, outer * 0.45f, 5.dp.toPx())
             hand(minutes * 6f, outer * 0.72f, 3.dp.toPx())
             drawCircle(dot, radius = 4.5.dp.toPx(), center = c)
-            drawCircle(AppColors.card, radius = 1.5.dp.toPx(), center = c)
+            drawCircle(face, radius = 1.5.dp.toPx(), center = c)
         }
     }
 }
