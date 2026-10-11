@@ -307,7 +307,8 @@ class LauncherState(context: Context) {
     }
 
     fun updateHomeApps(list: List<String>) {
-        homeApps = list.distinct().take(6)
+        // A gated app can never be a Home app.
+        homeApps = list.distinct().filter { it !in gated }.take(6)
         val arr = JSONArray(homeApps)
         save { putString("home_apps", arr.toString()) }
     }
@@ -318,6 +319,7 @@ class LauncherState(context: Context) {
     private var breathsValue by mutableStateOf(int("breaths", 3))
     private var wordsValue by mutableStateOf(int("phrase_words", 5))
     private var growingValue by mutableStateOf(int("growing_wait", 1))
+    private var blockNotifsValue by mutableStateOf(int("block_notifs", 1))
     var pendingChanges by mutableStateOf(readPending())
         private set
 
@@ -325,6 +327,9 @@ class LauncherState(context: Context) {
     val breaths: Int get() = breathsValue
     val phraseWords: Int get() = wordsValue
     val growingWait: Boolean get() = growingValue == 1
+
+    /** Hide notifications from gated apps. On by default. Turning it off waits 24 hours like other weaker gate changes. */
+    val blockGatedNotifications: Boolean get() = blockNotifsValue == 1
 
     private fun readPending(): Map<String, PendingChange> = runCatching {
         val o = JSONObject(str("pending_changes", "{}"))
@@ -346,6 +351,7 @@ class LauncherState(context: Context) {
         GateSetting.Breaths -> breathsValue
         GateSetting.PhraseWords -> wordsValue
         GateSetting.GrowingWait -> growingValue
+        GateSetting.BlockNotifs -> blockNotifsValue
     }
 
     private fun applyNow(s: GateSetting, v: Int) {
@@ -354,6 +360,7 @@ class LauncherState(context: Context) {
             GateSetting.Breaths -> breathsValue = v
             GateSetting.PhraseWords -> wordsValue = v
             GateSetting.GrowingWait -> growingValue = v
+            GateSetting.BlockNotifs -> blockNotifsValue = v
         }
         save { putInt(s.key, v) }
     }
@@ -627,7 +634,7 @@ class LauncherState(context: Context) {
         water = 0; waterGoal = 8; note = ""
         habits = emptyList(); dumps = emptyList(); tasks = emptyList()
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
-        limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
+        limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; blockNotifsValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L
         sessionPkg = ""; sessionEnd = 0L; sessionNotified = true
         focusEnd = 0L; focusDnd = true; focusLockGated = true

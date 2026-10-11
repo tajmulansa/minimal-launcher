@@ -28,11 +28,14 @@ import com.example.productivitylauncher.data.formatMinutes
 import com.example.productivitylauncher.data.hasDndAccess
 import com.example.productivitylauncher.data.isDefaultLauncher
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
+import com.example.productivitylauncher.data.hasNotificationAccess
 import com.example.productivitylauncher.data.openDndSettings
+import com.example.productivitylauncher.data.openNotificationAccessSettings
 import com.example.productivitylauncher.data.openOverlaySettings
 import com.example.productivitylauncher.data.openUsageAccessSettings
 import com.example.productivitylauncher.ui.Nav
 import com.example.productivitylauncher.ui.Route
+import com.example.productivitylauncher.ui.pip.PIP_ENABLED
 import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
@@ -57,6 +60,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
     val overlay = remember(tick) { canDrawOverlays(context) }
     val dnd = remember(tick) { hasDndAccess(context) }
     val isHome = remember(tick) { isDefaultLauncher(context) }
+    val notifAccess = remember(tick) { hasNotificationAccess(context) }
 
     Column(Modifier.fillMaxSize()) {
         PageHeader("Settings", onBack = nav.back)
@@ -68,9 +72,11 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Theme", subtitle = state.themeMode.label, onClick = { nav.go(Route.Themes) }) {
                     AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp)
                 }
-                Divider()
-                SettingRow("Pip", subtitle = "The little [^_^] helper on your Home and Widgets pages") {
-                    Toggle(state.pipOn, { state.updatePipOn(it) }, "Show Pip")
+                if (PIP_ENABLED) {
+                    Divider()
+                    SettingRow("Pip", subtitle = "The little [^_^] helper on your Home and Widgets pages") {
+                        Toggle(state.pipOn, { state.updatePipOn(it) }, "Show Pip")
+                    }
                 }
             }
 
@@ -89,6 +95,20 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                     Toggle(if (growPending != null) !state.growingWait else state.growingWait, { on ->
                         state.changeGateSetting(GateSetting.GrowingWait, if (on) 1 else 0)
                     }, "Longer wait each open")
+                }
+                Divider()
+                val blockPending = state.pendingFor(GateSetting.BlockNotifs)
+                SettingRow(
+                    "Block gated app notifications",
+                    subtitle = when {
+                        blockPending != null -> pendingText(blockPending.applyAt)
+                        state.blockGatedNotifications && !notifAccess -> "On, but it needs Notification access (see Permissions)"
+                        else -> "Hides notifications from your gated apps so they can't pull you back"
+                    },
+                ) {
+                    Toggle(if (blockPending != null) !state.blockGatedNotifications else state.blockGatedNotifications, { on ->
+                        state.changeGateSetting(GateSetting.BlockNotifs, if (on) 1 else 0)
+                    }, "Block gated app notifications")
                 }
                 Divider()
                 AppText(
@@ -118,7 +138,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                     Stepper(formatMinutes(state.screenGoalMin.toLong()), { state.setScreenGoal(state.screenGoalMin - 30) }, { state.setScreenGoal(state.screenGoalMin + 30) }, valueWidth = 70.dp)
                 }
                 Divider()
-                SettingRow("Evening shutdown", subtitle = "Pip reminds you to close the day") {
+                SettingRow("Evening shutdown", subtitle = "When the day should wrap up") {
                     Stepper("${state.eveningHour}:00", { state.updateEveningHour(state.eveningHour - 1) }, { state.updateEveningHour(state.eveningHour + 1) }, valueWidth = 64.dp)
                 }
                 Divider()
@@ -148,6 +168,10 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 Divider()
                 SettingRow("Do Not Disturb access", subtitle = "For the Moon button and focus", onClick = { openDndSettings(context) }) {
                     ValueChevron(if (dnd) "Allowed" else "Allow", if (dnd) AppColors.focus else AppColors.gate)
+                }
+                Divider()
+                SettingRow("Notification access", subtitle = "Lets the launcher hide gated apps' notifications", onClick = { openNotificationAccessSettings(context) }) {
+                    ValueChevron(if (notifAccess) "Allowed" else "Allow", if (notifAccess) AppColors.focus else AppColors.gate)
                 }
                 Divider()
                 SettingRow("Default home app", subtitle = "Make this your launcher", onClick = { openDefaultLauncherSettings(context) }) {

@@ -96,3 +96,13 @@ fun goHome(activity: Activity) {
         Intent(activity, activity.javaClass).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
     )
 }
+
+/** True when the user has allowed Notification access for this app (needed to hide gated apps' notifications). */
+fun hasNotificationAccess(context: Context): Boolean =
+    androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+
+fun openNotificationAccessSettings(context: Context) {
+    runCatching {
+        context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}

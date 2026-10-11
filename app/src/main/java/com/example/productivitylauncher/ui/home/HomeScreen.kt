@@ -124,7 +124,7 @@ fun HomeScreen(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            val shown = state.homeApps.mapNotNull { state.appByPackage(it) }
+            val shown = state.homeApps.filter { !state.isGated(it) }.mapNotNull { state.appByPackage(it) }
             shown.forEach { app ->
                 AppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
             }

@@ -55,6 +55,9 @@ import com.example.productivitylauncher.ui.theme.AppColors
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 
+/** Pip is switched off for now. Flip this to bring it back (the code and tests are kept). */
+const val PIP_ENABLED = false
+
 /** How Pip rests against the screen edge. */
 object PipDock {
     /** Seconds of nobody touching Pip before it tucks itself away. */
