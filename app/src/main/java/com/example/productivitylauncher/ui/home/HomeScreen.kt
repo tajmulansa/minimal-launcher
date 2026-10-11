@@ -256,24 +256,14 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.com
         contentAlignment = Alignment.Center,
     ) {
         val measurer = rememberTextMeasurer()
-        val numeralStyle = TextStyle(color = AppColors.muted, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = (diameter.value * 0.095f).sp)
+        val numeralStyle = TextStyle(color = AppColors.muted, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = (diameter.value * 0.085f).sp)
         Canvas(Modifier.size(diameter)) {
             val c = Offset(size.width / 2, size.height / 2)
             val outer = size.minDimension / 2 - 6.dp.toPx()
             drawCircle(ring, radius = outer, center = c, style = Stroke(width = 2.dp.toPx()))
-            // Sixty tiny marks, a longer one for each hour, a bold one at 12, 3, 6 and 9.
-            for (i in 0 until 60) {
-                val a = Math.toRadians((i * 6 - 90).toDouble())
-                val hour = i % 5 == 0
-                val quarter = i % 15 == 0
-                val len = if (quarter) 7.dp.toPx() else if (hour) 5.dp.toPx() else 2.dp.toPx()
-                val from = Offset(c.x + ((outer - len) * Math.cos(a)).toFloat(), c.y + ((outer - len) * Math.sin(a)).toFloat())
-                val to = Offset(c.x + (outer * Math.cos(a)).toFloat(), c.y + (outer * Math.sin(a)).toFloat())
-                drawLine(if (quarter) ink else if (hour) muted else tick, from, to, strokeWidth = if (quarter) 2.5.dp.toPx() else if (hour) 1.5.dp.toPx() else 1.dp.toPx(), cap = StrokeCap.Round)
-            }
-            // Numerals at 12, 3, 6 and 9.
-            val numeralRadius = outer - 17.dp.toPx()
-            listOf("12" to 0, "3" to 90, "6" to 180, "9" to 270).forEach { (label, deg) ->
+            // All twelve numbers around the face.
+            val numeralRadius = outer - 13.dp.toPx()
+            (1..12).map { it.toString() to it * 30 }.forEach { (label, deg) ->
                 val a = Math.toRadians((deg - 90).toDouble())
                 val m = measurer.measure(label, numeralStyle)
                 val p = Offset(c.x + (numeralRadius * Math.cos(a)).toFloat() - m.size.width / 2f, c.y + (numeralRadius * Math.sin(a)).toFloat() - m.size.height / 2f)
@@ -284,8 +274,8 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.com
                 val end = Offset(c.x + (length * Math.cos(a)).toFloat(), c.y + (length * Math.sin(a)).toFloat())
                 drawLine(color, c, end, strokeWidth = width, cap = StrokeCap.Round)
             }
-            hand(hours * 30f, outer * 0.45f, 5.dp.toPx())
-            hand(minutes * 6f, outer * 0.72f, 3.dp.toPx())
+            hand(hours * 30f, outer * 0.38f, 5.dp.toPx())
+            hand(minutes * 6f, outer * 0.6f, 3.dp.toPx())
             drawCircle(dot, radius = 4.5.dp.toPx(), center = c)
             drawCircle(face, radius = 1.5.dp.toPx(), center = c)
         }
