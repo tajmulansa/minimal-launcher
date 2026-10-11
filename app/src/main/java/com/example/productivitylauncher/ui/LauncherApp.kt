@@ -22,6 +22,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.productivitylauncher.data.AppEntry
@@ -44,10 +46,14 @@ import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
 import com.example.productivitylauncher.ui.pip.PipBubble
 import com.example.productivitylauncher.ui.pip.PipCard
 import com.example.productivitylauncher.ui.pip.PipChip
+import com.example.productivitylauncher.ui.pip.PIP_ENABLED
 import com.example.productivitylauncher.ui.pip.PipDock
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.settings.ThemesScreen
 import com.example.productivitylauncher.ui.theme.AppColors
+import com.example.productivitylauncher.ui.theme.LocalPalette
+import com.example.productivitylauncher.ui.theme.NotebookMargin
+import com.example.productivitylauncher.ui.theme.NotebookRule
 import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
 import com.example.productivitylauncher.ui.widgets.BrainDumpScreen
 import com.example.productivitylauncher.ui.widgets.WidgetsScreen
@@ -144,14 +150,32 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
         }
     }
 
-    Box(Modifier.fillMaxSize().background(AppColors.phone).systemBarsPadding()) {
+    val ruled = LocalPalette.current.ruled
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(AppColors.phone)
+            .then(
+                if (ruled) Modifier.drawBehind {
+                    // Notebook paper: a faint ruled line every 34dp and a red margin line near the left edge.
+                    val gap = 34.dp.toPx()
+                    var y = gap + 24.dp.toPx()
+                    while (y < size.height) {
+                        drawLine(NotebookRule, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx())
+                        y += gap
+                    }
+                    drawLine(NotebookMargin, Offset(16.dp.toPx(), 0f), Offset(16.dp.toPx(), size.height), strokeWidth = 1.5.dp.toPx())
+                } else Modifier,
+            )
+            .systemBarsPadding(),
+    ) {
         when (val r = route) {
             Route.Main -> {
                 HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
                     if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0)
                     else WidgetsScreen(state, nav, widgetHost, page = 1)
                 }
-                if (state.pipOn) {
+                if (PIP_ENABLED && state.pipOn) {
                     // Reading these makes Pip choose again when the minute, the resume or the frog changes.
                     @Suppress("UNUSED_VARIABLE") val clockTick = minute + state.resumeTick
                     val message = pipMessage(state.pipFacts(), pipVariant)

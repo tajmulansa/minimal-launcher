@@ -30,6 +30,8 @@ class Palette(
     val primary: Color,
     val onPrimary: Color,
     val dark: Boolean,
+    /** Draws ruled lines and a red margin behind every screen, like a notebook page. */
+    val ruled: Boolean = false,
 )
 
 val LightPalette = Palette(
@@ -102,6 +104,29 @@ val MidnightPalette = Palette(
     dark = true,
 )
 
+/** Lined notebook paper: cream page, pale blue rules, a red margin and blue-black ink. */
+val NotebookPalette = Palette(
+    phone = Color(0xFFFBF9F0),
+    card = Color(0xFFFFFFFE),
+    text = Color(0xFF1F2A4A),
+    muted = Color(0xFF68708A),
+    focus = Color(0xFF2F4FA3),
+    onFocus = Color(0xFFFFFFFF),
+    gate = Color(0xFFC0392B),
+    gateSoft = Color(0xFFFBE9E6),
+    onGate = Color(0xFFFFFFFF),
+    line = Color(0xFFE5E9F3),
+    dot = Color(0xFFC3CFE6),
+    primary = Color(0xFF1F2A4A),
+    onPrimary = Color(0xFFFFFFFF),
+    dark = false,
+    ruled = true,
+)
+
+/** The ruled lines and the margin line of the Notebook theme. */
+val NotebookRule = Color(0xFFD3DEF1)
+val NotebookMargin = Color(0x66D9534F)
+
 val LocalPalette = staticCompositionLocalOf { LightPalette }
 
 /** Short accessors, e.g. AppColors.text. */
@@ -136,6 +161,7 @@ enum class ThemeMode(val label: String) {
     Dark("Dark"),
     PenBlue("Pen blue"),
     Midnight("Midnight"),
+    Notebook("Notebook"),
 }
 
 /** The palette for a theme, or null for Auto (which depends on the phone). */
@@ -145,6 +171,7 @@ fun paletteOf(mode: ThemeMode): Palette? = when (mode) {
     ThemeMode.Dark -> DarkPalette
     ThemeMode.PenBlue -> PenBluePalette
     ThemeMode.Midnight -> MidnightPalette
+    ThemeMode.Notebook -> NotebookPalette
 }
 
 @Composable

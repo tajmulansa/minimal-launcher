@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,6 +23,7 @@ import com.example.productivitylauncher.ui.Nav
 import com.example.productivitylauncher.ui.components.AppBadge
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.CheckCircle
+import com.example.productivitylauncher.ui.components.GatedTag
 import com.example.productivitylauncher.ui.components.PageHeader
 import com.example.productivitylauncher.ui.components.RadiusMd
 import com.example.productivitylauncher.ui.components.clickableRole
@@ -90,24 +92,32 @@ fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
             size = 14.sp, color = AppColors.muted, lineHeight = 20.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
         )
         LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(state.apps.filter { it.packageName !in state.gated }, key = { it.packageName + "/" + it.activityName }) { app ->
+            // Gated apps are listed last, greyed out, so it is clear why they cannot be picked.
+            items(state.apps.sortedBy { it.packageName in state.gated }, key = { it.packageName + "/" + it.activityName }) { app ->
                 val on = app.packageName in state.homeApps
+                val gated = app.packageName in state.gated
                 Row(
                     Modifier
                         .fillMaxWidth()
                         .heightIn(min = 60.dp)
+                        .alpha(if (gated) 0.5f else 1f)
                         .background(AppColors.card, RadiusMd)
-                        .clickableRole({
-                            if (on) state.updateHomeApps(state.homeApps - app.packageName)
-                            else if (state.homeApps.size < 6) state.updateHomeApps(state.homeApps + app.packageName)
-                        })
+                        .then(
+                            if (gated) Modifier else Modifier.clickableRole({
+                                if (on) state.updateHomeApps(state.homeApps - app.packageName)
+                                else if (state.homeApps.size < 6) state.updateHomeApps(state.homeApps + app.packageName)
+                            }),
+                        )
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    AppBadge(letterOf(app.label), false, size = 40.dp)
-                    AppText(app.label, Modifier.weight(1f), size = 17.sp, weight = FontWeight.Medium, maxLines = 1)
-                    CheckCircle(on, size = 28.dp)
+                    AppBadge(letterOf(app.label), gated, size = 40.dp)
+                    Column(Modifier.weight(1f)) {
+                        AppText(app.label, size = 17.sp, weight = FontWeight.Medium, maxLines = 1)
+                        if (gated) AppText("Gated apps can't go on Home", size = 12.sp, color = AppColors.muted)
+                    }
+                    if (gated) GatedTag() else CheckCircle(on, size = 28.dp)
                 }
             }
         }

@@ -17,7 +17,9 @@ import com.example.productivitylauncher.data.UsageReader
 import com.example.productivitylauncher.data.canDrawOverlays
 import com.example.productivitylauncher.data.hasCalendarPermission
 import com.example.productivitylauncher.data.hasDndAccess
+import com.example.productivitylauncher.data.hasNotificationAccess
 import com.example.productivitylauncher.data.openDndSettings
+import com.example.productivitylauncher.data.openNotificationAccessSettings
 import com.example.productivitylauncher.data.openOverlaySettings
 import com.example.productivitylauncher.data.openUsageAccessSettings
 import com.example.productivitylauncher.ui.settings.PRIVACY_SECTIONS
@@ -53,7 +55,7 @@ import com.example.productivitylauncher.ui.components.TextLink
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.components.ThemePicker
 
-/** First run: meet Pip, pick gated apps, pick six Home apps, set the first frog, choose a theme. */
+/** First run: welcome, pick gated apps, pick six Home apps, set the first frog, choose a theme. */
 @Composable
 fun OnboardingScreen(state: LauncherState, nav: Nav) {
     val context = LocalContext.current
@@ -73,10 +75,7 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
         Column(Modifier.weight(1f).fillMaxWidth()) {
             when (step) {
                 0 -> Column(Modifier.weight(1f).padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Box(Modifier.size(120.dp).background(AppColors.card, CircleShape), contentAlignment = Alignment.Center) {
-                        AppText("[^_^]", size = 28.sp, weight = FontWeight.Medium, mono = true)
-                    }
-                    AppText("Hi, I'm Pip.", size = 32.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp, modifier = Modifier.padding(top = 28.dp))
+                    AppText("Welcome.", size = 34.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
                     AppText(
                         "This launcher helps you do one important thing a day. It keeps distracting apps calm and hard to open, and everything stays on this phone.",
                         size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, modifier = Modifier.padding(top = 12.dp),
@@ -148,6 +147,7 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
     val overlay = remember(tick) { canDrawOverlays(context) }
     val dnd = remember(tick) { hasDndAccess(context) }
     val home = remember(tick) { isDefaultLauncher(context) }
+    val notifAccess = remember(tick) { hasNotificationAccess(context) }
     var showPolicy by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp)) {
@@ -159,6 +159,7 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
         PermRow("Usage access", "Reads how long apps were used, on this phone only, to show screen time and your gated time.", usage) { openUsageAccessSettings(context) }
         PermRow("Floating timer", "Lets the small timer show over a gated app while your session runs.", overlay) { openOverlaySettings(context) }
         PermRow("Do Not Disturb", "Lets the moon button and focus sessions silence notifications.", dnd) { openDndSettings(context) }
+        PermRow("Notification access", "Lets the launcher hide notifications from your gated apps. It only checks which app sent one and never reads the text.", notifAccess) { openNotificationAccessSettings(context) }
         PermRow("Calendar (read only)", "Shows today's events in the Agenda widget. Nothing is copied or sent.", calendar) { calLauncher.launch(Manifest.permission.READ_CALENDAR) }
         PermRow("Home app", "Make this your launcher so it opens when you press Home.", home) { openDefaultLauncherSettings(context) }
         TextLink(if (showPolicy) "Hide privacy policy" else "Read the full privacy policy", { showPolicy = !showPolicy })

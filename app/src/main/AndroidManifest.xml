@@ -9,7 +9,8 @@
 
     <!--
       Optional permissions, each asked for by the user in Settings and only used on this device:
-      usage access (screen time), display over other apps (floating timer), calendar read (Agenda widget).
+      usage access (screen time), display over other apps (floating timer), calendar read (Agenda widget),
+      notification access (hides gated apps' notifications; it never reads their text).
       Do Not Disturb access is granted in system settings and needs no manifest permission here.
     -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
@@ -50,5 +51,16 @@
         <service
             android:name=".service.SessionOverlayService"
             android:exported="false" />
+
+        <!-- Hides notifications from gated apps. Runs only after the user allows Notification access. -->
+        <service
+            android:name=".service.GatedNotificationService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
