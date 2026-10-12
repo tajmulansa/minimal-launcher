@@ -173,6 +173,17 @@ class LauncherState(context: Context) {
 
     fun updateLockIn(on: Boolean) { lockIn = on; save { putBoolean("lock_in", on) } }
 
+    // ------------------------------------------------------------ red button (urge lock)
+
+    /** Epoch millis when the red button's timer ends, or 0. Saved, so closing the app does not end it. */
+    var urgeEnd by mutableStateOf(long("urge_end", 0L))
+        private set
+
+    fun startUrgeLock(minutes: Int = URGE_LOCK_MINUTES) {
+        urgeEnd = System.currentTimeMillis() + minutes * 60_000L
+        save { putLong("urge_end", urgeEnd) }
+    }
+
     // ------------------------------------------------------------ water, note
 
     var water by mutableStateOf(int("water", 0))
@@ -634,7 +645,7 @@ class LauncherState(context: Context) {
         prefs.edit().clear().apply()
         frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
-        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false
+        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
         limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L
