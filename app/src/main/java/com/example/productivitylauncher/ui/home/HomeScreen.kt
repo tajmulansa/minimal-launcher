@@ -124,11 +124,14 @@ fun HomeScreen(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            if (state.lockIn) {
+                AppText("LOCK IN  ·  ONLY YOUR HOME APPS", size = 11.sp, weight = FontWeight.Bold, color = AppColors.muted, letterSpacing = 1.5.sp, modifier = Modifier.padding(start = 4.dp))
+            }
             val shown = state.homeApps.filter { !state.isGated(it) }.mapNotNull { state.appByPackage(it) }
             shown.forEach { app ->
                 AppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
             }
-            if (shown.size < 6) {
+            if (shown.size < 6 && !state.lockIn) {
                 CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 16.dp), onClick = { nav.go(Route.HomePicker) }) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         Box(Modifier.size(44.dp).background(AppColors.phone, RoundedCornerShape(11.dp)), contentAlignment = Alignment.Center) {

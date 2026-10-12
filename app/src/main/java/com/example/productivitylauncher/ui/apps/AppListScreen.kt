@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.data.AppEntry
 import com.example.productivitylauncher.data.LauncherState
+import com.example.productivitylauncher.data.exactNameMatches
 import com.example.productivitylauncher.data.filterApps
 import com.example.productivitylauncher.data.letterOf
 import com.example.productivitylauncher.data.openAppInfo
@@ -67,7 +68,8 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
         Filter.Work -> state.apps.filter { !state.isGated(it.packageName) }
         Filter.Gated -> state.apps.filter { state.isGated(it.packageName) }
     }
-    val shown = filterApps(base, query)
+    // Lock In: nothing is listed until the full name of an app is typed.
+    val shown = if (state.lockIn) exactNameMatches(state.apps, query) else filterApps(base, query)
 
     Column(Modifier.fillMaxSize()) {
         PageHeader("All apps", onBack = nav.back, trailing = { IconButtonLarge(Ic.Sliders, "Settings", { nav.go(Route.Settings) }) })
@@ -89,17 +91,24 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                 cursorBrush = SolidColor(AppColors.text),
                 modifier = Modifier.weight(1f),
                 decorationBox = { inner ->
-                    Box { if (query.isEmpty()) AppText("Search apps", color = AppColors.muted); inner() }
+                    Box { if (query.isEmpty()) AppText(if (state.lockIn) "Type an app's full name" else "Search apps", color = AppColors.muted); inner() }
                 },
             )
         }
-        Row(Modifier.padding(start = 28.dp, end = 28.dp, top = 14.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Filter.entries.forEach { f -> Chip(f.label, filter == f, { filter = f }) }
+        if (!state.lockIn) {
+            Row(Modifier.padding(start = 28.dp, end = 28.dp, top = 14.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Filter.entries.forEach { f -> Chip(f.label, filter == f, { filter = f }) }
+            }
         }
 
         if (shown.isEmpty()) {
             AppText(
-                if (filter == Filter.Gated && query.isEmpty()) "No gated apps yet. Long-press an app to gate it." else "No apps match.",
+                when {
+                    state.lockIn && query.isBlank() -> "Lock In is on. Type an app's full name to find it. Your Home apps are on the Home page."
+                    state.lockIn -> "No app has exactly that name."
+                    filter == Filter.Gated && query.isEmpty() -> "No gated apps yet. Long-press an app to gate it."
+                    else -> "No apps match."
+                },
                 color = AppColors.muted, modifier = Modifier.padding(32.dp),
             )
         }
@@ -119,7 +128,7 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                         .fillMaxWidth()
                         .heightIn(min = 60.dp)
                         .background(if (gated) AppColors.gateSoft else AppColors.card, RadiusMd)
-                        .combinedClickable(role = Role.Button, onClick = { onOpenApp(app) }, onLongClick = { options = app })
+                        .combinedClickable(role = Role.Button, onClick = { onOpenApp(app) }, onLongClick = { if (!state.lockIn) options = app })
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),

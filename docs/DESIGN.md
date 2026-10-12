@@ -42,7 +42,7 @@ Known limits: the gate only guards gated apps opened from this launcher (Android
 | --- | --- | --- |
 | Home | Built | Big centred round clock (opens Settings), date, today's screen time, six apps, dock with Phone, Messages, Do Not Disturb, Focus, and the floating Pip. The to-do list is **not** here |
 | All apps | Built | Search, filter chips (All, Work, Gated), A to Z list |
-| Widgets (page 2) | Built | To-do list (many tasks, one frog first), water, distraction budget, agenda, habit stack, quick note, brain dump |
+| Widgets (page 2) | Built | To-do list (many tasks, one frog first), water, distraction budget, agenda, habit stack, quick note, brain dump, quick actions (a grid of square buttons; Lock In first) |
 | Add widget | Built | Launcher widgets and other apps' widgets |
 | Brain dump | Built | Capture thoughts, sort them later |
 | Gate | Built | Three calm steps before a gated app opens (see below) |
@@ -127,3 +127,7 @@ The home screen stays calm. Widgets live on page 2, and the user chooses which a
 ## Evidence note
 
 Prefer techniques with solid research behind them (starting small, planning ahead, retrieval practice, spaced study). Avoid popular claims that do not hold up, such as "habits take 21 days".
+
+## Lock In mode
+
+Turned on and off from the Quick actions widget. While it is on, Home shows only the Home apps. The All apps list stays empty until the exact full name of an app is typed, then that app appears. The Home app picker is locked and "Add an app" is hidden.

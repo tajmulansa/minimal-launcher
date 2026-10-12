@@ -22,14 +22,15 @@ enum class LauncherWidget(val id: String, val title: String, val subtitle: Strin
     Agenda("agenda", "Agenda", "Today's calendar events", "A"),
     Habits("habits", "Habit stack", "After X, I do Y", "H"),
     Note("note", "Quick note", "Jot one thing", "N"),
-    Dump("dump", "Brain dump", "Empty your head, sort later", "B");
+    Dump("dump", "Brain dump", "Empty your head, sort later", "B"),
+    Quick("quick", "Quick actions", "One-tap buttons, starting with Lock In", "Q");
 
     companion object {
         fun byId(id: String): LauncherWidget? = entries.firstOrNull { it.id == id }
     }
 }
 
-val DEFAULT_WIDGETS = listOf("frog", "water", "budget", "note", "dump")
+val DEFAULT_WIDGETS = listOf("frog", "quick", "water", "budget", "note", "dump")
 
 /** Gate settings that can be made weaker. Weakening waits 24 hours. */
 enum class GateSetting(val key: String) {

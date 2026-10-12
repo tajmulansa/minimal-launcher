@@ -86,6 +86,10 @@ fun HomePickerScreen(state: LauncherState, nav: Nav) {
 
 @Composable
 fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
+    if (state.lockIn) {
+        AppText("Lock In is on, so your Home apps are locked. Turn Lock In off to change them.", color = AppColors.muted, modifier = modifier.padding(28.dp))
+        return
+    }
     Column(modifier) {
         AppText(
             "Choose up to six apps for your Home page. Keep only what helps you work. (${state.homeApps.size} of 6)",

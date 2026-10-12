@@ -48,6 +48,13 @@ fun isWeakening(setting: GateSetting, old: Int, new: Int): Boolean = when (setti
     GateSetting.Breaths, GateSetting.PhraseWords, GateSetting.GrowingWait, GateSetting.BlockNotifs -> new < old
 }
 
+/** Lock In: an app is found only by typing its full name (any capitals, spaces at the ends ignored). */
+fun exactNameMatches(apps: List<AppEntry>, query: String): List<AppEntry> {
+    val q = query.trim()
+    if (q.isEmpty()) return emptyList()
+    return apps.filter { it.label.trim().equals(q, ignoreCase = true) }
+}
+
 /** True when a notification from [pkg] should be hidden: the setting is on and the app is gated. */
 fun shouldBlockNotification(pkg: String, gated: Set<String>, enabled: Boolean, ownPackage: String): Boolean =
     enabled && pkg != ownPackage && pkg in gated

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -87,6 +91,7 @@ fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
                         LauncherWidget.Habits -> HabitsWidget(state)
                         LauncherWidget.Note -> NoteWidget(state)
                         LauncherWidget.Dump -> DumpWidget(state, nav)
+                        LauncherWidget.Quick -> QuickActionsWidget(state)
                         null -> Unit
                     }
                 }
@@ -108,6 +113,49 @@ private fun WidgetHeader(label: String, accent: Boolean = false, link: String? =
                 AppIcon(Ic.Chevron, AppColors.muted, size = 14.dp)
             }
         }
+    }
+}
+
+// ------------------------------------------------------------------ quick actions
+
+/** A grid of square one-tap buttons, four across. More buttons will be added here over time. */
+@Composable
+private fun QuickActionsWidget(state: LauncherState) {
+    CeramicCard {
+        WidgetHeader("Quick actions")
+        val tiles: List<@Composable (Modifier) -> Unit> = listOf(
+            { m -> QuickTile("Lock In", Ic.Lock, state.lockIn, { state.updateLockIn(!state.lockIn) }, m) },
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            tiles.chunked(4).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { tile -> tile(Modifier.weight(1f).aspectRatio(1f)) }
+                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+        }
+        if (state.lockIn) {
+            AppText("Lock In is on. Only your Home apps show. Type an app's full name in All apps to find any other.", size = 13.sp, color = AppColors.muted, lineHeight = 18.sp)
+        }
+    }
+}
+
+@Composable
+private fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    val bg = if (on) AppColors.primary else AppColors.phone
+    val fg = if (on) AppColors.onPrimary else AppColors.text
+    Column(
+        modifier
+            .background(bg, RoundedCornerShape(14.dp))
+            .semantics { contentDescription = "$label, " + if (on) "on" else "off" }
+            .clickableRole(onClick, Role.Switch)
+            .padding(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        AppIcon(icon, fg, size = 22.dp)
+        AppText(label, size = 11.sp, weight = FontWeight.SemiBold, color = fg, maxLines = 1, modifier = Modifier.padding(top = 5.dp))
+        AppText(if (on) "ON" else "OFF", size = 10.sp, weight = FontWeight.Bold, color = fg.copy(alpha = 0.7f), letterSpacing = 1.sp)
     }
 }
 
