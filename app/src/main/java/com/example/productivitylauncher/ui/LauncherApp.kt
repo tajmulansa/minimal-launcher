@@ -49,6 +49,7 @@ import com.example.productivitylauncher.ui.pip.PipChip
 import com.example.productivitylauncher.ui.pip.PIP_ENABLED
 import com.example.productivitylauncher.ui.pip.PipDock
 import com.example.productivitylauncher.ui.settings.SettingsScreen
+import com.example.productivitylauncher.ui.urge.UrgeScreen
 import com.example.productivitylauncher.ui.settings.ThemesScreen
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.theme.LocalPalette
@@ -80,6 +81,24 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     // Pip always knows the time: this ticks every minute so greetings and reminders stay current.
     val minute by produceState(System.currentTimeMillis() / 60_000L) {
         while (true) { delay(60_000L - System.currentTimeMillis() % 60_000L); value = System.currentTimeMillis() / 60_000L }
+    }
+
+    // The red button: while its timer runs, nothing but the lock screen is shown.
+    val urgeNow by produceState(System.currentTimeMillis(), state.urgeEnd) {
+        while (true) {
+            value = System.currentTimeMillis()
+            if (value >= state.urgeEnd) break
+            delay(500L)
+        }
+    }
+    val urgeActive = state.urgeEnd > urgeNow
+    LaunchedEffect(urgeActive) {
+        if (urgeActive) {
+            stack.clear()
+            if (route != Route.Onboarding) route = Route.Main
+            pipOpen = false
+            pager.scrollToPage(0)
+        }
     }
 
     val nav = remember {
@@ -132,6 +151,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     // A launcher never closes: Back goes toward Home, and does nothing on Home.
     BackHandler {
         when {
+            urgeActive -> Unit
             route == Route.Onboarding -> Unit
             route != Route.Main -> nav.back()
             pipOpen -> pipOpen = false
@@ -169,7 +189,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             )
             .systemBarsPadding(),
     ) {
-        when (val r = route) {
+        if (urgeActive) UrgeScreen(state.urgeEnd - urgeNow) else when (val r = route) {
             Route.Main -> {
                 HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
                     if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0)

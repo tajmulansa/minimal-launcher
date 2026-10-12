@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.LauncherWidget
+import com.example.productivitylauncher.data.URGE_LOCK_MINUTES
 import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.data.clockLabel
 import com.example.productivitylauncher.data.dayKey
@@ -121,10 +124,22 @@ private fun WidgetHeader(label: String, accent: Boolean = false, link: String? =
 /** A grid of square one-tap buttons, four across. More buttons will be added here over time. */
 @Composable
 private fun QuickActionsWidget(state: LauncherState) {
+    var confirmUrge by remember { mutableStateOf(false) }
+    if (confirmUrge) {
+        AlertDialog(
+            onDismissRequest = { confirmUrge = false },
+            containerColor = AppColors.card,
+            title = { AppText("Lock the phone for $URGE_LOCK_MINUTES minutes?", size = 20.sp, weight = FontWeight.SemiBold) },
+            text = { AppText("The launcher will show only a timer, with Call and Message. It can't be stopped early.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp) },
+            confirmButton = { TextButton(onClick = { confirmUrge = false; state.startUrgeLock() }) { AppText("Lock", weight = FontWeight.SemiBold, color = AppColors.gate) } },
+            dismissButton = { TextButton(onClick = { confirmUrge = false }) { AppText("Cancel", weight = FontWeight.SemiBold) } },
+        )
+    }
     CeramicCard {
         WidgetHeader("Quick actions")
         val tiles: List<@Composable (Modifier) -> Unit> = listOf(
             { m -> QuickTile("Lock In", Ic.Lock, state.lockIn, { state.updateLockIn(!state.lockIn) }, m) },
+            { m -> UrgeTile({ confirmUrge = true }, m) },
         )
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             tiles.chunked(4).forEach { row ->
@@ -137,6 +152,24 @@ private fun QuickActionsWidget(state: LauncherState) {
         if (state.lockIn) {
             AppText("Lock In is on. Only your Home apps show. Type an app's full name in All apps to find any other.", size = 13.sp, color = AppColors.muted, lineHeight = 18.sp)
         }
+    }
+}
+
+/** The red button: starts a short lock that leaves only Call and Message. */
+@Composable
+private fun UrgeTile(onClick: () -> Unit, modifier: Modifier) {
+    Column(
+        modifier
+            .background(AppColors.gate, RoundedCornerShape(14.dp))
+            .semantics { contentDescription = "Red button, lock the phone for $URGE_LOCK_MINUTES minutes" }
+            .clickableRole(onClick, Role.Button)
+            .padding(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        AppIcon(Ic.Lock, AppColors.onGate, size = 22.dp)
+        AppText("Red button", size = 11.sp, weight = FontWeight.SemiBold, color = AppColors.onGate, maxLines = 1, modifier = Modifier.padding(top = 5.dp))
+        AppText("${URGE_LOCK_MINUTES} MIN", size = 10.sp, weight = FontWeight.Bold, color = AppColors.onGate.copy(alpha = 0.75f), letterSpacing = 1.sp)
     }
 }
 

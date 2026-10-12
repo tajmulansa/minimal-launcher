@@ -32,6 +32,9 @@ enum class LauncherWidget(val id: String, val title: String, val subtitle: Strin
 
 val DEFAULT_WIDGETS = listOf("frog", "quick", "water", "budget", "note", "dump")
 
+/** How long the red button locks the phone. */
+const val URGE_LOCK_MINUTES = 5
+
 /** Gate settings that can be made weaker. Weakening waits 24 hours. */
 enum class GateSetting(val key: String) {
     Limit("limit"),
