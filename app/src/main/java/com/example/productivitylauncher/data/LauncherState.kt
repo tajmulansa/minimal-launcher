@@ -165,6 +165,14 @@ class LauncherState(context: Context) {
         updateFrog(t.text)
     }
 
+    // ------------------------------------------------------------ Lock In mode
+
+    /** While on, only the Home apps are shown. Any other app must be found by typing its full name. */
+    var lockIn by mutableStateOf(bool("lock_in", false))
+        private set
+
+    fun updateLockIn(on: Boolean) { lockIn = on; save { putBoolean("lock_in", on) } }
+
     // ------------------------------------------------------------ water, note
 
     var water by mutableStateOf(int("water", 0))
@@ -632,7 +640,7 @@ class LauncherState(context: Context) {
         prefs.edit().clear().apply()
         frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
-        habits = emptyList(); dumps = emptyList(); tasks = emptyList()
+        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
         limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; blockNotifsValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L

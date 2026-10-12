@@ -128,4 +128,12 @@ class LogicTest {
         assertTrue(isWeakening(GateSetting.BlockNotifs, 1, 0))
         assertFalse(isWeakening(GateSetting.BlockNotifs, 0, 1))
     }
+
+    @Test fun lockInFindsAnAppOnlyByItsFullName() {
+        val apps = listOf(AppEntry("Instagram", "a.insta", "A"), AppEntry("Maps", "b.maps", "B"))
+        assertEquals(listOf("Instagram"), exactNameMatches(apps, "  instagram ").map { it.label })
+        assertTrue(exactNameMatches(apps, "insta").isEmpty())
+        assertTrue(exactNameMatches(apps, "").isEmpty())
+        assertTrue(exactNameMatches(apps, "   ").isEmpty())
+    }
 }
