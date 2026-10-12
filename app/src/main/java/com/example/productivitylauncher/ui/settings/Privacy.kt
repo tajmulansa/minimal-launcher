@@ -7,7 +7,6 @@ val PRIVACY_SECTIONS: List<Pair<String, String>> = listOf(
     "Usage access (optional)" to "If you allow it, the launcher reads how long each app was used on this phone to show screen time and gated time. It is never uploaded or shared.",
     "Display over other apps (optional)" to "Used only to show the small countdown timer over a gated app.",
     "Do Not Disturb access (optional)" to "Used only to turn Do Not Disturb on or off from the moon button and during focus sessions.",
-    "Notification access (optional)" to "Used only to hide notifications from the apps you gate. The launcher checks which app sent a notification and never reads or stores its text. If you turn this off, nothing is hidden.",
     "Calendar, read only (optional)" to "Used only to list today's events in the Agenda widget. Events are read when the widget is shown and are not copied or stored.",
     "Installed apps" to "The launcher lists the apps installed on your phone so you can open them. The list stays on your phone.",
     "Other apps' widgets" to "Widgets from other apps run inside this launcher but belong to those apps and follow their privacy policies.",

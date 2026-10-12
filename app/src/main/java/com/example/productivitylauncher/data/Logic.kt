@@ -45,7 +45,7 @@ fun extraWaitSeconds(opensToday: Int, growing: Boolean): Int =
 /** True when the new value makes the gate easier to get through. */
 fun isWeakening(setting: GateSetting, old: Int, new: Int): Boolean = when (setting) {
     GateSetting.Limit -> new > old
-    GateSetting.Breaths, GateSetting.PhraseWords, GateSetting.GrowingWait, GateSetting.BlockNotifs -> new < old
+    GateSetting.Breaths, GateSetting.PhraseWords, GateSetting.GrowingWait -> new < old
 }
 
 /** Lock In: an app is found only by typing its full name (any capitals, spaces at the ends ignored). */
@@ -54,10 +54,6 @@ fun exactNameMatches(apps: List<AppEntry>, query: String): List<AppEntry> {
     if (q.isEmpty()) return emptyList()
     return apps.filter { it.label.trim().equals(q, ignoreCase = true) }
 }
-
-/** True when a notification from [pkg] should be hidden: the setting is on and the app is gated. */
-fun shouldBlockNotification(pkg: String, gated: Set<String>, enabled: Boolean, ownPackage: String): Boolean =
-    enabled && pkg != ownPackage && pkg in gated
 
 fun formatMinutes(totalMinutes: Long): String {
     val m = totalMinutes.coerceAtLeast(0)

@@ -22,10 +22,6 @@ Used only to show the small countdown timer over a gated app.
 
 Used only to turn Do Not Disturb on or off from the moon button and during focus sessions.
 
-## Notification access (optional)
-
-Used only to hide notifications from the apps you gate. The launcher checks which app sent a notification and never reads or stores its text. If you turn this off, nothing is hidden.
-
 ## Calendar, read only (optional)
 
 Used only to list today's events in the Agenda widget. Events are read when the widget is shown and are not copied or stored.
