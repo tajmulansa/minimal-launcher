@@ -28,9 +28,7 @@ import com.example.productivitylauncher.data.formatMinutes
 import com.example.productivitylauncher.data.hasDndAccess
 import com.example.productivitylauncher.data.isDefaultLauncher
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
-import com.example.productivitylauncher.data.hasNotificationAccess
 import com.example.productivitylauncher.data.openDndSettings
-import com.example.productivitylauncher.data.openNotificationAccessSettings
 import com.example.productivitylauncher.data.openOverlaySettings
 import com.example.productivitylauncher.data.openUsageAccessSettings
 import com.example.productivitylauncher.ui.Nav
@@ -60,7 +58,6 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
     val overlay = remember(tick) { canDrawOverlays(context) }
     val dnd = remember(tick) { hasDndAccess(context) }
     val isHome = remember(tick) { isDefaultLauncher(context) }
-    val notifAccess = remember(tick) { hasNotificationAccess(context) }
 
     Column(Modifier.fillMaxSize()) {
         PageHeader("Settings", onBack = nav.back)
@@ -95,20 +92,6 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                     Toggle(if (growPending != null) !state.growingWait else state.growingWait, { on ->
                         state.changeGateSetting(GateSetting.GrowingWait, if (on) 1 else 0)
                     }, "Longer wait each open")
-                }
-                Divider()
-                val blockPending = state.pendingFor(GateSetting.BlockNotifs)
-                SettingRow(
-                    "Block gated app notifications",
-                    subtitle = when {
-                        blockPending != null -> pendingText(blockPending.applyAt)
-                        state.blockGatedNotifications && !notifAccess -> "On, but it needs Notification access (see Permissions)"
-                        else -> "Hides notifications from your gated apps so they can't pull you back"
-                    },
-                ) {
-                    Toggle(if (blockPending != null) !state.blockGatedNotifications else state.blockGatedNotifications, { on ->
-                        state.changeGateSetting(GateSetting.BlockNotifs, if (on) 1 else 0)
-                    }, "Block gated app notifications")
                 }
                 Divider()
                 AppText(
@@ -168,10 +151,6 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 Divider()
                 SettingRow("Do Not Disturb access", subtitle = "For the Moon button and focus", onClick = { openDndSettings(context) }) {
                     ValueChevron(if (dnd) "Allowed" else "Allow", if (dnd) AppColors.focus else AppColors.gate)
-                }
-                Divider()
-                SettingRow("Notification access", subtitle = "Lets the launcher hide gated apps' notifications", onClick = { openNotificationAccessSettings(context) }) {
-                    ValueChevron(if (notifAccess) "Allowed" else "Allow", if (notifAccess) AppColors.focus else AppColors.gate)
                 }
                 Divider()
                 SettingRow("Default home app", subtitle = "Make this your launcher", onClick = { openDefaultLauncherSettings(context) }) {

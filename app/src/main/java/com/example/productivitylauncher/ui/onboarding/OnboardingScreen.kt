@@ -17,9 +17,7 @@ import com.example.productivitylauncher.data.UsageReader
 import com.example.productivitylauncher.data.canDrawOverlays
 import com.example.productivitylauncher.data.hasCalendarPermission
 import com.example.productivitylauncher.data.hasDndAccess
-import com.example.productivitylauncher.data.hasNotificationAccess
 import com.example.productivitylauncher.data.openDndSettings
-import com.example.productivitylauncher.data.openNotificationAccessSettings
 import com.example.productivitylauncher.data.openOverlaySettings
 import com.example.productivitylauncher.data.openUsageAccessSettings
 import com.example.productivitylauncher.ui.settings.PRIVACY_SECTIONS
@@ -147,7 +145,6 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
     val overlay = remember(tick) { canDrawOverlays(context) }
     val dnd = remember(tick) { hasDndAccess(context) }
     val home = remember(tick) { isDefaultLauncher(context) }
-    val notifAccess = remember(tick) { hasNotificationAccess(context) }
     var showPolicy by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp)) {
@@ -159,7 +156,6 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
         PermRow("Usage access", "Reads how long apps were used, on this phone only, to show screen time and your gated time.", usage) { openUsageAccessSettings(context) }
         PermRow("Floating timer", "Lets the small timer show over a gated app while your session runs.", overlay) { openOverlaySettings(context) }
         PermRow("Do Not Disturb", "Lets the moon button and focus sessions silence notifications.", dnd) { openDndSettings(context) }
-        PermRow("Notification access", "Lets the launcher hide notifications from your gated apps. It only checks which app sent one and never reads the text.", notifAccess) { openNotificationAccessSettings(context) }
         PermRow("Calendar (read only)", "Shows today's events in the Agenda widget. Nothing is copied or sent.", calendar) { calLauncher.launch(Manifest.permission.READ_CALENDAR) }
         PermRow("Home app", "Make this your launcher so it opens when you press Home.", home) { openDefaultLauncherSettings(context) }
         TextLink(if (showPolicy) "Hide privacy policy" else "Read the full privacy policy", { showPolicy = !showPolicy })

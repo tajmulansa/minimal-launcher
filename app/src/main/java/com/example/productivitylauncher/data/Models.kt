@@ -38,7 +38,6 @@ enum class GateSetting(val key: String) {
     Breaths("breaths"),
     PhraseWords("phrase_words"),
     GrowingWait("growing_wait"),
-    BlockNotifs("block_notifs"),
 }
 
 /** A weakening change that is waiting for its 24 hour delay to pass. */

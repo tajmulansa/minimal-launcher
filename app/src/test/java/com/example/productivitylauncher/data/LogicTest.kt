@@ -116,19 +116,6 @@ class LogicTest {
         assertTrue(pipMessage(facts(hour = 1)).text.contains("Sleep", ignoreCase = true))
     }
 
-    @Test fun blocksNotificationsOnlyFromGatedAppsWhenOn() {
-        val gated = setOf("com.chat", "com.video")
-        assertTrue(shouldBlockNotification("com.chat", gated, true, "me"))
-        assertFalse(shouldBlockNotification("com.maps", gated, true, "me"))
-        assertFalse(shouldBlockNotification("com.chat", gated, false, "me"))
-        assertFalse(shouldBlockNotification("me", setOf("me"), true, "me"))
-    }
-
-    @Test fun turningBlockingOffIsWeakeningAndTurningOnIsNot() {
-        assertTrue(isWeakening(GateSetting.BlockNotifs, 1, 0))
-        assertFalse(isWeakening(GateSetting.BlockNotifs, 0, 1))
-    }
-
     @Test fun lockInFindsAnAppOnlyByItsFullName() {
         val apps = listOf(AppEntry("Instagram", "a.insta", "A"), AppEntry("Maps", "b.maps", "B"))
         assertEquals(listOf("Instagram"), exactNameMatches(apps, "  instagram ").map { it.label })
