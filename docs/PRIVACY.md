@@ -16,7 +16,7 @@ If you allow it, the launcher reads how long each app was used on this phone to 
 
 ## Display over other apps (optional)
 
-Used only to show the small countdown timer over a gated app.
+Used only to show the small countdown timer over a gated app, and the red button over other apps if you turn it on.
 
 ## Do Not Disturb access (optional)
 

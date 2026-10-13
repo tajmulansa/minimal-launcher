@@ -140,12 +140,25 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 }
             }
 
+            SettingsGroup("Red button") {
+                SettingRow(
+                    "Red button in every app",
+                    subtitle = if (state.urgeButtonOn && !overlay) "On, but it needs Display over other apps (see Permissions)"
+                    else "A small red dot over every app. Tap it twice to lock the phone for 5 minutes",
+                ) {
+                    Toggle(state.urgeButtonOn, { on ->
+                        state.updateUrgeButton(on)
+                        if (on && !overlay) openOverlaySettings(context)
+                    }, "Red button in every app")
+                }
+            }
+
             SettingsGroup("Permissions") {
                 SettingRow("Usage access", subtitle = "Screen time and exact gated time", onClick = { openUsageAccessSettings(context) }) {
                     ValueChevron(if (usage) "Allowed" else "Allow", if (usage) AppColors.focus else AppColors.gate)
                 }
                 Divider()
-                SettingRow("Floating timer", subtitle = "Shows time left over gated apps", onClick = { openOverlaySettings(context) }) {
+                SettingRow("Display over other apps", subtitle = "For the floating timer and the red button", onClick = { openOverlaySettings(context) }) {
                     ValueChevron(if (overlay) "Allowed" else "Allow", if (overlay) AppColors.focus else AppColors.gate)
                 }
                 Divider()
