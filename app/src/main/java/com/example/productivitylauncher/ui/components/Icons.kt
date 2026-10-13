@@ -37,6 +37,8 @@ enum class Ic(val path: String, val filled: Boolean = false) {
     Chart("M18 20V10 M12 20V4 M6 20v-6"),
     Shield("M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"),
     Home("M3 11l9-8 9 8 M5 10v10h5v-6h4v6h5V10"),
+    Contrast("M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 2v20 M12 2a10 10 0 0 1 0 20z"),
+    Bolt("M13 2L3 14h9l-1 8 10-12h-9z"),
 }
 
 private val cache = HashMap<Ic, ImageVector>()

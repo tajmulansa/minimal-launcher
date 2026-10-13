@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,12 +38,21 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.LauncherWidget
 import com.example.productivitylauncher.data.URGE_LOCK_MINUTES
+import com.example.productivitylauncher.data.hasDndAccess
+import com.example.productivitylauncher.data.isDndOn
+import com.example.productivitylauncher.data.setDnd
+import com.example.productivitylauncher.data.openDndSettings
+import com.example.productivitylauncher.data.openGrayscaleSettings
+import com.example.productivitylauncher.data.hasTorch
+import com.example.productivitylauncher.data.setTorch
+import com.example.productivitylauncher.data.observeTorch
 import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.data.clockLabel
 import com.example.productivitylauncher.data.dayKey
@@ -62,6 +73,7 @@ import com.example.productivitylauncher.ui.components.CheckCircle
 import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.IconButtonLarge
 import com.example.productivitylauncher.ui.components.PageHeader
+import com.example.productivitylauncher.ui.components.Rule
 import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.ui.components.TextLink
 import com.example.productivitylauncher.ui.components.clickableRole
@@ -94,7 +106,7 @@ fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
                         LauncherWidget.Habits -> HabitsWidget(state)
                         LauncherWidget.Note -> NoteWidget(state)
                         LauncherWidget.Dump -> DumpWidget(state, nav)
-                        LauncherWidget.Quick -> QuickActionsWidget(state)
+                        LauncherWidget.Quick -> QuickActionsWidget(state, nav)
                         null -> Unit
                     }
                 }
@@ -121,9 +133,10 @@ private fun WidgetHeader(label: String, accent: Boolean = false, link: String? =
 
 // ------------------------------------------------------------------ quick actions
 
-/** A grid of square one-tap buttons, four across. More buttons will be added here over time. */
+/** A grid of square one-tap buttons, four across. Every tile has the same layout: icon above, one-word label below. */
 @Composable
-private fun QuickActionsWidget(state: LauncherState) {
+private fun QuickActionsWidget(state: LauncherState, nav: Nav) {
+    val context = LocalContext.current
     var confirmUrge by remember { mutableStateOf(false) }
     if (confirmUrge) {
         AlertDialog(
@@ -135,12 +148,27 @@ private fun QuickActionsWidget(state: LauncherState) {
             dismissButton = { TextButton(onClick = { confirmUrge = false }) { AppText("Cancel", weight = FontWeight.SemiBold) } },
         )
     }
+
+    var torch by remember { mutableStateOf(false) }
+    DisposableEffect(Unit) {
+        val stop = observeTorch(context) { torch = it }
+        onDispose { stop() }
+    }
+    var dnd by remember { mutableStateOf(isDndOn(context)) }
+
     CeramicCard {
-        WidgetHeader("Quick actions")
-        val tiles: List<@Composable (Modifier) -> Unit> = listOf(
-            { m -> QuickTile("Lock In", Ic.Lock, state.lockIn, { state.updateLockIn(!state.lockIn) }, m) },
-            { m -> UrgeTile({ confirmUrge = true }, m) },
-        )
+        Caption("Quick actions")
+        val tiles = buildList<@Composable (Modifier) -> Unit> {
+            add { m -> QuickTile("Lock In", Ic.Lock, state.lockIn, { state.updateLockIn(!state.lockIn) }, m) }
+            add { m -> QuickTile("Break", Ic.Pause, false, { confirmUrge = true }, m, danger = true) }
+            add { m -> QuickTile("Grayscale", Ic.Contrast, false, { openGrayscaleSettings(context) }, m) }
+            if (hasTorch(context)) add { m -> QuickTile("Light", Ic.Bolt, torch, { setTorch(context, !torch) }, m) }
+            add { m -> QuickTile("Silent", Ic.Moon, dnd, {
+                if (!hasDndAccess(context)) openDndSettings(context)
+                else { dnd = !dnd; setDnd(context, dnd) }
+            }, m) }
+            add { m -> QuickTile("Focus", Ic.Target, false, { nav.go(Route.Focus) }, m) }
+        }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             tiles.chunked(4).forEach { row ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -155,117 +183,102 @@ private fun QuickActionsWidget(state: LauncherState) {
     }
 }
 
-/** The red button: starts a short lock that leaves only Call and Message. */
+/** One square tile. Filled when switched on; the red one (danger) is always filled red. */
 @Composable
-private fun UrgeTile(onClick: () -> Unit, modifier: Modifier) {
-    Column(
+private fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit, modifier: Modifier, danger: Boolean = false) {
+    val bg = when { danger -> AppColors.gate; on -> AppColors.primary; else -> AppColors.phone }
+    val fg = when { danger -> AppColors.onGate; on -> AppColors.onPrimary; else -> AppColors.text }
+    Box(
         modifier
-            .background(AppColors.gate, RoundedCornerShape(14.dp))
-            .semantics { contentDescription = "Red button, lock the phone for $URGE_LOCK_MINUTES minutes" }
-            .clickableRole(onClick, Role.Button)
-            .padding(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+            .background(bg, RoundedCornerShape(16.dp))
+            .semantics { contentDescription = if (danger) "$label, lock the phone for $URGE_LOCK_MINUTES minutes" else "$label, " + if (on) "on" else "off" }
+            .clickableRole(onClick, if (danger) Role.Button else Role.Switch),
+        contentAlignment = Alignment.Center,
     ) {
-        AppIcon(Ic.Lock, AppColors.onGate, size = 22.dp)
-        AppText("Break", size = 11.sp, weight = FontWeight.SemiBold, color = AppColors.onGate, maxLines = 1, modifier = Modifier.padding(top = 5.dp))
-        AppText("${URGE_LOCK_MINUTES} MIN", size = 11.sp, weight = FontWeight.Bold, color = AppColors.onGate.copy(alpha = 0.75f), letterSpacing = 1.sp)
-    }
-}
-
-@Composable
-private fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit, modifier: Modifier) {
-    val bg = if (on) AppColors.primary else AppColors.phone
-    val fg = if (on) AppColors.onPrimary else AppColors.text
-    Column(
-        modifier
-            .background(bg, RoundedCornerShape(14.dp))
-            .semantics { contentDescription = "$label, " + if (on) "on" else "off" }
-            .clickableRole(onClick, Role.Switch)
-            .padding(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        AppIcon(icon, fg, size = 22.dp)
-        AppText(label, size = 11.sp, weight = FontWeight.SemiBold, color = fg, maxLines = 1, modifier = Modifier.padding(top = 5.dp))
-        AppText(if (on) "ON" else "OFF", size = 11.sp, weight = FontWeight.Bold, color = fg.copy(alpha = 0.7f), letterSpacing = 1.sp)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            AppIcon(icon, fg, size = 24.dp)
+            AppText(label, size = 11.sp, weight = FontWeight.SemiBold, color = fg, maxLines = 1, align = TextAlign.Center)
+        }
     }
 }
 
 // ------------------------------------------------------------------ to-do list
 
-/** A normal to-do list. One task is the frog for the day, and the others unlock once the frog is checked. */
+/** A normal to-do list. One task is the frog for the day: it is bold, sits first, and the rest unlock once it is checked. */
 @Composable
 private fun TodoWidget(state: LauncherState, nav: Nav) {
-    var editing by remember { mutableStateOf(false) }
-    var draft by remember { mutableStateOf(state.frog) }
-    var newTask by remember { mutableStateOf("") }
+    var adding by remember { mutableStateOf(state.frog.isBlank() && state.tasks.isEmpty()) }
+    var draft by remember { mutableStateOf("") }
+    var editingFrog by remember { mutableStateOf(false) }
+    var frogDraft by remember { mutableStateOf("") }
     val locked = state.tasksLocked
+    fun submit() {
+        val text = draft.trim()
+        if (text.isNotEmpty()) { if (state.frog.isBlank()) state.updateFrog(text) else state.addTask(text) }
+        draft = ""
+        adding = false
+    }
     CeramicCard {
-        WidgetHeader("To-do")
-        // The frog: the one task that matters most today.
-        if (state.frog.isBlank() || editing) {
-            AppText("Pick today's frog, the one task that matters most. Do it first.", size = 14.sp, color = AppColors.muted, lineHeight = 20.sp)
-            AppField(
-                value = draft,
-                onChange = { draft = it },
-                placeholder = "e.g. Finish chemistry chapter 4",
-                onDone = { state.updateFrog(draft.trim()); editing = false },
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                CButton("Save", { state.updateFrog(draft.trim()); editing = false }, Modifier.weight(1f), BtnKind.Accent, small = true, enabled = draft.isNotBlank())
-                if (state.frog.isNotBlank()) CButton("Cancel", { draft = state.frog; editing = false }, Modifier.weight(1f), BtnKind.Soft, small = true)
-            }
-        } else {
-            Row(
-                Modifier.fillMaxWidth().background(AppColors.focus.copy(alpha = 0.10f), RoundedCornerShape(14.dp)).clickableRole({ state.setFrogDone(!state.frogDone) }).padding(horizontal = 14.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                CheckCircle(state.frogDone)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    AppText("FROG", size = 11.sp, weight = FontWeight.ExtraBold, color = AppColors.focus, letterSpacing = 1.5.sp)
-                    AppText(
-                        state.frog, size = 18.sp, weight = FontWeight.SemiBold, lineHeight = 24.sp,
-                        color = if (state.frogDone) AppColors.muted else AppColors.text, strike = state.frogDone,
-                    )
-                }
-            }
-            if (!state.frogDone) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    CButton("Focus ${state.frogMinutes} min", { nav.go(Route.Focus) }, Modifier.weight(1f), BtnKind.Accent, small = true, leading = Ic.Target)
-                    CButton("Edit", { draft = state.frog; editing = true }, Modifier.weight(1f), BtnKind.Soft, small = true)
+        Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Caption("Today")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (state.frog.isNotBlank() && !state.frogDone) TextLink("Focus ${state.frogMinutes} min", { nav.go(Route.Focus) })
+                Box(Modifier.size(44.dp).clickableRole({ adding = !adding }), contentAlignment = Alignment.Center) {
+                    AppIcon(if (adding) Ic.Close else Ic.Plus, AppColors.text, size = 22.dp, description = if (adding) "Close" else "Add a task")
                 }
             }
         }
 
-        // The other tasks.
-        if (locked && state.tasks.isNotEmpty()) {
-            AppText("Check your frog first. Then the rest unlock.", size = 13.sp, color = AppColors.muted)
+        // The frog: bold, first.
+        if (state.frog.isNotBlank()) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Box(Modifier.size(44.dp).clickableRole({ state.setFrogDone(!state.frogDone) }, Role.Checkbox), contentAlignment = Alignment.Center) {
+                    CheckCircle(state.frogDone, size = 30.dp)
+                }
+                if (editingFrog) {
+                    Box(Modifier.weight(1f)) {
+                        AppField(frogDraft, { frogDraft = it }, "Your frog", onDone = {
+                            if (frogDraft.isNotBlank()) state.updateFrog(frogDraft.trim())
+                            editingFrog = false
+                        })
+                    }
+                } else {
+                    AppText(
+                        state.frog, Modifier.weight(1f).clickableRole({ frogDraft = state.frog; editingFrog = true }),
+                        size = 18.sp, weight = FontWeight.Bold, lineHeight = 24.sp,
+                        color = if (state.frogDone) AppColors.muted else AppColors.text, strike = state.frogDone,
+                    )
+                }
+            }
+            if (state.tasks.isNotEmpty()) Rule()
         }
+
+        // The other tasks.
         state.tasks.forEach { t ->
             Row(
-                Modifier.fillMaxWidth().alpha(if (locked && !t.done) 0.5f else 1f),
+                Modifier.fillMaxWidth().alpha(if (locked && !t.done) 0.45f else 1f),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Row(
-                    Modifier.weight(1f).clickableRole({ state.toggleTask(t.id) }).padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
+                Box(Modifier.size(44.dp).clickableRole({ state.toggleTask(t.id) }, Role.Checkbox), contentAlignment = Alignment.Center) {
                     CheckCircle(t.done, size = 26.dp)
-                    AppText(t.text, Modifier.weight(1f), size = 16.sp, color = if (t.done) AppColors.muted else AppColors.text, strike = t.done)
                 }
-                if (!state.frogDone && !t.done && !editing) {
-                    TextLink("Make frog", { state.makeFrog(t.id) })
-                }
+                AppText(t.text, Modifier.weight(1f), size = 16.sp, color = if (t.done) AppColors.muted else AppColors.text, strike = t.done)
+                if (!state.frogDone && !t.done) TextLink("Make frog", { state.makeFrog(t.id) })
                 Box(Modifier.size(44.dp).clickableRole({ state.removeTask(t.id) }), contentAlignment = Alignment.Center) {
                     AppIcon(Ic.Close, AppColors.muted, size = 16.dp, description = "Remove task")
                 }
             }
         }
-        AppField(newTask, { newTask = it }, "Add a task", onDone = { state.addTask(newTask); newTask = "" })
+
+        if (adding) {
+            AppField(draft, { draft = it }, if (state.frog.isBlank()) "Your first task becomes today's frog" else "Add a task", onDone = { submit() })
+        } else if (state.frog.isBlank() && state.tasks.isEmpty()) {
+            AppText("Nothing here yet. Tap + to add a task.", size = 14.sp, color = AppColors.muted)
+        }
+        if (locked && state.tasks.isNotEmpty()) {
+            AppText("The bold task is your frog. Check it first, then the rest unlock.", size = 13.sp, color = AppColors.muted, lineHeight = 18.sp)
+        }
     }
 }
 

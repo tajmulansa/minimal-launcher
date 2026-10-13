@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
@@ -97,3 +99,39 @@ fun goHome(activity: Activity) {
     )
 }
 
+
+
+/** Opens the screen where the phone's own grayscale (colour correction) is switched on. */
+fun openGrayscaleSettings(context: Context) {
+    val tried = runCatching {
+        context.startActivity(Intent("android.settings.COLOR_CORRECTION_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }.isSuccess
+    if (!tried) openSettingsAction(context, Settings.ACTION_ACCESSIBILITY_SETTINGS)
+}
+
+private fun torchCameraId(context: Context): String? = runCatching {
+    val cm = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    cm.cameraIdList.firstOrNull { id ->
+        val c = cm.getCameraCharacteristics(id)
+        c.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true &&
+            c.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK
+    }
+}.getOrNull()
+
+fun hasTorch(context: Context): Boolean = torchCameraId(context) != null
+
+fun setTorch(context: Context, on: Boolean) {
+    val id = torchCameraId(context) ?: return
+    runCatching { (context.getSystemService(Context.CAMERA_SERVICE) as CameraManager).setTorchMode(id, on) }
+}
+
+/** Reports the torch state whenever it changes. Returns a function that stops listening. */
+fun observeTorch(context: Context, onChange: (Boolean) -> Unit): () -> Unit {
+    val cm = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    val id = torchCameraId(context) ?: return {}
+    val cb = object : CameraManager.TorchCallback() {
+        override fun onTorchModeChanged(cameraId: String, enabled: Boolean) { if (cameraId == id) onChange(enabled) }
+    }
+    runCatching { cm.registerTorchCallback(cb, null) }
+    return { runCatching { cm.unregisterTorchCallback(cb) } }
+}
