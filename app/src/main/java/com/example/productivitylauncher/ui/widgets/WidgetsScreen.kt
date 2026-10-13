@@ -168,8 +168,8 @@ private fun UrgeTile(onClick: () -> Unit, modifier: Modifier) {
         verticalArrangement = Arrangement.Center,
     ) {
         AppIcon(Ic.Lock, AppColors.onGate, size = 22.dp)
-        AppText("Red button", size = 11.sp, weight = FontWeight.SemiBold, color = AppColors.onGate, maxLines = 1, modifier = Modifier.padding(top = 5.dp))
-        AppText("${URGE_LOCK_MINUTES} MIN", size = 10.sp, weight = FontWeight.Bold, color = AppColors.onGate.copy(alpha = 0.75f), letterSpacing = 1.sp)
+        AppText("Break", size = 11.sp, weight = FontWeight.SemiBold, color = AppColors.onGate, maxLines = 1, modifier = Modifier.padding(top = 5.dp))
+        AppText("${URGE_LOCK_MINUTES} MIN", size = 11.sp, weight = FontWeight.Bold, color = AppColors.onGate.copy(alpha = 0.75f), letterSpacing = 1.sp)
     }
 }
 
@@ -188,7 +188,7 @@ private fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit,
     ) {
         AppIcon(icon, fg, size = 22.dp)
         AppText(label, size = 11.sp, weight = FontWeight.SemiBold, color = fg, maxLines = 1, modifier = Modifier.padding(top = 5.dp))
-        AppText(if (on) "ON" else "OFF", size = 10.sp, weight = FontWeight.Bold, color = fg.copy(alpha = 0.7f), letterSpacing = 1.sp)
+        AppText(if (on) "ON" else "OFF", size = 11.sp, weight = FontWeight.Bold, color = fg.copy(alpha = 0.7f), letterSpacing = 1.sp)
     }
 }
 
@@ -224,7 +224,7 @@ private fun TodoWidget(state: LauncherState, nav: Nav) {
             ) {
                 CheckCircle(state.frogDone)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    AppText("FROG", size = 10.sp, weight = FontWeight.ExtraBold, color = AppColors.focus, letterSpacing = 1.5.sp)
+                    AppText("FROG", size = 11.sp, weight = FontWeight.ExtraBold, color = AppColors.focus, letterSpacing = 1.5.sp)
                     AppText(
                         state.frog, size = 18.sp, weight = FontWeight.SemiBold, lineHeight = 24.sp,
                         color = if (state.frogDone) AppColors.muted else AppColors.text, strike = state.frogDone,
@@ -260,7 +260,7 @@ private fun TodoWidget(state: LauncherState, nav: Nav) {
                 if (!state.frogDone && !t.done && !editing) {
                     TextLink("Make frog", { state.makeFrog(t.id) })
                 }
-                Box(Modifier.size(36.dp).clickableRole({ state.removeTask(t.id) }), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(44.dp).clickableRole({ state.removeTask(t.id) }), contentAlignment = Alignment.Center) {
                     AppIcon(Ic.Close, AppColors.muted, size = 16.dp, description = "Remove task")
                 }
             }
@@ -386,7 +386,7 @@ private fun HabitsWidget(state: LauncherState) {
                     AppText("I ${h.action}", size = 15.sp, weight = FontWeight.Medium, color = if (done) AppColors.muted else AppColors.text, strike = done)
                     AppText("After ${h.anchor}", size = 12.sp, color = AppColors.muted)
                 }
-                Box(Modifier.size(36.dp).clickableRole({ state.removeHabit(h.id) }), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(44.dp).clickableRole({ state.removeHabit(h.id) }), contentAlignment = Alignment.Center) {
                     AppIcon(Ic.Close, AppColors.muted, size = 16.dp, description = "Remove habit")
                 }
             }

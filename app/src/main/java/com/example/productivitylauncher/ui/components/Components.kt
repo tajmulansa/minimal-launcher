@@ -324,7 +324,7 @@ fun GatedTag(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         AppIcon(Ic.Lock, AppColors.gate, size = 11.dp)
-        AppText("GATED", size = 10.sp, weight = FontWeight.ExtraBold, color = AppColors.gate, letterSpacing = 1.5.sp)
+        AppText("GATED", size = 11.sp, weight = FontWeight.ExtraBold, color = AppColors.gate, letterSpacing = 1.5.sp)
     }
 }
 
