@@ -13,6 +13,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.WidgetHost
+import com.example.productivitylauncher.data.canDrawOverlays
+import com.example.productivitylauncher.service.UrgeButtonService
 import com.example.productivitylauncher.ui.LauncherApp
 import com.example.productivitylauncher.ui.theme.LauncherTheme
 import com.example.productivitylauncher.ui.theme.resolvePalette
@@ -58,6 +60,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         state.onResume()
+        // The launcher is on screen, so the red button over other apps is not needed here.
+        if (state.urgeButtonOn && canDrawOverlays(this)) UrgeButtonService.hide(this) else UrgeButtonService.stop(this)
+    }
+
+    override fun onPause() {
+        // Leaving the launcher for another app: bring the red button back.
+        if (state.urgeButtonOn && canDrawOverlays(this)) UrgeButtonService.show(this)
+        super.onPause()
     }
 
     override fun onStop() {

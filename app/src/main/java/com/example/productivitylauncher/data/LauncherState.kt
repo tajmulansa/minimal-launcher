@@ -33,7 +33,11 @@ class LauncherState(context: Context) {
     var resumeTick by mutableIntStateOf(0)
         private set
 
-    fun onResume() { resumeTick++ }
+    fun onResume() {
+        // The red button over other apps can start the lock while the launcher is in the background.
+        urgeEnd = long("urge_end", 0L)
+        resumeTick++
+    }
 
     fun pipFacts(): PipFacts = PipFacts(
         hour = hourOf(),
@@ -178,6 +182,12 @@ class LauncherState(context: Context) {
     /** Epoch millis when the red button's timer ends, or 0. Saved, so closing the app does not end it. */
     var urgeEnd by mutableStateOf(long("urge_end", 0L))
         private set
+
+    /** Show the red button over every app. Needs "Display over other apps". */
+    var urgeButtonOn by mutableStateOf(bool("urge_button", false))
+        private set
+
+    fun updateUrgeButton(on: Boolean) { urgeButtonOn = on; save { putBoolean("urge_button", on) } }
 
     fun startUrgeLock(minutes: Int = URGE_LOCK_MINUTES) {
         urgeEnd = System.currentTimeMillis() + minutes * 60_000L
@@ -645,7 +655,7 @@ class LauncherState(context: Context) {
         prefs.edit().clear().apply()
         frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
-        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L
+        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L; urgeButtonOn = false
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
         limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L

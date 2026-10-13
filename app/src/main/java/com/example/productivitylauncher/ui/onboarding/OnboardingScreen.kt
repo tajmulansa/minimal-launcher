@@ -154,7 +154,7 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
             size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
         )
         PermRow("Usage access", "Reads how long apps were used, on this phone only, to show screen time and your gated time.", usage) { openUsageAccessSettings(context) }
-        PermRow("Floating timer", "Lets the small timer show over a gated app while your session runs.", overlay) { openOverlaySettings(context) }
+        PermRow("Display over other apps", "Lets the small timer show over a gated app, and the optional red button show over every app.", overlay) { openOverlaySettings(context) }
         PermRow("Do Not Disturb", "Lets the moon button and focus sessions silence notifications.", dnd) { openDndSettings(context) }
         PermRow("Calendar (read only)", "Shows today's events in the Agenda widget. Nothing is copied or sent.", calendar) { calLauncher.launch(Manifest.permission.READ_CALENDAR) }
         PermRow("Home app", "Make this your launcher so it opens when you press Home.", home) { openDefaultLauncherSettings(context) }

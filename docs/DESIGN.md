@@ -135,3 +135,7 @@ Turned on and off from the Quick actions widget. While it is on, Home shows only
 ## Red button
 
 A red tile in the Quick actions widget, for a moment when you know you should not be on your phone. After one confirmation it closes everything and shows a full-screen 5 minute timer with only a Call button and a Message button. Pressing Home or Back does not leave it, and it survives closing the app. Known limit: the launcher cannot stop an app that is opened from outside it (Recents, a notification), because Android only allows that with an accessibility service.
+
+### Red button in every app
+
+An optional setting (Settings > Red button). A small red dot sits against the right edge over every app. Tap it, then tap again within 3 seconds, and the launcher opens straight into the 5 minute lock. The dot is hidden while the launcher itself is on screen. It needs "Display over other apps". Known limit: it is drawn by a background service, so if Android stops that service the dot disappears until the launcher is opened again.
