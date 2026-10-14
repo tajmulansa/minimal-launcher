@@ -576,6 +576,16 @@ class LauncherState(context: Context) {
 
     fun removeWidgetId(id: String) = updateWidgets(widgets - id)
 
+    /** Moves a widget one place earlier (delta -1) or later (delta +1) on the Widgets page. */
+    fun moveWidget(id: String, delta: Int) {
+        val i = widgets.indexOf(id)
+        val j = i + delta
+        if (i < 0 || j !in widgets.indices) return
+        val list = widgets.toMutableList()
+        list[i] = list[j].also { list[j] = list[i] }
+        updateWidgets(list)
+    }
+
     private fun updateWidgets(list: List<String>) {
         widgets = list
         save { putString("widgets", JSONArray(list).toString()) }

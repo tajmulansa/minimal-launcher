@@ -53,7 +53,7 @@ import com.example.productivitylauncher.ui.components.TextLink
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.components.ThemePicker
 
-/** First run: welcome, pick gated apps, pick six Home apps, set the first frog, choose a theme. */
+/** First run: welcome, pick gated apps, pick six Home apps, set the first most important task, choose a theme. */
 @Composable
 fun OnboardingScreen(state: LauncherState, nav: Nav) {
     val context = LocalContext.current
@@ -72,12 +72,16 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
         }
         Column(Modifier.weight(1f).fillMaxWidth()) {
             when (step) {
-                0 -> Column(Modifier.weight(1f).padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    AppText("Welcome.", size = 34.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
+                0 -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.Center) {
+                    AppText("Made for students.", size = 32.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
                     AppText(
-                        "This launcher helps you do one important thing a day. It keeps distracting apps calm and hard to open, and everything stays on this phone.",
-                        size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, modifier = Modifier.padding(top = 12.dp),
+                        "Your phone is full of things that pull you away from studying. This launcher puts you back in charge.",
+                        size = 16.sp, color = AppColors.muted, lineHeight = 24.sp, modifier = Modifier.padding(top = 12.dp, bottom = 20.dp),
                     )
+                    WelcomePoint("Do the one thing that matters", "Pick your most important task each day and do it first.")
+                    WelcomePoint("Distractions wait", "Social and game apps sit behind a short pause, so you open them on purpose, not by habit.")
+                    WelcomePoint("Focus when you need it", "Focus sessions, Lock In and a red button for the hard moments.")
+                    WelcomePoint("Private by design", "No account, no ads, no internet. Everything stays on this phone.")
                 }
                 1 -> Column(Modifier.weight(1f)) {
                     AppText("Gate your distractions", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
@@ -88,8 +92,8 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                     HomePickerBody(state, Modifier.weight(1f))
                 }
                 3 -> Column(Modifier.weight(1f).padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    AppText("Your first task", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
-                    AppText("Your to-do list starts with one frog: the task that matters most today. Check it first, then your other tasks unlock.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
+                    AppText("Your most important task", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
+                    AppText("What is the one task that matters most today? It shows in bold at the top of your list. Do it first and your other tasks unlock.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
                     AppField(frog, { frog = it }, "e.g. Finish chemistry chapter 4", fill = AppColors.card)
                 }
                 5 -> PermissionsStep(state, Modifier.weight(1f))
@@ -115,6 +119,14 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
             if (step > 0) TextLink("Back", { step -= 1 })
             else if (step == 0) TextLink("Skip setup", { state.finishOnboarding(); nav.go(Route.Main) })
         }
+    }
+}
+
+@Composable
+private fun WelcomePoint(title: String, body: String) {
+    Column(Modifier.padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        AppText(title, size = 16.sp, weight = FontWeight.SemiBold)
+        AppText(body, size = 14.sp, color = AppColors.muted, lineHeight = 20.sp)
     }
 }
 

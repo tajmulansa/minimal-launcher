@@ -81,27 +81,27 @@ fun EveningScreen(state: LauncherState, nav: Nav) {
             if (done) {
                 Spacer(Modifier.height(40.dp))
                 AppText("Day closed", size = 32.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                AppText("Your mind is clear and tomorrow's frog is ready.", size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, modifier = Modifier.fillMaxWidth())
+                AppText("Your mind is clear and tomorrow's most important task is ready.", size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, modifier = Modifier.fillMaxWidth())
                 AppText("[-_-] phone down. sleep well.", size = 14.sp, color = AppColors.muted, mono = true, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 CButton("Back to Home", { nav.back() }, Modifier.fillMaxWidth().padding(top = 16.dp), BtnKind.Primary)
                 return@Column
             }
             StepCard(1, "How did today go?") {
                 if (state.frog.isBlank()) {
-                    AppText("You didn't set a frog today. That's okay, tomorrow is a fresh start.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp)
+                    AppText("You didn't set a most important task today. That's okay, tomorrow is a fresh start.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp)
                 } else {
                     Row(Modifier.fillMaxWidth().clickableRole({ state.setFrogDone(!state.frogDone) }), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         CheckCircle(state.frogDone)
                         AppText(state.frog, Modifier.weight(1f), size = 18.sp, weight = FontWeight.SemiBold, strike = state.frogDone, color = if (state.frogDone) AppColors.muted else AppColors.text)
                     }
-                    AppText(if (state.frogDone) "Frog eaten. Well done." else "Not finished? Leave tomorrow's frog empty and it carries over.", size = 14.sp, color = AppColors.muted)
+                    AppText(if (state.frogDone) "Done. Well done." else "Not finished? Leave tomorrow's most important task empty and it carries over.", size = 14.sp, color = AppColors.muted)
                 }
             }
             StepCard(2, "Empty your head") {
                 AppField(dump, { dump = it }, "Anything still on your mind?", onDone = { state.addDump(dump); dump = "" })
                 if (state.dumps.isNotEmpty()) AppText("${state.dumps.size} thought${if (state.dumps.size == 1) "" else "s"} saved in your brain dump.", size = 13.sp, color = AppColors.muted)
             }
-            StepCard(3, "Tomorrow's frog") {
+            StepCard(3, "Tomorrow's most important task") {
                 AppField(tomorrow, { tomorrow = it }, "The one thing for tomorrow")
             }
             CButton("Close the day", {
@@ -157,7 +157,7 @@ fun WeekScreen(state: LauncherState, nav: Nav) {
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard("$frogs", "frogs eaten in the last 7 days", Modifier.weight(1f), good = true)
+                StatCard("$frogs", "important tasks done in the last 7 days", Modifier.weight(1f), good = true)
                 StatCard("$backed", "times you backed out of a gate", Modifier.weight(1f), good = true)
             }
             AppText(

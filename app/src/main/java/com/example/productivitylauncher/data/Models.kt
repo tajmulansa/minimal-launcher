@@ -15,14 +15,14 @@ data class Task(val id: String, val text: String, val done: Boolean = false)
 data class Dump(val id: String, val text: String, val createdAt: Long)
 
 /** The widgets the launcher itself provides. Hosted app widgets use ids like "ext:12". */
-enum class LauncherWidget(val id: String, val title: String, val subtitle: String, val letter: String) {
-    Frog("frog", "To-do list", "Many tasks, one frog first", "T"),
-    Water("water", "Water reminder", "Count glasses", "W"),
-    Budget("budget", "Distraction budget", "Time left in gated apps", "D"),
+enum class LauncherWidget(val id: String, val title: String, val subtitle: String, val letter: String, val half: Boolean = false) {
+    Frog("frog", "To-do list", "Your tasks, with one most important", "T"),
+    Water("water", "Water reminder", "Count glasses", "W", half = true),
+    Budget("budget", "Distraction budget", "Time left in gated apps", "D", half = true),
     Agenda("agenda", "Agenda", "Today's calendar events", "A"),
     Habits("habits", "Habit stack", "After X, I do Y", "H"),
-    Note("note", "Quick note", "Jot one thing", "N"),
-    Dump("dump", "Brain dump", "Empty your head, sort later", "B"),
+    Note("note", "Quick note", "Jot one thing", "N", half = true),
+    Dump("dump", "Brain dump", "Empty your head, sort later", "B", half = true),
     Quick("quick", "Quick actions", "One-tap buttons, starting with Lock In", "Q");
 
     companion object {

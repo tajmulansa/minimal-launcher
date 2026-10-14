@@ -3,7 +3,7 @@ package com.example.productivitylauncher.ui.settings
 /** The privacy policy, shown in setup and in Settings. Keep docs/PRIVACY.md in sync with this. */
 val PRIVACY_SECTIONS: List<Pair<String, String>> = listOf(
     "Short version" to "Everything this launcher does happens on your phone. It has no internet permission, so it cannot send your data anywhere. There are no accounts, ads, analytics or trackers.",
-    "What is stored" to "Your frog, notes, habits, brain dump, water count, settings and the apps you gate are saved in this app's private storage on your phone. Delete all my data in Settings erases them. Uninstalling the app erases them too.",
+    "What is stored" to "Your tasks, notes, habits, brain dump, water count, settings and the apps you gate are saved in this app's private storage on your phone. Delete all my data in Settings erases them. Uninstalling the app erases them too.",
     "Usage access (optional)" to "If you allow it, the launcher reads how long each app was used on this phone to show screen time and gated time. It is never uploaded or shared.",
     "Display over other apps (optional)" to "Used only to show the small countdown timer over a gated app, and the red button over other apps if you turn it on.",
     "Do Not Disturb access (optional)" to "Used only to turn Do Not Disturb on or off from the moon button and during focus sessions.",

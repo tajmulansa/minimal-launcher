@@ -72,7 +72,7 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
     val shown = if (state.lockIn) exactNameMatches(state.apps, query) else filterApps(base, query)
 
     Column(Modifier.fillMaxSize()) {
-        PageHeader("All apps", onBack = nav.back, trailing = { IconButtonLarge(Ic.Sliders, "Settings", { nav.go(Route.Settings) }) })
+        PageHeader("All apps", onBack = nav.back, trailing = { IconButtonLarge(Ic.Gear, "Settings", { nav.go(Route.Settings) }) })
         Row(
             Modifier
                 .fillMaxWidth()
