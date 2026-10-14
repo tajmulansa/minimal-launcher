@@ -3,49 +3,70 @@
 [![Build](../../actions/workflows/build.yml/badge.svg)](../../actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A minimal, text-first Android launcher that helps students focus. It is built on ideas from productivity books: do the hardest task first, start small, and make distracting apps harder to open than useful ones.
+A minimal Android launcher made for students. It helps you study without your phone pulling you away: do your most important task first, make distracting apps harder to open than useful ones, and keep everything private on your phone.
 
-> **Status: pre-alpha.** This is an early scaffold. The home screen and app list are written, but **the project has not been through its first CI build yet**, so expect small build fixes first (roadmap M1). The gate, pet, and widgets described below are planned and not built yet. The visual direction is the **Ceramic prototype** in [docs/design](docs/design/README.md) (open it in a browser). The app does not use it yet. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Status: alpha.** The launcher is built and builds in CI on every change, but it is still changing quickly and has only been tested on a few phones. The app name, final icon and application ID are not decided yet (see [Open decisions](#open-decisions)).
 
 ## Why this exists
 
 Phones are designed to pull attention away from what matters. Most "focus" apps either block everything (and get uninstalled) or only report screen time (and change nothing). This launcher takes a middle path:
 
-- **A normal to-do list with one frog.** Add as many tasks as you like, but mark just one as the day's "frog" (the idea from *Eat That Frog*). Check the frog first, then the other tasks unlock. It lives in the to-do widget, nowhere else.
-- **Friction where it counts.** Apps the *user* marks as distracting are slow to open. Work apps open in one tap.
-- **Gentle, never shaming.** A small text-face pet nudges the user based on what they are doing. It cheers wins and never punishes.
-- **Private by design.** No account, no ads, no analytics, no internet permission. Everything stays on the device.
+- **Do the one thing that matters.** A plain to-do list where one task is your *most important task* of the day. It is shown in bold at the top. Check it first, and the other tasks unlock.
+- **Friction where it counts.** Apps you mark as distracting wait behind a short pause. Your everyday apps open in one tap.
+- **Help for the hard moments.** Focus sessions, Lock In mode and a red button.
+- **Private by design.** No account, no ads, no analytics, no internet permission. Everything stays on the phone.
 
-## What exists today
+## What is built
 
-- Registers as an Android home screen (HOME launcher)
-- Live clock and date
-- One persistent "frog" field (stored locally)
-- Searchable, text-only list of all installed apps, tap to launch
-- GitHub Actions build that produces an installable debug APK, plus unit tests and lint
+**Home and apps**
+- Home screen with a numbers clock, date, screen time and six Home apps you choose
+- Searchable list of all installed apps
+- Dock with Phone, Messages, Do Not Disturb and Focus
 
-## Planned
+**Gate for distracting apps**
+- Choose which apps are gated. Opening one starts a breathing pause, a typed phrase and a choice of how long to stay, with a longer wait each time you open it
+- A daily limit for gated apps (1 hour by default) and a small floating timer over the app while a session runs
+- Settings that make the gate stricter apply at once. Settings that make it easier wait 24 hours
+- Gated apps cannot be Home apps
 
-| Area | Idea | Inspired by |
-| --- | --- | --- |
-| Frog card | One most important task, a "start 2 minutes" button, an optional 25-minute focus timer | *Eat That Frog*, *Atomic Habits* |
-| Gated apps | User-chosen distracting apps shown in red; opening one asks for a reason, a typed phrase, and a wait that grows with each open | *Indistractable*, *The One Thing* |
-| Pet | A friendly text-face companion that reacts to behavior (long phone use, frog undone, late night) with a hard daily cap | *Atomic Habits*, *Mindset* |
-| Evening shutdown | Review the day and set tomorrow's frog before sleep | *Deep Work*, Ivy Lee method |
-| Tools page | Habit stack, quiz yourself, focus timer, phone-time mirror, exam countdown, brain dump, weekly review | *Make It Stick*, *A Mind for Numbers*, *Getting Things Done*, *Digital Minimalism* |
+**Widgets page**
+- To-do list with one most important task, Quick actions, Water, Distraction budget, Agenda, Habit stack, Quick note and Brain dump
+- Small widgets sit two to a row. Add, move and remove widgets with the edit button
+- Add widgets from other apps, grouped by app, with previews and resizing
 
-Full details and design rules: [docs/DESIGN.md](docs/DESIGN.md).
+**Quick actions**
+- **Lock In:** while on, only your Home apps show. Any other app is found only by typing its full name
+- **Break (red button):** a 5 minute full-screen timer with only Call and Message. It survives closing the app. Optionally, a small red dot can show over every app (Settings, Red button) and starts the same lock after two taps
+- **Gray:** opens the phone's own grayscale setting
+- **Light:** flashlight
+- **Silent:** Do Not Disturb
+- **Focus:** opens the focus screen
+
+**Focus and review**
+- Focus session with a timer, Do Not Disturb and gated apps locked
+- Evening shutdown to review the day and set tomorrow's most important task
+- Weekly review of screen time, finished tasks and gates backed out of
+
+**Look**
+- Themes on their own screen: Auto, Light, Dark, Pen blue, Midnight and Notebook (with ruled lines)
+- Inter font, one calm Ceramic style. See [docs/DESIGN.md](docs/DESIGN.md)
+
+**Also in the code**
+- Pip, a small text-face companion. It is switched off for now (`PIP_ENABLED`), and its code and tests are kept
+
+Full details and design rules: [docs/DESIGN.md](docs/DESIGN.md). Plans: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Get the app without a PC
 
 You can build and install it entirely from a phone.
 
 1. Open the **Actions** tab of this repository.
-2. Choose the **Build** workflow, tap **Run workflow**, then confirm.
-3. Wait about 5 to 10 minutes for it to finish (green check).
-4. Open the finished run, scroll to **Artifacts**, and download **debug-apk**. It arrives as a zip. Extract it with your phone's file manager.
-5. Tap the `.apk` to install. Android will ask you to allow installs from your browser or file manager.
-6. Go to **Settings, Apps, Default apps, Home app** and choose this launcher. To go back, choose your old launcher in the same place.
+2. Open the latest green **Build** run (or choose **Build**, tap **Run workflow**, then confirm).
+3. Scroll to **Artifacts** and download **debug-apk**. It arrives as a zip. Extract it with your phone's file manager.
+4. Tap the `.apk` to install. Android will ask you to allow installs from your browser or file manager.
+5. Go to **Settings, Apps, Default apps, Home app** and choose this launcher. To go back, choose your old launcher in the same place.
+
+If Google Play Protect blocks the install, it is because debug builds come from outside the Play Store and the app asks for optional permissions. You can switch off **Scan apps with Play Protect** in the Play Store's Play Protect settings while you install, then switch it back on.
 
 Debug builds are for testing only. Release builds for Google Play use the [release workflow](docs/RELEASING.md).
 
@@ -68,11 +89,11 @@ Or open the folder in Android Studio and press Run.
 | | |
 | --- | --- |
 | Language | Kotlin |
-| UI | Jetpack Compose (Material 3 theme, custom text-first components) |
+| UI | Jetpack Compose (custom text-first components, Material 3 only for dialogs) |
 | Min / target SDK | 26 / 36 (Google Play requires targeting Android 16, API 36, for new apps and updates since 31 Aug 2026) |
 | Build | Gradle (Kotlin DSL), version catalog in `gradle/libs.versions.toml` |
 | CI | GitHub Actions |
-| Storage | Local only (SharedPreferences now, DataStore if needed later) |
+| Storage | Local only (SharedPreferences) |
 | Network | None. The app does not request the INTERNET permission |
 
 ## Project layout
@@ -84,13 +105,14 @@ Or open the folder in Android Studio and press Run.
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml # HOME intent filter lives here
-│       │   ├── res/                # strings, colors, icon
+│       │   ├── res/                # strings, colors, fonts, icon
 │       │   └── java/com/example/productivitylauncher/
 │       │       ├── MainActivity.kt
-│       │       ├── data/           # app list, filtering, local storage
-│       │       └── ui/             # theme, components, home, apps
+│       │       ├── data/           # state, rules, app list, system helpers
+│       │       ├── service/        # floating timer and red button overlays
+│       │       └── ui/             # theme, components and one folder per screen
 │       └── test/                   # JVM unit tests
-├── docs/                           # design, architecture, roadmap, releasing
+├── docs/                           # design, architecture, roadmap, privacy, releasing
 ├── gradle/libs.versions.toml       # all dependency versions
 └── .github/                        # workflows, issue and PR templates
 ```
@@ -99,7 +121,7 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Contributing
 
-Contributions of every size are welcome: code, design, writing the pet's lines, testing on different devices, or improving these docs.
+Contributions of every size are welcome: code, design, testing on different devices, or improving these docs.
 
 1. Read [CONTRIBUTING.md](CONTRIBUTING.md) (it includes a phone-only workflow).
 2. Pick an issue labeled `good first issue`, or open one to propose your idea.
@@ -110,8 +132,15 @@ By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 ## Privacy and permissions
 
 - No accounts, ads, analytics, trackers, or network access.
-- All data (such as your frog text) stays on your device. `allowBackup` is off.
-- Planned optional permissions, each explained in-app before it is requested: **Usage Access** (total phone time) and **Notifications** (pet reminders). The app must keep working without them.
+- All data (your tasks, notes, habits and settings) stays on your device. `allowBackup` is off.
+- Every permission is optional, is explained in the app before it is requested, and the app keeps working without it:
+  - **Usage access:** screen time and gated time
+  - **Display over other apps:** the floating timer and the optional red button
+  - **Do Not Disturb access:** the Silent tile, the moon button and focus sessions
+  - **Calendar (read only):** the Agenda widget
+  - **Home app:** make it your launcher
+
+Full policy: [docs/PRIVACY.md](docs/PRIVACY.md).
 
 ## Open decisions
 
@@ -119,8 +148,8 @@ These are intentionally unset, so please do not hard-code guesses:
 
 - **App name.** "Launcher" is a working title.
 - **Application ID.** `com.example.productivitylauncher` is a placeholder that Google Play rejects. It can never change after the first Play upload.
-- **Final icon and name.** The look is chosen (Ceramic, Inter, light and dark), but the app icon and name are not.
-- **Pip.** The pet is a text face named Pip. More lines and behavior still to design.
+- **Final icon.** The look is chosen, but the app icon is not.
+- **Study Together.** Studying with friends over a nearby connection, with no internet, is an idea under discussion and is not built.
 
 ## Inspiration
 
