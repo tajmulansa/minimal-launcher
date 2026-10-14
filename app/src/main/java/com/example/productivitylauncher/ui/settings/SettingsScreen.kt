@@ -101,7 +101,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             }
 
             SettingsGroup("Focus and rhythm") {
-                SettingRow("Focus length", subtitle = "Default session for your frog") {
+                SettingRow("Focus length", subtitle = "Default session for your most important task") {
                     Stepper("${state.frogMinutes} min", { state.updateFrogMinutes(state.frogMinutes - 5) }, { state.updateFrogMinutes(state.frogMinutes + 5) }, valueWidth = 70.dp)
                 }
                 Divider()
@@ -209,7 +209,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             onDismissRequest = { confirmReset = false },
             containerColor = AppColors.card,
             title = { AppText("Delete all data?", size = 20.sp, weight = FontWeight.SemiBold) },
-            text = { AppText("This removes your frog, notes, habits, brain dump, gated apps and settings from this phone. It can't be undone.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp) },
+            text = { AppText("This removes your tasks, notes, habits, brain dump, gated apps and settings from this phone. It can't be undone.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp) },
             confirmButton = {
                 TextButton(onClick = { state.resetAll(); confirmReset = false; nav.go(Route.Onboarding) }) {
                     AppText("Delete", color = AppColors.gate, weight = FontWeight.SemiBold)

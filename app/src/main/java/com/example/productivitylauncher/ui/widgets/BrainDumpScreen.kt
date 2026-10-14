@@ -50,7 +50,7 @@ fun BrainDumpScreen(state: LauncherState, nav: Nav) {
                 CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
                     AppText(d.text, size = 16.sp, lineHeight = 22.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CButton("Make it my frog", {
+                        CButton("Make it my most important task", {
                             state.updateFrog(d.text); state.setFrogDone(false); state.removeDump(d.id); nav.back()
                         }, kind = BtnKind.Accent, small = true)
                         CButton("Let it go", { state.removeDump(d.id) }, kind = BtnKind.Soft, small = true, leading = Ic.Trash)

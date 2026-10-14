@@ -7,10 +7,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.data.canDrawOverlays
@@ -23,6 +26,9 @@ import com.example.productivitylauncher.ui.theme.resolvePalette
  * The single activity of the app. It is registered as a HOME activity in the manifest,
  * so Android can offer it as the default launcher.
  */
+/** 1.0 is Android's normal size. */
+private const val UI_SCALE = 0.88f
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var state: LauncherState
@@ -46,8 +52,12 @@ class MainActivity : ComponentActivity() {
                 )
                 onDispose { }
             }
-            LauncherTheme(palette) {
-                LauncherApp(state = state, widgetHost = widgetHost, homeSignal = homeSignal)
+            // Everything is drawn a little smaller than the Android default: sizes and text scale together.
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density * UI_SCALE, density.fontScale)) {
+                LauncherTheme(palette) {
+                    LauncherApp(state = state, widgetHost = widgetHost, homeSignal = homeSignal)
+                }
             }
         }
     }

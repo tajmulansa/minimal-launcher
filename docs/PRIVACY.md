@@ -8,7 +8,7 @@ Everything this launcher does happens on your phone. It has no internet permissi
 
 ## What is stored
 
-Your frog, notes, habits, brain dump, water count, settings and the apps you gate are saved in this app's private storage on your phone. Delete all my data in Settings erases them. Uninstalling the app erases them too.
+Your tasks, notes, habits, brain dump, water count, settings and the apps you gate are saved in this app's private storage on your phone. Delete all my data in Settings erases them. Uninstalling the app erases them too.
 
 ## Usage access (optional)
 

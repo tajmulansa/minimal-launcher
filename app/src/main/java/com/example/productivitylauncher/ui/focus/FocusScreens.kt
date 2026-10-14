@@ -118,7 +118,7 @@ fun FocusScreen(state: LauncherState, nav: Nav) {
                 }
             }
             AppText(
-                if (state.frog.isBlank()) "No frog set yet. Add one on the Widgets page." else state.frog,
+                if (state.frog.isBlank()) "No most important task set yet. Add one on the Widgets page." else state.frog,
                 size = 20.sp, weight = FontWeight.SemiBold, align = TextAlign.Center, lineHeight = 26.sp,
             )
             if (!active) {
@@ -148,7 +148,7 @@ private fun CompleteBlock(state: LauncherState, nav: Nav, onAgain: () -> Unit) {
     }
     AppText("Focus complete", size = 28.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
     AppText("Did you finish \"${state.frog}\"?", size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp)
-    CButton("Yes, frog eaten", { state.setFrogDone(true); nav.back() }, Modifier.fillMaxWidth(), BtnKind.Accent, leading = Ic.Check)
+    CButton("Yes, done", { state.setFrogDone(true); nav.back() }, Modifier.fillMaxWidth(), BtnKind.Accent, leading = Ic.Check)
     CButton("Not yet", { nav.back() }, Modifier.fillMaxWidth(), BtnKind.Soft)
     TextLink("Another session", onAgain)
 }
