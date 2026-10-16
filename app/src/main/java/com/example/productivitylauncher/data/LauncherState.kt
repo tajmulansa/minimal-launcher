@@ -555,8 +555,18 @@ class LauncherState(context: Context) {
 
     // ------------------------------------------------------------ widgets page
 
-    var widgets by mutableStateOf(readStringList("widgets").ifEmpty { DEFAULT_WIDGETS })
+    var widgets by mutableStateOf(addNewWidgetsOnce(readStringList("widgets").ifEmpty { DEFAULT_WIDGETS }))
         private set
+
+    /** The first time this version runs, existing users get the new Focus and Exam widgets near the top. */
+    private fun addNewWidgetsOnce(list: List<String>): List<String> {
+        if (bool("widgets_v3", false)) return list
+        val out = list.toMutableList()
+        var at = minOf(2, out.size)
+        for (id in listOf("focus", "exam")) if (id !in out) { out.add(at, id); at++ }
+        save { putString("widgets", JSONArray(out).toString()); putBoolean("widgets_v3", true) }
+        return out
+    }
 
     var widgetHeights by mutableStateOf(readLongMap("widget_heights"))
         private set
@@ -576,14 +586,28 @@ class LauncherState(context: Context) {
 
     fun removeWidgetId(id: String) = updateWidgets(widgets - id)
 
-    /** Moves a widget one place earlier (delta -1) or later (delta +1) on the Widgets page. */
-    fun moveWidget(id: String, delta: Int) {
-        val i = widgets.indexOf(id)
-        val j = i + delta
-        if (i < 0 || j !in widgets.indices) return
+    /** Drag and drop: puts the widget [fromId] where [toId] is. */
+    fun reorderWidget(fromId: String, toId: String) {
+        val i = widgets.indexOf(fromId)
+        val j = widgets.indexOf(toId)
+        if (i < 0 || j < 0 || i == j) return
         val list = widgets.toMutableList()
-        list[i] = list[j].also { list[j] = list[i] }
+        list.add(j, list.removeAt(i))
         updateWidgets(list)
+    }
+
+    // ------------------------------------------------------------ exam countdown
+
+    var examName by mutableStateOf(str("exam_name"))
+        private set
+
+    /** The exam day as an epoch day, or 0 when none is set. */
+    var examDay by mutableStateOf(long("exam_day", 0L))
+        private set
+
+    fun updateExam(name: String, epochDay: Long) {
+        examName = name; examDay = epochDay
+        save { putString("exam_name", name); putLong("exam_day", epochDay) }
     }
 
     private fun updateWidgets(list: List<String>) {
@@ -665,7 +689,7 @@ class LauncherState(context: Context) {
         prefs.edit().clear().apply()
         frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
-        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L; urgeButtonOn = false
+        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L; urgeButtonOn = false; examName = ""; examDay = 0L
         gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
         limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L

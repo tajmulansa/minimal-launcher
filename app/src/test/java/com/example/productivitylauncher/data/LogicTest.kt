@@ -123,4 +123,10 @@ class LogicTest {
         assertTrue(exactNameMatches(apps, "").isEmpty())
         assertTrue(exactNameMatches(apps, "   ").isEmpty())
     }
+
+    @Test fun daysUntilCountsWholeDays() {
+        assertEquals(12L, daysUntil(112L, 100L))
+        assertEquals(0L, daysUntil(100L, 100L))
+        assertEquals(-3L, daysUntil(97L, 100L))
+    }
 }
