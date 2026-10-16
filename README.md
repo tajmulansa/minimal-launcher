@@ -30,8 +30,8 @@ Phones are designed to pull attention away from what matters. Most "focus" apps 
 - Gated apps cannot be Home apps
 
 **Widgets page**
-- To-do list with one most important task, Quick actions, Water, Distraction budget, Agenda, Habit stack, Quick note and Brain dump
-- Small widgets sit two to a row. Add, move and remove widgets with the edit button
+- A grid of tiles: To-do list, Quick actions, Focus timer, Water, Gated apps time, Exam countdown, Quick note, Brain dump, Agenda and Habit stack
+- Small tiles sit two to a row. Tap the pencil, then touch and hold a tile to drag it where you want it, or tap the minus to remove it
 - Add widgets from other apps, grouped by app, with previews and resizing
 
 **Quick actions**

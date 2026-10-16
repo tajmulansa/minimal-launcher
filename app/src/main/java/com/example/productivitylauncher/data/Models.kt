@@ -17,20 +17,22 @@ data class Dump(val id: String, val text: String, val createdAt: Long)
 /** The widgets the launcher itself provides. Hosted app widgets use ids like "ext:12". */
 enum class LauncherWidget(val id: String, val title: String, val subtitle: String, val letter: String, val half: Boolean = false) {
     Frog("frog", "To-do list", "Your tasks, with one most important", "T"),
-    Water("water", "Water reminder", "Count glasses", "W", half = true),
-    Budget("budget", "Distraction budget", "Time left in gated apps", "D", half = true),
-    Agenda("agenda", "Agenda", "Today's calendar events", "A"),
-    Habits("habits", "Habit stack", "After X, I do Y", "H"),
-    Note("note", "Quick note", "Jot one thing", "N", half = true),
+    Quick("quick", "Quick actions", "Lock In, red button, flashlight and more", "Q"),
+    Focus("focus", "Focus timer", "Start a focus session", "F", half = true),
+    Water("water", "Water", "Count glasses", "W", half = true),
+    Budget("budget", "Gated apps time", "Time left in gated apps today", "G", half = true),
+    Exam("exam", "Exam countdown", "Days until your exam", "E", half = true),
     Dump("dump", "Brain dump", "Empty your head, sort later", "B", half = true),
-    Quick("quick", "Quick actions", "One-tap buttons, starting with Lock In", "Q");
+    Note("note", "Quick note", "Jot one thing", "N"),
+    Agenda("agenda", "Agenda", "Today's calendar events", "A"),
+    Habits("habits", "Habit stack", "After X, I do Y", "H");
 
     companion object {
         fun byId(id: String): LauncherWidget? = entries.firstOrNull { it.id == id }
     }
 }
 
-val DEFAULT_WIDGETS = listOf("frog", "quick", "water", "budget", "note", "dump")
+val DEFAULT_WIDGETS = listOf("frog", "quick", "focus", "water", "budget", "exam", "note")
 
 /** How long the red button locks the phone. */
 const val URGE_LOCK_MINUTES = 5

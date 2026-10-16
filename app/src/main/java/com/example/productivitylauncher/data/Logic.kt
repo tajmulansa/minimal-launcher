@@ -227,3 +227,6 @@ fun pipMessage(f: PipFacts, variant: Int = 0): PipMessage {
 
     return PipMessage("[^_^]", "$hello " + pick(listOf("I'm here if you need a nudge.", "One small step is enough."), variant), null, PipAction.None, false)
 }
+
+/** Whole days from [today] to the exam day (both as epoch days). Negative once the exam has passed. */
+fun daysUntil(examEpochDay: Long, today: Long = java.time.LocalDate.now().toEpochDay()): Long = examEpochDay - today
