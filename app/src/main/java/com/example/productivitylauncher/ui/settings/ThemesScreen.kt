@@ -60,7 +60,7 @@ fun ThemesScreen(state: LauncherState, nav: Nav) {
                         Modifier.size(38.dp)
                             .then(if (a == Accent.Default) Modifier.border(2.dp, AppColors.muted, CircleShape) else Modifier.background(swatch, CircleShape))
                             .semantics { contentDescription = a.label + " accent" + if (on) ", selected" else "" }
-                            .clickableRole({ state.setAccent(a) }, Role.RadioButton),
+                            .clickableRole({ state.updateAccent(a) }, Role.RadioButton),
                         contentAlignment = Alignment.Center,
                     ) {
                         if (on) AppIcon(Ic.Check, if (a == Accent.Default) AppColors.muted else if (dark) Color(0xFF0E1412) else Color.White, size = 18.dp)
@@ -71,7 +71,7 @@ fun ThemesScreen(state: LauncherState, nav: Nav) {
 
             AppText("Background", size = 17.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
             AppText("A soft glow behind frosted cards, a gentle gradient, or plain. Notebook keeps its ruled paper.", size = 14.sp, color = AppColors.muted, lineHeight = 20.sp)
-            Segmented(Backdrop.entries.map { it.label }, Backdrop.entries.indexOf(state.backdrop), { state.setBackdrop(Backdrop.entries[it]) })
+            Segmented(Backdrop.entries.map { it.label }, Backdrop.entries.indexOf(state.backdrop), { state.updateBackdrop(Backdrop.entries[it]) })
         }
     }
 }

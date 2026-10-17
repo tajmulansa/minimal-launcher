@@ -85,13 +85,13 @@ class LauncherState(context: Context) {
     var accent by mutableStateOf(runCatching { Accent.valueOf(str("accent", "Default")) }.getOrDefault(Accent.Default))
         private set
 
-    fun setAccent(a: Accent) { accent = a; save { putString("accent", a.name) } }
+    fun updateAccent(a: Accent) { accent = a; save { putString("accent", a.name) } }
 
     /** What is drawn behind the screens. */
     var backdrop by mutableStateOf(runCatching { Backdrop.valueOf(str("backdrop", "Glow")) }.getOrDefault(Backdrop.Glow))
         private set
 
-    fun setBackdrop(b: Backdrop) { backdrop = b; save { putString("backdrop", b.name) } }
+    fun updateBackdrop(b: Backdrop) { backdrop = b; save { putString("backdrop", b.name) } }
 
     var pipOn by mutableStateOf(bool("pip_on", true))
         private set
