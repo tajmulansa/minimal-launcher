@@ -24,9 +24,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.offset
+import com.example.productivitylauncher.ui.theme.Motion
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
@@ -139,7 +141,7 @@ fun CeramicCard(
 fun Modifier.clickableRole(onClick: () -> Unit, role: Role = Role.Button): Modifier = composed {
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.96f else 1f, spring(dampingRatio = 0.6f, stiffness = 500f), label = "press")
+    val scale by animateFloatAsState(if (pressed) Motion.PressScale else 1f, Motion.press(), label = "press")
     Modifier
         .graphicsLayer { scaleX = scale; scaleY = scale }
         .clickable(interactionSource = source, indication = null, role = role, onClick = onClick)
@@ -275,29 +277,32 @@ fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, mod
 
 @Composable
 fun Toggle(on: Boolean, onChange: (Boolean) -> Unit, description: String) {
+    // The thumb slides and the track changes colour, so the switch never just teleports.
+    val track by animateColorAsState(if (on) AppColors.focus else AppColors.dot, Motion.state(160), label = "toggleTrack")
+    val thumb by animateColorAsState(if (on) AppColors.onFocus else AppColors.card, Motion.state(160), label = "toggleThumb")
+    val slide by animateFloatAsState(if (on) 1f else 0f, Motion.press(), label = "toggleSlide")
     Box(
         Modifier
             .size(width = 52.dp, height = 32.dp)
-            .background(if (on) AppColors.focus else AppColors.dot, RoundedCornerShape(16.dp))
+            .background(track, RoundedCornerShape(16.dp))
             .semantics { contentDescription = description }
             .clickable(role = Role.Switch) { onChange(!on) }
             .padding(3.dp),
-        contentAlignment = if (on) Alignment.CenterEnd else Alignment.CenterStart,
     ) {
-        Box(Modifier.size(26.dp).background(if (on) AppColors.onFocus else AppColors.card, CircleShape))
+        Box(Modifier.offset(x = 20.dp * slide).size(26.dp).background(thumb, CircleShape))
     }
 }
 
 /** Round check used by the frog and habits. */
 @Composable
 fun CheckCircle(checked: Boolean, size: Dp = 34.dp) {
-    val fill by animateFloatAsState(if (checked) 1f else 0f, tween(200), label = "fill")
+    val fill by animateFloatAsState(if (checked) 1f else 0f, Motion.state(160), label = "fill")
     // A little pop when it becomes checked (not when the screen first shows it already checked).
     val pop = remember { Animatable(1f) }
     var first by remember { mutableStateOf(true) }
     LaunchedEffect(checked) {
         if (first) first = false
-        else if (checked) { pop.snapTo(0.78f); pop.animateTo(1f, spring(dampingRatio = 0.4f, stiffness = 450f)) }
+        else if (checked) { pop.snapTo(0.88f); pop.animateTo(1f, spring(dampingRatio = 0.65f, stiffness = 600f)) }
     }
     Box(
         Modifier

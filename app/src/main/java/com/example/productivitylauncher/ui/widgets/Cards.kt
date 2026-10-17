@@ -5,7 +5,7 @@ import android.appwidget.AppWidgetHostView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import com.example.productivitylauncher.ui.theme.Motion
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -182,8 +182,8 @@ internal fun QuickActionsWidget(state: LauncherState, nav: Nav) {
 /** A square icon button with its label underneath. The red one only tints its icon. */
 @Composable
 internal fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit, modifier: Modifier, danger: Boolean = false) {
-    val bg by animateColorAsState(if (on) AppColors.primary else AppColors.phone, tween(220), label = "tileBg")
-    val fg by animateColorAsState(when { on -> AppColors.onPrimary; danger -> AppColors.gate; else -> AppColors.text }, tween(220), label = "tileFg")
+    val bg by animateColorAsState(if (on) AppColors.primary else AppColors.phone, Motion.state(), label = "tileBg")
+    val fg by animateColorAsState(when { on -> AppColors.onPrimary; danger -> AppColors.gate; else -> AppColors.text }, Motion.state(), label = "tileFg")
     Column(
         modifier
             .semantics { contentDescription = if (danger) "$label, lock the phone for $URGE_LOCK_MINUTES minutes" else "$label, " + if (on) "on" else "off" }
@@ -220,7 +220,7 @@ internal fun Tile(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, 
 /** A ring that fills as [progress] goes from 0 to 1. */
 @Composable
 internal fun Ring(progress: Float, diameter: Dp, stroke: Dp, color: Color, track: Color, content: @Composable () -> Unit = {}) {
-    val shown by animateFloatAsState(progress.coerceIn(0f, 1f), tween(700), label = "ring")
+    val shown by animateFloatAsState(progress.coerceIn(0f, 1f), Motion.fill(), label = "ring")
     Box(Modifier.size(diameter), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(diameter)) {
             val w = stroke.toPx()
@@ -235,7 +235,7 @@ internal fun Ring(progress: Float, diameter: Dp, stroke: Dp, color: Color, track
 
 @Composable
 private fun ThinBar(progress: Float, color: Color) {
-    val shown by animateFloatAsState(progress.coerceIn(0f, 1f), tween(600), label = "bar")
+    val shown by animateFloatAsState(progress.coerceIn(0f, 1f), Motion.fill(), label = "bar")
     Box(Modifier.fillMaxWidth().height(5.dp).background(AppColors.phone, RoundedCornerShape(3.dp))) {
         Box(Modifier.fillMaxWidth(shown).height(5.dp).background(color, RoundedCornerShape(3.dp)))
     }
@@ -439,7 +439,7 @@ internal fun TodoWidget(state: LauncherState) {
     var mainDraft by remember { mutableStateOf("") }
     val locked = state.tasksLocked
     val haptic = LocalHapticFeedback.current
-    val pillAlpha by animateFloatAsState(if (state.frogDone) 0.24f else 0.10f, tween(400), label = "pill")
+    val pillAlpha by animateFloatAsState(if (state.frogDone) 0.24f else 0.10f, Motion.state(200), label = "pill")
     val hasMain = state.frog.isNotBlank()
     val total = state.tasks.size + if (hasMain) 1 else 0
     val done = state.tasks.count { it.done } + if (hasMain && state.frogDone) 1 else 0
