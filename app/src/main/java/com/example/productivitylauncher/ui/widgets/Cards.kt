@@ -5,6 +5,8 @@ import android.appwidget.AppWidgetHostView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -103,6 +105,8 @@ import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.IconButtonLarge
 import com.example.productivitylauncher.ui.components.PageHeader
 import com.example.productivitylauncher.ui.components.RadiusLg
+import com.example.productivitylauncher.ui.theme.GlassAlpha
+import com.example.productivitylauncher.ui.theme.LocalGlass
 import com.example.productivitylauncher.ui.components.Rule
 import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.ui.components.TextLink
@@ -178,8 +182,8 @@ internal fun QuickActionsWidget(state: LauncherState, nav: Nav) {
 /** A square icon button with its label underneath. The red one only tints its icon. */
 @Composable
 internal fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit, modifier: Modifier, danger: Boolean = false) {
-    val bg = if (on) AppColors.primary else AppColors.phone
-    val fg = when { on -> AppColors.onPrimary; danger -> AppColors.gate; else -> AppColors.text }
+    val bg by animateColorAsState(if (on) AppColors.primary else AppColors.phone, tween(220), label = "tileBg")
+    val fg by animateColorAsState(when { on -> AppColors.onPrimary; danger -> AppColors.gate; else -> AppColors.text }, tween(220), label = "tileFg")
     Column(
         modifier
             .semantics { contentDescription = if (danger) "$label, lock the phone for $URGE_LOCK_MINUTES minutes" else "$label, " + if (on) "on" else "off" }
@@ -202,23 +206,27 @@ private val TileHeight = 156.dp
 /** A square-ish tile for the small widgets: two sit side by side. */
 @Composable
 internal fun Tile(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable BoxScope.() -> Unit) {
+    val glass = LocalGlass.current
+    val edge = AppColors.text.copy(alpha = 0.08f)
     val base = modifier
         .fillMaxWidth()
         .height(TileHeight)
-        .shadow(6.dp, RadiusLg, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
-        .background(AppColors.card, RadiusLg)
+        .then(if (glass) Modifier else Modifier.shadow(6.dp, RadiusLg, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)))
+        .background(if (glass) AppColors.card.copy(alpha = GlassAlpha) else AppColors.card, RadiusLg)
+        .then(if (glass) Modifier.border(1.dp, edge, RadiusLg) else Modifier)
     Box((if (onClick != null) base.clickableRole(onClick) else base).padding(16.dp), content = content)
 }
 
 /** A ring that fills as [progress] goes from 0 to 1. */
 @Composable
 internal fun Ring(progress: Float, diameter: Dp, stroke: Dp, color: Color, track: Color, content: @Composable () -> Unit = {}) {
+    val shown by animateFloatAsState(progress.coerceIn(0f, 1f), tween(700), label = "ring")
     Box(Modifier.size(diameter), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(diameter)) {
             val w = stroke.toPx()
             val arc = Size(this.size.width - w, this.size.height - w)
             drawArc(track, 0f, 360f, false, topLeft = Offset(w / 2, w / 2), size = arc, style = Stroke(w))
-            val p = progress.coerceIn(0f, 1f)
+            val p = shown
             if (p > 0f) drawArc(color, -90f, 360f * p, false, topLeft = Offset(w / 2, w / 2), size = arc, style = Stroke(w, cap = StrokeCap.Round))
         }
         content()
@@ -227,8 +235,9 @@ internal fun Ring(progress: Float, diameter: Dp, stroke: Dp, color: Color, track
 
 @Composable
 private fun ThinBar(progress: Float, color: Color) {
+    val shown by animateFloatAsState(progress.coerceIn(0f, 1f), tween(600), label = "bar")
     Box(Modifier.fillMaxWidth().height(5.dp).background(AppColors.phone, RoundedCornerShape(3.dp))) {
-        Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(5.dp).background(color, RoundedCornerShape(3.dp)))
+        Box(Modifier.fillMaxWidth(shown).height(5.dp).background(color, RoundedCornerShape(3.dp)))
     }
 }
 
@@ -429,6 +438,8 @@ internal fun TodoWidget(state: LauncherState) {
     var editingMain by remember { mutableStateOf(false) }
     var mainDraft by remember { mutableStateOf("") }
     val locked = state.tasksLocked
+    val haptic = LocalHapticFeedback.current
+    val pillAlpha by animateFloatAsState(if (state.frogDone) 0.24f else 0.10f, tween(400), label = "pill")
     val hasMain = state.frog.isNotBlank()
     val total = state.tasks.size + if (hasMain) 1 else 0
     val done = state.tasks.count { it.done } + if (hasMain && state.frogDone) 1 else 0
@@ -445,12 +456,12 @@ internal fun TodoWidget(state: LauncherState) {
         }
 
         if (hasMain) {
-            Box(Modifier.fillMaxWidth().background(AppColors.focus.copy(alpha = 0.10f), RoundedCornerShape(14.dp)).padding(start = 2.dp)) {
+            Box(Modifier.fillMaxWidth().background(AppColors.focus.copy(alpha = pillAlpha), RoundedCornerShape(14.dp)).padding(start = 2.dp)) {
                 TaskRow(
                     done = state.frogDone, text = state.frog, important = true, dimmed = false,
                     editing = editingMain, editDraft = mainDraft, onEditDraft = { mainDraft = it },
                     onEditDone = { if (mainDraft.isNotBlank()) state.updateFrog(mainDraft.trim()); editingMain = false },
-                    onCheck = { state.setFrogDone(!state.frogDone) },
+                    onCheck = { if (!state.frogDone) haptic.performHapticFeedback(HapticFeedbackType.LongPress); state.setFrogDone(!state.frogDone) },
                     onSelect = { selected = if (selected == "main") null else "main" },
                     actions = if (selected == "main") listOf(
                         Ic.Edit to { mainDraft = state.frog; editingMain = true; selected = null },
