@@ -20,7 +20,6 @@ import com.example.productivitylauncher.ui.components.clickableRole
 import com.example.productivitylauncher.ui.theme.Accent
 import com.example.productivitylauncher.ui.theme.Backdrop
 import com.example.productivitylauncher.ui.theme.LocalPalette
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
