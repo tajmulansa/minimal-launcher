@@ -5,7 +5,7 @@ import android.appwidget.AppWidgetHostView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import com.example.productivitylauncher.ui.theme.Motion
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -183,12 +183,12 @@ fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
 /** One widget. While editing it shrinks a little, ignores taps, can be dragged, and shows a minus to remove it. */
 @Composable
 private fun WidgetFrame(id: String, index: Int, editing: Boolean, isDragging: Boolean, dragHandle: Modifier, state: LauncherState, nav: Nav, host: WidgetHost) {
-    val scale by animateFloatAsState(if (isDragging) 1.04f else if (editing) 0.97f else 1f, label = "tile")
+    val scale by animateFloatAsState(if (isDragging) 1.04f else if (editing) 0.97f else 1f, Motion.lift(), label = "tile")
     // Tiles fade and rise in one after another the first time they appear.
     var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { delay(45L * index.coerceIn(0, 8)); shown = true }
-    val appear by animateFloatAsState(if (shown) 1f else 0f, tween(380), label = "appear")
-    Box(Modifier.graphicsLayer { scaleX = scale; scaleY = scale; alpha = appear; translationY = (1f - appear) * 28.dp.toPx() }) {
+    LaunchedEffect(Unit) { delay(35L * index.coerceIn(0, 6)); shown = true }
+    val appear by animateFloatAsState(if (shown) 1f else 0f, Motion.enter(), label = "appear")
+    Box(Modifier.graphicsLayer { scaleX = scale; scaleY = scale; alpha = appear; translationY = (1f - appear) * 10.dp.toPx() }) {
         if (id.startsWith("ext:")) ExternalWidget(id.removePrefix("ext:").toIntOrNull(), state, host)
         else when (LauncherWidget.byId(id)) {
             LauncherWidget.Frog -> TodoWidget(state)
