@@ -129,6 +129,33 @@ val NotebookMargin = Color(0x66D9534F)
 
 val LocalPalette = staticCompositionLocalOf { LightPalette }
 
+/** True when cards are drawn see-through ("glass") over the soft background glow. */
+val LocalGlass = staticCompositionLocalOf { false }
+
+/** How see-through glass cards are. 1 would be solid. */
+const val GlassAlpha = 0.74f
+
+/** The colour used for checks, rings and highlights. Default keeps each theme's own colour. */
+enum class Accent(val label: String, val light: Color?, val dark: Color?) {
+    Default("Theme", null, null),
+    Sage("Sage", Color(0xFF4F7165), Color(0xFF8DB8A7)),
+    Blue("Blue", Color(0xFF2F5FD0), Color(0xFF7FA2FF)),
+    Violet("Violet", Color(0xFF6A4FC4), Color(0xFFB39CFF)),
+    Rose("Rose", Color(0xFFB23A63), Color(0xFFFF8FB1)),
+    Amber("Amber", Color(0xFF9A5B00), Color(0xFFF2B84B)),
+    Teal("Teal", Color(0xFF0B6F79), Color(0xFF5FD0D9)),
+    Coral("Coral", Color(0xFFC2410C), Color(0xFFFF9B73)),
+}
+
+/** What is drawn behind everything: plain colour, a soft glow of the accent, or a gentle gradient. */
+enum class Backdrop(val label: String) { Plain("Plain"), Glow("Glow"), Gradient("Gradient") }
+
+/** The same palette with the chosen accent as its highlight colour. */
+fun Palette.withAccent(a: Accent): Palette {
+    val c = (if (dark) a.dark else a.light) ?: return this
+    return Palette(phone, card, text, muted, c, if (dark) Color(0xFF0E1412) else Color.White, gate, gateSoft, onGate, line, dot, primary, onPrimary, dark, ruled)
+}
+
 /** Short accessors, e.g. AppColors.text. */
 object AppColors {
     val phone: Color @Composable @ReadOnlyComposable get() = LocalPalette.current.phone
@@ -179,14 +206,14 @@ fun resolvePalette(mode: ThemeMode): Palette =
     paletteOf(mode) ?: if (isSystemInDarkTheme()) DarkPalette else LightPalette
 
 @Composable
-fun LauncherTheme(palette: Palette, content: @Composable () -> Unit) {
+fun LauncherTheme(palette: Palette, glass: Boolean = false, content: @Composable () -> Unit) {
     val p = palette
     val scheme = if (p.dark) {
         darkColorScheme(primary = p.primary, background = p.phone, surface = p.phone, onBackground = p.text, onSurface = p.text)
     } else {
         lightColorScheme(primary = p.primary, background = p.phone, surface = p.phone, onBackground = p.text, onSurface = p.text)
     }
-    CompositionLocalProvider(LocalPalette provides p) {
+    CompositionLocalProvider(LocalPalette provides p, LocalGlass provides glass) {
         MaterialTheme(colorScheme = scheme, content = content)
     }
 }

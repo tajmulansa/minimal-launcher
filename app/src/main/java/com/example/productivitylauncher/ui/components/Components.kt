@@ -23,7 +23,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.graphicsLayer
+import com.example.productivitylauncher.ui.theme.GlassAlpha
+import com.example.productivitylauncher.ui.theme.LocalGlass
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -109,16 +124,26 @@ fun CeramicCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val glass = LocalGlass.current
+    val edge = AppColors.text.copy(alpha = 0.08f)
     val base = modifier
-        .shadow(6.dp, shape, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
-        .background(color, shape)
+        .then(if (glass) Modifier else Modifier.shadow(6.dp, shape, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)))
+        .background(if (glass) color.copy(alpha = GlassAlpha) else color, shape)
+        .then(if (glass && borderColor == null) Modifier.border(1.dp, edge, shape) else Modifier)
         .then(if (borderColor != null) Modifier.border(2.dp, borderColor, shape) else Modifier)
     val clickable = if (onClick != null) base.then(Modifier.clickableRole(onClick)) else base
     Column(clickable.padding(padding), verticalArrangement = Arrangement.spacedBy(14.dp), content = content)
 }
 
-fun Modifier.clickableRole(onClick: () -> Unit, role: Role = Role.Button): Modifier =
-    this.then(Modifier.clickable(role = role, onClick = onClick))
+/** A tap target that gives a small springy press: it shrinks a little while held. */
+fun Modifier.clickableRole(onClick: () -> Unit, role: Role = Role.Button): Modifier = composed {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) 0.96f else 1f, spring(dampingRatio = 0.6f, stiffness = 500f), label = "press")
+    Modifier
+        .graphicsLayer { scaleX = scale; scaleY = scale }
+        .clickable(interactionSource = source, indication = null, role = role, onClick = onClick)
+}
 
 enum class BtnKind { Primary, Accent, Soft, Gate }
 
@@ -184,8 +209,8 @@ fun IconButtonLarge(ic: Ic, description: String, onClick: () -> Unit, modifier: 
     Box(
         modifier
             .size(48.dp)
-            .shadow(4.dp, RoundedCornerShape(14.dp), ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
-            .background(AppColors.card, RoundedCornerShape(14.dp))
+            .then(if (LocalGlass.current) Modifier else Modifier.shadow(4.dp, RoundedCornerShape(14.dp), ambientColor = Color(0x14000000), spotColor = Color(0x14000000)))
+            .background(if (LocalGlass.current) AppColors.card.copy(alpha = GlassAlpha) else AppColors.card, RoundedCornerShape(14.dp))
             .semantics { contentDescription = description }
             .clickableRole(onClick),
         contentAlignment = Alignment.Center,
@@ -266,16 +291,23 @@ fun Toggle(on: Boolean, onChange: (Boolean) -> Unit, description: String) {
 /** Round check used by the frog and habits. */
 @Composable
 fun CheckCircle(checked: Boolean, size: Dp = 34.dp) {
+    val fill by animateFloatAsState(if (checked) 1f else 0f, tween(200), label = "fill")
+    // A little pop when it becomes checked (not when the screen first shows it already checked).
+    val pop = remember { Animatable(1f) }
+    var first by remember { mutableStateOf(true) }
+    LaunchedEffect(checked) {
+        if (first) first = false
+        else if (checked) { pop.snapTo(0.78f); pop.animateTo(1f, spring(dampingRatio = 0.4f, stiffness = 450f)) }
+    }
     Box(
         Modifier
             .size(size)
-            .then(
-                if (checked) Modifier.background(AppColors.focus, CircleShape)
-                else Modifier.border(BorderStroke(2.5.dp, AppColors.focus), CircleShape),
-            ),
+            .graphicsLayer { scaleX = pop.value; scaleY = pop.value }
+            .background(AppColors.focus.copy(alpha = fill), CircleShape)
+            .border(BorderStroke(2.5.dp, AppColors.focus), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (checked) AppIcon(Ic.Check, AppColors.onFocus, size = size * 0.52f)
+        if (fill > 0.4f) AppIcon(Ic.Check, AppColors.onFocus, size = size * 0.52f)
     }
 }
 
