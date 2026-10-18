@@ -48,6 +48,11 @@ class LogicTest {
         assertEquals("A", sectionOf("alarm"))
         assertEquals("#", sectionOf("1Password"))
         assertEquals("K", letterOf("kindle"))
+        assertEquals("\uD83C\uDFB5", letterOf("\uD83C\uDFB5 Music"))
+        assertEquals("\u0645", letterOf("\u0645\u0644\u0627\u062D\u0638\u0627\u062A"))
+        assertEquals("?", letterOf("   "))
+        assertEquals("E", sectionOf("\u00C9cole"))
+        assertEquals("#", sectionOf("\uD83C\uDFB5 Music"))
     }
 
     private fun facts(

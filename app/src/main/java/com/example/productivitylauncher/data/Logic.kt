@@ -90,13 +90,26 @@ fun hourOf(millis: Long = System.currentTimeMillis()): Int {
 }
 
 /** Alphabetical section header for an app label ("#" for anything that is not a letter). */
-fun sectionOf(label: String): String {
-    val c = label.trim().firstOrNull()?.uppercaseChar() ?: return "#"
-    return if (c in 'A'..'Z') c.toString() else "#"
+/** The first whole character of a label (an emoji is two Chars, so never split it). */
+private fun firstSymbol(label: String): String {
+    val s = label.trim()
+    if (s.isEmpty()) return ""
+    return String(Character.toChars(s.codePointAt(0)))
 }
 
-fun letterOf(label: String): String =
-    label.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+/** The list section for an app: A to Z, with accents dropped ("École" is E), or # for everything else. */
+fun sectionOf(label: String): String {
+    val first = firstSymbol(label)
+    if (first.isEmpty()) return "#"
+    val base = java.text.Normalizer.normalize(first, java.text.Normalizer.Form.NFD).firstOrNull()?.uppercaseChar() ?: return "#"
+    return if (base in 'A'..'Z') base.toString() else "#"
+}
+
+/** The big letter on an app badge. Emoji and non-Latin first characters stay whole. */
+fun letterOf(label: String): String {
+    val first = firstSymbol(label)
+    return if (first.isEmpty()) "?" else first.uppercase()
+}
 
 // ---------------------------------------------------------------- Pip
 //
