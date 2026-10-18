@@ -48,8 +48,9 @@ Phones are designed to pull attention away from what matters. Most "focus" apps 
 - Weekly review of screen time, finished tasks and gates backed out of
 
 **Look**
-- Themes on their own screen: Auto, Light, Dark, Pen blue, Midnight and Notebook (with ruled lines)
-- Inter font, one calm Ceramic style. See [docs/DESIGN.md](docs/DESIGN.md)
+- An iOS-style look by default: system grey and true black backgrounds, system blue, large titles, a Back link on inner pages, flat grouped lists, an iOS switch and segmented control
+- Themes on their own screen: Auto, Light, Dark, Pen blue, Midnight, Notebook (with ruled lines) and Ceramic (the original warm look)
+- Inter font. See [docs/DESIGN.md](docs/DESIGN.md)
 
 **Also in the code**
 - Pip, a small text-face companion. It is switched off for now (`PIP_ENABLED`), and its code and tests are kept

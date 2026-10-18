@@ -1,5 +1,6 @@
 package com.example.productivitylauncher.ui.gate
 
+import com.example.productivitylauncher.ui.components.softShadow
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -28,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -129,7 +129,7 @@ private fun ColumnScope.BreatheStep(state: LauncherState, app: AppEntry, onConti
                 Modifier
                     .size(180.dp)
                     .scale(scale.value)
-                    .shadow(12.dp, CircleShape, ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
+                    .softShadow(12.dp, CircleShape, ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
                     .background(AppColors.card, CircleShape)
                     .border(8.dp, if (phase == 0) AppColors.focus else AppColors.focus.copy(alpha = 0.35f), CircleShape),
             )
@@ -176,7 +176,7 @@ private fun ColumnScope.PhraseStep(state: LauncherState, onContinue: () -> Unit,
         AppText("Type this to continue", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, align = TextAlign.Center)
         AppText("Typing it slows you down, just enough to choose on purpose.", size = 15.sp, color = AppColors.muted, align = TextAlign.Center, modifier = Modifier.padding(top = 8.dp, start = 12.dp, end = 12.dp))
         Box(
-            Modifier.padding(top = 24.dp).fillMaxWidth().shadow(6.dp, RadiusMd, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)).background(AppColors.card, RadiusMd).padding(22.dp),
+            Modifier.padding(top = 24.dp).fillMaxWidth().softShadow(6.dp, RadiusMd, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)).background(AppColors.card, RadiusMd).padding(22.dp),
             contentAlignment = Alignment.Center,
         ) { AppText(target, size = 19.sp, letterSpacing = 1.sp, align = TextAlign.Center, lineHeight = 27.sp, mono = true) }
         Spacer(Modifier.height(16.dp))
@@ -267,7 +267,7 @@ private fun ColumnScope.TimeStep(state: LauncherState, app: AppEntry, nav: Nav, 
 private fun TimeChoice(text: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Box(
         modifier
-            .shadow(if (selected) 6.dp else 3.dp, RadiusMd, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+            .softShadow(if (selected) 6.dp else 3.dp, RadiusMd, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
             .background(AppColors.card, RadiusMd)
             .border(2.dp, if (selected) AppColors.text else Color.Transparent, RadiusMd)
             .clickableRole(onClick)
