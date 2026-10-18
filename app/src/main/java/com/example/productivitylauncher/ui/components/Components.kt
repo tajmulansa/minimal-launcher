@@ -27,6 +27,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.widthIn
 import com.example.productivitylauncher.ui.theme.Motion
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -281,15 +282,17 @@ fun Toggle(on: Boolean, onChange: (Boolean) -> Unit, description: String) {
     val track by animateColorAsState(if (on) AppColors.focus else AppColors.dot, Motion.state(160), label = "toggleTrack")
     val thumb by animateColorAsState(if (on) AppColors.onFocus else AppColors.card, Motion.state(160), label = "toggleThumb")
     val slide by animateFloatAsState(if (on) 1f else 0f, Motion.press(), label = "toggleSlide")
+    // The tap area is 48 dp tall even though the track is 32 dp, and it shrinks a little when pressed.
     Box(
         Modifier
-            .size(width = 52.dp, height = 32.dp)
-            .background(track, RoundedCornerShape(16.dp))
+            .size(width = 52.dp, height = 48.dp)
             .semantics { contentDescription = description }
-            .clickable(role = Role.Switch) { onChange(!on) }
-            .padding(3.dp),
+            .clickableRole({ onChange(!on) }, Role.Switch),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.offset(x = 20.dp * slide).size(26.dp).background(thumb, CircleShape))
+        Box(Modifier.size(width = 52.dp, height = 32.dp).background(track, RoundedCornerShape(16.dp)).padding(3.dp)) {
+            Box(Modifier.offset(x = 20.dp * slide).size(26.dp).background(thumb, CircleShape))
+        }
     }
 }
 
@@ -435,7 +438,7 @@ fun SettingRow(
 @Composable
 fun ValueChevron(value: String, color: Color = AppColors.muted) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (value.isNotEmpty()) AppText(value, size = 15.sp, weight = FontWeight.Medium, color = color)
+        if (value.isNotEmpty()) AppText(value, Modifier.widthIn(max = 150.dp), size = 15.sp, weight = FontWeight.Medium, color = color, maxLines = 1)
         AppIcon(Ic.Chevron, color, size = 18.dp)
     }
 }
