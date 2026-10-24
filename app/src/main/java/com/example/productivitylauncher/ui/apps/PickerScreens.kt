@@ -46,7 +46,7 @@ fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier) {
             "Pick the apps that steal your time. They get a calm gate before they open. Removing a gate takes 24 hours.",
             size = 14.sp, color = AppColors.muted, lineHeight = 20.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
         )
-        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             items(state.apps, key = { it.packageName + "/" + it.activityName }) { app ->
                 val gated = app.packageName in state.gated
                 val pending = app.packageName in state.pendingRemoval
@@ -95,7 +95,7 @@ fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
             "Choose up to six apps for your Home page. Keep only what helps you work. (${state.homeApps.size} of 6)",
             size = 14.sp, color = AppColors.muted, lineHeight = 20.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
         )
-        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             // Gated apps are listed last, greyed out, so it is clear why they cannot be picked.
             items(state.apps.sortedBy { it.packageName in state.gated }, key = { it.packageName + "/" + it.activityName }) { app ->
                 val on = app.packageName in state.homeApps
