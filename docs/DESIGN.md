@@ -139,14 +139,3 @@ A red tile in the Quick actions widget, for a moment when you know you should no
 ### Red button in every app
 
 An optional setting (Settings > Red button). A small red dot sits against the right edge over every app. Tap it, then tap again within 3 seconds, and the launcher opens straight into the 5 minute lock. The dot is hidden while the launcher itself is on screen. It needs "Display over other apps". Known limit: it is drawn by a background service, so if Android stops that service the dot disappears until the launcher is opened again.
-
-## iOS-style look (default)
-
-Auto, Light and Dark follow Apple's interface conventions. The Ceramic look is still available as a theme.
-
-- **Colour:** system grouped background (`#F2F2F7`, true black in dark), white or `#1C1C1E` cards, system blue as the tint, a darker red for text so it stays readable.
-- **Titles:** large bold titles with tight tracking. Inner pages show a tint-coloured "Back" link above the title.
-- **Lists:** flat grouped cards (no shadow), hairline separators, 17 sp row text, small uppercase section headers.
-- **Controls:** a 51 x 31 green switch with a white thumb and a 48 dp tap area, a segmented control with a raised selected segment, tinted soft buttons, capsule chips, rings that fill in the tint colour.
-- **Feel:** press-down feedback on every tap, springs that can be interrupted, a haptic tick on switches.
-- Themes with `tinted = true` get this look. The accent colour then also tints buttons and selections.

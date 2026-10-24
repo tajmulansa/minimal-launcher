@@ -7,8 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.example.productivitylauncher.ui.theme.Accent
-import com.example.productivitylauncher.ui.theme.Backdrop
 import com.example.productivitylauncher.ui.theme.ThemeMode
 import org.json.JSONArray
 import org.json.JSONObject
@@ -80,18 +78,6 @@ class LauncherState(context: Context) {
         private set
 
     fun setTheme(m: ThemeMode) { themeMode = m; save { putString("theme", m.name) } }
-
-    /** The highlight colour. Default keeps each theme's own. */
-    var accent by mutableStateOf(runCatching { Accent.valueOf(str("accent", "Default")) }.getOrDefault(Accent.Default))
-        private set
-
-    fun updateAccent(a: Accent) { accent = a; save { putString("accent", a.name) } }
-
-    /** What is drawn behind the screens. */
-    var backdrop by mutableStateOf(runCatching { Backdrop.valueOf(str("backdrop", "Glow")) }.getOrDefault(Backdrop.Glow))
-        private set
-
-    fun updateBackdrop(b: Backdrop) { backdrop = b; save { putString("backdrop", b.name) } }
 
     var pipOn by mutableStateOf(bool("pip_on", true))
         private set
@@ -711,6 +697,6 @@ class LauncherState(context: Context) {
         focusEnd = 0L; focusDnd = true; focusLockGated = true
         eveningHour = 21; eveningDoneDay = ""; screenGoalMin = 180
         widgets = DEFAULT_WIDGETS; widgetHeights = emptyMap()
-        themeMode = ThemeMode.Auto; accent = Accent.Default; backdrop = Backdrop.Glow; pipOn = true; onboarded = false
+        themeMode = ThemeMode.Auto; pipOn = true; onboarded = false
     }
 }

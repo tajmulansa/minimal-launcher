@@ -1,6 +1,5 @@
 package com.example.productivitylauncher.ui.home
 
-import com.example.productivitylauncher.ui.components.softShadow
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -206,7 +206,7 @@ private fun Dock(dnd: Boolean, onPhone: () -> Unit, onMessages: () -> Unit, onDn
         Row(
             Modifier
                 .fillMaxWidth()
-                .softShadow(10.dp, RadiusPill, ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
+                .shadow(10.dp, RadiusPill, ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
                 .background(AppColors.card, RadiusPill)
                 .padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -254,7 +254,7 @@ fun AnalogClock(now: Date, modifier: Modifier = Modifier, diameter: androidx.com
     Box(
         modifier
             .size(diameter)
-            .softShadow(4.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+            .shadow(4.dp, CircleShape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
             .background(AppColors.card, CircleShape),
         contentAlignment = Alignment.Center,
     ) {

@@ -105,8 +105,6 @@ import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.IconButtonLarge
 import com.example.productivitylauncher.ui.components.PageHeader
 import com.example.productivitylauncher.ui.components.RadiusLg
-import com.example.productivitylauncher.ui.theme.GlassAlpha
-import com.example.productivitylauncher.ui.theme.LocalGlass
 import com.example.productivitylauncher.ui.components.Rule
 import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.ui.components.TextLink
@@ -206,14 +204,11 @@ private val TileHeight = 156.dp
 /** A square-ish tile for the small widgets: two sit side by side. */
 @Composable
 internal fun Tile(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable BoxScope.() -> Unit) {
-    val glass = LocalGlass.current
-    val edge = AppColors.text.copy(alpha = 0.08f)
     val base = modifier
         .fillMaxWidth()
         .height(TileHeight)
-        .then(if (glass) Modifier else Modifier.shadow(6.dp, RadiusLg, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)))
-        .background(if (glass) AppColors.card.copy(alpha = GlassAlpha) else AppColors.card, RadiusLg)
-        .then(if (glass) Modifier.border(1.dp, edge, RadiusLg) else Modifier)
+        .shadow(6.dp, RadiusLg, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+        .background(AppColors.card, RadiusLg)
     Box((if (onClick != null) base.clickableRole(onClick) else base).padding(16.dp), content = content)
 }
 

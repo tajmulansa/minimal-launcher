@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import com.example.productivitylauncher.ui.theme.Backdrop
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.productivitylauncher.data.AppEntry
@@ -174,9 +173,6 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     }
 
     val ruled = LocalPalette.current.ruled
-    val accentColor = LocalPalette.current.focus
-    val darkTheme = LocalPalette.current.dark
-    val backdrop = state.backdrop
     Box(
         Modifier
             .fillMaxSize()
@@ -191,13 +187,6 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                         y += gap
                     }
                     drawLine(NotebookMargin, Offset(16.dp.toPx(), 0f), Offset(16.dp.toPx(), size.height), strokeWidth = 1.5.dp.toPx())
-                } else if (backdrop == Backdrop.Glow) Modifier.drawBehind {
-                    // Two soft pools of the accent colour, one top left and one bottom right.
-                    val a = if (darkTheme) 0.30f else 0.20f
-                    drawRect(Brush.radialGradient(listOf(accentColor.copy(alpha = a), Color.Transparent), center = Offset(size.width * 0.1f, size.height * 0.04f), radius = size.width * 1.1f))
-                    drawRect(Brush.radialGradient(listOf(accentColor.copy(alpha = a * 0.7f), Color.Transparent), center = Offset(size.width * 0.95f, size.height * 0.96f), radius = size.width * 1.0f))
-                } else if (backdrop == Backdrop.Gradient) Modifier.drawBehind {
-                    drawRect(Brush.verticalGradient(listOf(Color.Transparent, accentColor.copy(alpha = if (darkTheme) 0.22f else 0.14f))))
                 } else Modifier,
             )
             .systemBarsPadding(),
