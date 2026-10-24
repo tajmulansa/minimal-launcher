@@ -4,11 +4,10 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.graphics.graphicsLayer
@@ -210,20 +209,10 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             targetState = if (urgeActive) null else route,
             modifier = Modifier.fillMaxSize(),
             transitionSpec = {
-                val push = forward
-                when {
-                    // The red button and the screens around it just fade, calmly.
-                    initialState == null || targetState == null ->
-                        fadeIn(Motion.enter(320)) togetherWith fadeOut(Motion.state(200))
-                    // Going deeper: the new screen glides in from the right while the old one steps back.
-                    push ->
-                        (slideInHorizontally(Motion.enter(300)) { (it * 0.16f).toInt() } + fadeIn(Motion.enter(260))) togetherWith
-                            (slideOutHorizontally(Motion.enter(300)) { -(it * 0.06f).toInt() } + fadeOut(Motion.state(160)))
-                    // Coming back: the reverse, so the path feels the same both ways.
-                    else ->
-                        (slideInHorizontally(Motion.enter(300)) { -(it * 0.06f).toInt() } + fadeIn(Motion.enter(260))) togetherWith
-                            (slideOutHorizontally(Motion.enter(300)) { (it * 0.16f).toInt() } + fadeOut(Motion.state(160)))
-                }.using(SizeTransform(clip = false))
+                // One continuous surface: a soft cross-fade with a tiny scale, no sideways page jump.
+                ((fadeIn(Motion.enter(320)) + scaleIn(initialScale = 0.985f, animationSpec = Motion.enter(320))) togetherWith
+                    (fadeOut(Motion.exit(220)) + scaleOut(targetScale = 1.015f, animationSpec = Motion.exit(220))))
+                    .using(SizeTransform(clip = false))
             },
             label = "route",
         ) { r ->

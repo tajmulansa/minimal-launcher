@@ -1,7 +1,14 @@
 package com.example.productivitylauncher.ui.gate
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import com.example.productivitylauncher.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -91,10 +98,23 @@ fun GateScreen(state: LauncherState, app: AppEntry, nav: Nav) {
                 when (step) { 1 -> "Step 1 of 3 · Breathe"; 2 -> "Step 2 of 3 · Type"; else -> "Step 3 of 3 · Choose time" },
             )
         }
-        when (step) {
-            1 -> BreatheStep(state, app, onContinue = { step = 2 }, onCancel = { cancel() })
-            2 -> PhraseStep(state, onContinue = { step = 3 }, onCancel = { cancel() })
-            else -> TimeStep(state, app, nav, onCancel = { cancel() })
+        AnimatedContent(
+            targetState = step,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            transitionSpec = {
+                ((fadeIn(Motion.morph()) + scaleIn(initialScale = 0.98f, animationSpec = Motion.morph())) togetherWith
+                    (fadeOut(Motion.exit()) + scaleOut(targetScale = 1.02f, animationSpec = Motion.exit())))
+                    .using(SizeTransform(clip = false))
+            },
+            label = "gateStep",
+        ) { s ->
+            Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                when (s) {
+                    1 -> BreatheStep(state, app, onContinue = { step = 2 }, onCancel = { cancel() })
+                    2 -> PhraseStep(state, onContinue = { step = 3 }, onCancel = { cancel() })
+                    else -> TimeStep(state, app, nav, onCancel = { cancel() })
+                }
+            }
         }
     }
 }
@@ -112,9 +132,9 @@ private fun ColumnScope.BreatheStep(state: LauncherState, app: AppEntry, onConti
         for (i in 1..total) {
             breathNo = i
             phase = 0
-            scale.animateTo(1.2f, tween(4000, easing = FastOutSlowInEasing))
+            scale.animateTo(1.2f, tween(4000, easing = Motion.Soft))
             phase = 1
-            scale.animateTo(0.8f, tween(4000, easing = FastOutSlowInEasing))
+            scale.animateTo(0.8f, tween(4000, easing = Motion.Soft))
         }
         phase = 2
         while (waitLeft > 0) {
