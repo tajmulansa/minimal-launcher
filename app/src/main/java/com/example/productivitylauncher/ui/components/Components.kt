@@ -68,14 +68,15 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.theme.Inter
+import com.example.productivitylauncher.ui.theme.Mono
+import com.example.productivitylauncher.ui.theme.Sans
 import com.example.productivitylauncher.ui.theme.enterStagger
 
-/** Shapes: softened from the first Ceramic draft (10 / 16 / 22 / 16) after device feedback. */
+/** Shapes: soft tonal surfaces and fully rounded pills (the Still design). */
 val RadiusSm = RoundedCornerShape(10.dp)
-val RadiusMd = RoundedCornerShape(16.dp)
-val RadiusLg = RoundedCornerShape(22.dp)
-val RadiusPill = RoundedCornerShape(16.dp)
+val RadiusMd = RoundedCornerShape(18.dp)
+val RadiusLg = RoundedCornerShape(26.dp)
+val RadiusPill = RoundedCornerShape(percent = 50)
 
 fun Modifier.sizeCompat(s: Dp): Modifier = this.then(Modifier.size(s))
 
@@ -100,7 +101,7 @@ fun AppText(
         color = color,
         fontSize = size,
         fontWeight = weight,
-        fontFamily = if (mono) FontFamily.Monospace else Inter,
+        fontFamily = if (mono) Mono else Sans,
         letterSpacing = letterSpacing,
         textAlign = align,
         lineHeight = lineHeight,
@@ -113,7 +114,7 @@ fun AppText(
 /** Small uppercase caption used above sections. */
 @Composable
 fun Caption(text: String, modifier: Modifier = Modifier, color: Color = AppColors.muted) {
-    AppText(text.uppercase(), modifier, size = 12.sp, weight = FontWeight.Bold, color = color, letterSpacing = 1.5.sp)
+    AppText(text.uppercase(), modifier, size = 11.sp, weight = FontWeight.Medium, color = color, letterSpacing = 1.sp, mono = true)
 }
 
 @Composable
@@ -121,7 +122,7 @@ fun Rule(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth().height(1.dp).background(AppColors.line))
 }
 
-/** A soft white (or dark) card with the Ceramic shadow. */
+/** A quiet tonal surface. No shadow: depth comes from the tone, not from elevation. */
 @Composable
 fun CeramicCard(
     modifier: Modifier = Modifier,
@@ -133,7 +134,6 @@ fun CeramicCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val base = modifier
-        .shadow(6.dp, shape, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
         .background(color, shape)
         .then(if (borderColor != null) Modifier.border(2.dp, borderColor, shape) else Modifier)
     val clickable = if (onClick != null) base.then(Modifier.clickableRole(onClick)) else base
@@ -174,15 +174,14 @@ fun CButton(
         BtnKind.Soft -> AppColors.text
         BtnKind.Gate -> AppColors.onGate
     }
-    val shape = if (small) RoundedCornerShape(12.dp) else RadiusMd
+    val shape = RadiusPill
     Row(
         modifier
-            .alpha(if (enabled) 1f else 0.45f)
-            .then(if (kind == BtnKind.Soft) Modifier.shadow(4.dp, shape, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)) else Modifier)
+            .alpha(if (enabled) 1f else 0.4f)
             .background(bg, shape)
             .then(if (enabled) Modifier.clickableRole(onClick) else Modifier)
-            .heightIn(min = if (small) 44.dp else 56.dp)
-            .padding(horizontal = if (small) 18.dp else 22.dp, vertical = if (small) 10.dp else 16.dp),
+            .heightIn(min = if (small) 44.dp else 58.dp)
+            .padding(horizontal = if (small) 20.dp else 24.dp, vertical = if (small) 10.dp else 16.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -214,8 +213,7 @@ fun IconButtonLarge(ic: Ic, description: String, onClick: () -> Unit, modifier: 
     Box(
         modifier
             .size(48.dp)
-            .shadow(4.dp, RoundedCornerShape(14.dp), ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
-            .background(AppColors.card, RoundedCornerShape(14.dp))
+            .border(1.dp, AppColors.line, CircleShape)
             .semantics { contentDescription = description }
             .clickableRole(onClick),
         contentAlignment = Alignment.Center,
@@ -238,20 +236,20 @@ fun PageHeader(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (onBack != null) IconButtonLarge(Ic.Back, "Back", onBack)
-        AppText(title, Modifier.weight(1f), size = if (onBack != null) 24.sp else 32.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, maxLines = 1)
+        AppText(title, Modifier.weight(1f), size = if (onBack != null) 26.sp else 38.sp, weight = FontWeight.Medium, letterSpacing = (-1.2).sp, maxLines = 1)
         if (trailing != null) trailing()
     }
 }
 
 @Composable
 fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val chipBg by animateColorAsState(if (selected) AppColors.primary else AppColors.card, Motion.state(160), label = "chipBg")
+    val chipBg by animateColorAsState(if (selected) AppColors.primary else Color.Transparent, Motion.state(160), label = "chipBg")
     val chipFg by animateColorAsState(if (selected) AppColors.onPrimary else AppColors.muted, Motion.state(160), label = "chipFg")
     Box(
         modifier
             .heightIn(min = 44.dp)
-            .shadow(3.dp, RadiusPill, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
             .background(chipBg, RadiusPill)
+            .border(1.dp, if (selected) Color.Transparent else AppColors.line, RadiusPill)
             .clickableRole(onClick, Role.Tab)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
@@ -264,11 +262,11 @@ fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifie
 @Composable
 fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val haptic = LocalHapticFeedback.current
-    BoxWithConstraints(modifier.fillMaxWidth().background(AppColors.line, RadiusPill).padding(3.dp)) {
+    BoxWithConstraints(modifier.fillMaxWidth().background(AppColors.card, RadiusPill).padding(3.dp)) {
         val segment = maxWidth / options.size
         val x by animateDpAsState(segment * selected, Motion.press(), label = "segment")
         Box(Modifier.matchParentSize()) {
-            Box(Modifier.offset(x = x).width(segment).fillMaxHeight().background(AppColors.card, RadiusPill))
+            Box(Modifier.offset(x = x).width(segment).fillMaxHeight().background(AppColors.phone, RadiusPill))
         }
         Row(Modifier.fillMaxWidth()) {
             options.forEachIndexed { i, label ->
@@ -294,8 +292,8 @@ fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, mod
 @Composable
 fun Toggle(on: Boolean, onChange: (Boolean) -> Unit, description: String) {
     // The thumb slides and the track changes colour, so the switch never just teleports.
-    val track by animateColorAsState(if (on) AppColors.focus else AppColors.dot, Motion.state(160), label = "toggleTrack")
-    val thumb by animateColorAsState(if (on) AppColors.onFocus else AppColors.card, Motion.state(160), label = "toggleThumb")
+    val track by animateColorAsState(if (on) AppColors.text else AppColors.card, Motion.state(160), label = "toggleTrack")
+    val thumb by animateColorAsState(if (on) AppColors.phone else AppColors.text, Motion.state(160), label = "toggleThumb")
     val slide by animateFloatAsState(if (on) 1f else 0f, Motion.press(), label = "toggleSlide")
     val haptic = LocalHapticFeedback.current
     // The tap area is 48 dp tall even though the track is 32 dp, and it shrinks a little when pressed.
@@ -309,7 +307,7 @@ fun Toggle(on: Boolean, onChange: (Boolean) -> Unit, description: String) {
             }, Role.Switch),
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.size(width = 52.dp, height = 32.dp).background(track, RoundedCornerShape(16.dp)).padding(3.dp)) {
+        Box(Modifier.size(width = 52.dp, height = 32.dp).background(track, RoundedCornerShape(16.dp)).border(1.dp, AppColors.line, RoundedCornerShape(16.dp)).padding(3.dp)) {
             Box(Modifier.offset(x = 20.dp * slide).size(26.dp).background(thumb, CircleShape))
         }
     }
@@ -331,11 +329,11 @@ fun CheckCircle(checked: Boolean, size: Dp = 34.dp) {
         Modifier
             .size(size)
             .graphicsLayer { scaleX = pop.value; scaleY = pop.value }
-            .background(AppColors.focus.copy(alpha = fill), CircleShape)
-            .border(BorderStroke(2.5.dp, AppColors.focus), CircleShape),
+            .background(AppColors.text.copy(alpha = fill), CircleShape)
+            .border(BorderStroke(1.5.dp, AppColors.text), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (fill > 0.4f) AppIcon(Ic.Check, AppColors.onFocus, size = size * 0.52f)
+        if (fill > 0.4f) AppIcon(Ic.Check, AppColors.phone, size = size * 0.52f)
     }
 }
 
@@ -355,7 +353,7 @@ private fun StepBtn(ic: Ic, description: String, onClick: () -> Unit) {
     Box(
         Modifier
             .size(44.dp)
-            .background(AppColors.phone, CircleShape)
+            .border(1.dp, AppColors.line, CircleShape)
             .semantics { contentDescription = description }
             .clickableRole({ haptic.performHapticFeedback(HapticFeedbackType.SegmentTick); onClick() }),
         contentAlignment = Alignment.Center,
@@ -369,7 +367,7 @@ fun AppBadge(letter: String, gated: Boolean, size: Dp = 44.dp, modifier: Modifie
     Box(
         modifier
             .size(size)
-            .background(if (gated) AppColors.gate else AppColors.phone, RoundedCornerShape(size * 0.24f)),
+            .background(if (gated) AppColors.gate else AppColors.card, RoundedCornerShape(size * 0.3f)),
         contentAlignment = Alignment.Center,
     ) {
         AppText(letter, size = fontSize, weight = FontWeight.SemiBold, color = if (gated) AppColors.onGate else AppColors.text)
@@ -380,12 +378,12 @@ fun AppBadge(letter: String, gated: Boolean, size: Dp = 44.dp, modifier: Modifie
 @Composable
 fun GatedTag(modifier: Modifier = Modifier) {
     Row(
-        modifier.background(AppColors.gate.copy(alpha = 0.16f), RoundedCornerShape(8.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
+        modifier.border(1.dp, AppColors.gate.copy(alpha = 0.5f), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         AppIcon(Ic.Lock, AppColors.gate, size = 11.dp)
-        AppText("GATED", size = 11.sp, weight = FontWeight.ExtraBold, color = AppColors.gate, letterSpacing = 1.5.sp)
+        AppText("GATED", size = 10.sp, weight = FontWeight.Medium, color = AppColors.gate, letterSpacing = 1.sp, mono = true)
     }
 }
 
@@ -398,7 +396,7 @@ fun AppField(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     onDone: (() -> Unit)? = null,
-    fill: Color = AppColors.phone,
+    fill: Color = AppColors.card,
     mono: Boolean = false,
     center: Boolean = false,
 ) {
@@ -409,7 +407,7 @@ fun AppField(
         textStyle = TextStyle(
             color = AppColors.text,
             fontSize = 16.sp,
-            fontFamily = if (mono) FontFamily.Monospace else Inter,
+            fontFamily = if (mono) Mono else Sans,
             textAlign = if (center) TextAlign.Center else TextAlign.Start,
         ),
         cursorBrush = SolidColor(AppColors.text),
@@ -418,7 +416,7 @@ fun AppField(
         modifier = modifier.fillMaxWidth(),
         decorationBox = { inner ->
             Box(
-                Modifier.fillMaxWidth().heightIn(min = 52.dp).background(fill, RoundedCornerShape(14.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().heightIn(min = 54.dp).background(fill, RoundedCornerShape(18.dp)).padding(horizontal = 18.dp, vertical = 14.dp),
                 contentAlignment = if (center) Alignment.Center else Alignment.CenterStart,
             ) {
                 if (value.isEmpty()) AppText(placeholder, color = AppColors.muted, mono = mono)
@@ -466,16 +464,10 @@ fun ValueChevron(value: String, color: Color = AppColors.muted) {
 
 @Composable
 fun SettingsGroup(label: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxWidth().enterStagger(0), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Caption(label, Modifier.padding(start = 16.dp))
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .shadow(6.dp, RadiusLg, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
-                .background(AppColors.card, RadiusLg)
-                .padding(horizontal = 22.dp),
-            content = content,
-        )
+    Column(Modifier.fillMaxWidth().enterStagger(0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Rule()
+        Caption(label, Modifier.padding(top = 18.dp))
+        Column(Modifier.fillMaxWidth(), content = content)
     }
 }
 

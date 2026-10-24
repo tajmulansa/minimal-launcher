@@ -209,7 +209,7 @@ internal fun Tile(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, 
     val base = modifier
         .fillMaxWidth()
         .height(TileHeight)
-        .shadow(6.dp, RadiusLg, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+        
         .background(AppColors.card, RadiusLg)
     Box((if (onClick != null) base.clickableRole(onClick) else base).padding(16.dp), content = content)
 }

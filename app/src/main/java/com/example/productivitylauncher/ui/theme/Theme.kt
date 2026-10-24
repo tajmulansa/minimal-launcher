@@ -9,19 +9,27 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.example.productivitylauncher.R
 
-/** The Ceramic palette (see docs/DESIGN.md). Screens read colours only through [AppColors]. */
+/**
+ * The Still palette (see docs/DESIGN.md): cool stone and ink, no accent colour.
+ * Screens read colours only through [AppColors].
+ */
 class Palette(
     val phone: Color,
+    /** A quiet tonal surface: tiles, fields, tracks. Never a shadowed card. */
     val card: Color,
     val text: Color,
     val muted: Color,
+    /** Positive state. Ink, not green: the app has no accent colour. */
     val focus: Color,
     val onFocus: Color,
+    /** The one warm colour, used only for gated apps and warnings. */
     val gate: Color,
     val gateSoft: Color,
     val onGate: Color,
@@ -30,102 +38,41 @@ class Palette(
     val primary: Color,
     val onPrimary: Color,
     val dark: Boolean,
-    /** Draws ruled lines and a red margin behind every screen, like a notebook page. */
-    val ruled: Boolean = false,
 )
 
 val LightPalette = Palette(
-    phone = Color(0xFFF2F0E9),
-    card = Color(0xFFFFFFFF),
-    text = Color(0xFF363431),
-    muted = Color(0xFF6F6C66),
-    focus = Color(0xFF4F7165),
-    onFocus = Color(0xFFFFFFFF),
-    gate = Color(0xFFA84A3E),
-    gateSoft = Color(0xFFFAECEB),
+    phone = Color(0xFFECEDEA),
+    card = Color(0xFFE1E3DF),
+    text = Color(0xFF111312),
+    muted = Color(0xFF666A64),
+    focus = Color(0xFF111312),
+    onFocus = Color(0xFFECEDEA),
+    gate = Color(0xFFB5502C),
+    gateSoft = Color(0xFFEBD9D1),
     onGate = Color(0xFFFFFFFF),
-    line = Color(0xFFEAE8E3),
-    dot = Color(0xFFD6D3CD),
-    primary = Color(0xFF363431),
-    onPrimary = Color(0xFFFFFFFF),
+    line = Color(0x1F111312),
+    dot = Color(0xFFC5C8C2),
+    primary = Color(0xFF111312),
+    onPrimary = Color(0xFFECEDEA),
     dark = false,
 )
 
 val DarkPalette = Palette(
-    phone = Color(0xFF100F0E),
-    card = Color(0xFF1B1A18),
-    text = Color(0xFFEDEAE3),
-    muted = Color(0xFFA09B92),
-    focus = Color(0xFF8DB8A7),
-    onFocus = Color(0xFF12201B),
-    gate = Color(0xFFE58E7E),
-    gateSoft = Color(0xFF3A2723),
-    onGate = Color(0xFF2A1511),
-    line = Color(0xFF292724),
-    dot = Color(0xFF403C37),
-    primary = Color(0xFFEDEAE3),
-    onPrimary = Color(0xFF100F0E),
+    phone = Color(0xFF0B0C0B),
+    card = Color(0xFF161816),
+    text = Color(0xFFEEF0EC),
+    muted = Color(0xFF8E928B),
+    focus = Color(0xFFEEF0EC),
+    onFocus = Color(0xFF0B0C0B),
+    gate = Color(0xFFE27A52),
+    gateSoft = Color(0xFF2E1D17),
+    onGate = Color(0xFF241109),
+    line = Color(0x21EEF0EC),
+    dot = Color(0xFF383B37),
+    primary = Color(0xFFEEF0EC),
+    onPrimary = Color(0xFF0B0C0B),
     dark = true,
 )
-
-/** A pale blue notebook page, written on with a blue pen. */
-val PenBluePalette = Palette(
-    phone = Color(0xFFE9F0FB),
-    card = Color(0xFFF7FAFF),
-    text = Color(0xFF14284F),
-    muted = Color(0xFF51648C),
-    focus = Color(0xFF1F4FD1),
-    onFocus = Color(0xFFFFFFFF),
-    gate = Color(0xFFB8452F),
-    gateSoft = Color(0xFFFBE9E4),
-    onGate = Color(0xFFFFFFFF),
-    line = Color(0xFFD3DEF2),
-    dot = Color(0xFFB5C5E4),
-    primary = Color(0xFF14284F),
-    onPrimary = Color(0xFFFFFFFF),
-    dark = false,
-)
-
-/** Dark navy, like ink at night. */
-val MidnightPalette = Palette(
-    phone = Color(0xFF0B1020),
-    card = Color(0xFF141B30),
-    text = Color(0xFFE6EAF5),
-    muted = Color(0xFF8F9ABB),
-    focus = Color(0xFF7FA2FF),
-    onFocus = Color(0xFF0B1530),
-    gate = Color(0xFFFF8C7A),
-    gateSoft = Color(0xFF3A2025),
-    onGate = Color(0xFF2A1511),
-    line = Color(0xFF222B45),
-    dot = Color(0xFF34406A),
-    primary = Color(0xFFE6EAF5),
-    onPrimary = Color(0xFF0B1020),
-    dark = true,
-)
-
-/** Lined notebook paper: cream page, pale blue rules, a red margin and blue-black ink. */
-val NotebookPalette = Palette(
-    phone = Color(0xFFFBF9F0),
-    card = Color(0xFFFFFFFE),
-    text = Color(0xFF1F2A4A),
-    muted = Color(0xFF68708A),
-    focus = Color(0xFF2F4FA3),
-    onFocus = Color(0xFFFFFFFF),
-    gate = Color(0xFFC0392B),
-    gateSoft = Color(0xFFFBE9E6),
-    onGate = Color(0xFFFFFFFF),
-    line = Color(0xFFE5E9F3),
-    dot = Color(0xFFC3CFE6),
-    primary = Color(0xFF1F2A4A),
-    onPrimary = Color(0xFFFFFFFF),
-    dark = false,
-    ruled = true,
-)
-
-/** The ruled lines and the margin line of the Notebook theme. */
-val NotebookRule = Color(0xFFD3DEF1)
-val NotebookMargin = Color(0x66D9534F)
 
 val LocalPalette = staticCompositionLocalOf { LightPalette }
 
@@ -146,12 +93,23 @@ object AppColors {
     val onPrimary: Color @Composable @ReadOnlyComposable get() = LocalPalette.current.onPrimary
 }
 
-/** One typeface only: Inter, bundled in res/font (no download, no network). */
-val Inter = FontFamily(
-    Font(R.font.inter_regular, FontWeight.Normal),
-    Font(R.font.inter_medium, FontWeight.Medium),
-    Font(R.font.inter_semibold, FontWeight.SemiBold),
-    Font(R.font.inter_bold, FontWeight.Bold),
+/** Geist for everything, bundled in res/font (no download, no network). Tight tracking carries the display sizes. */
+val Sans = FontFamily(
+    Font(R.font.geist_light, FontWeight.Light),
+    Font(R.font.geist_regular, FontWeight.Normal),
+    Font(R.font.geist_medium, FontWeight.Medium),
+    Font(R.font.geist_semibold, FontWeight.SemiBold),
+    Font(R.font.geist_semibold, FontWeight.Bold),
+    Font(R.font.geist_semibold, FontWeight.ExtraBold),
+)
+
+/** Geist Mono: small uppercase labels and data. */
+val Mono = FontFamily(
+    Font(R.font.geist_mono_regular, FontWeight.Normal),
+    Font(R.font.geist_mono_medium, FontWeight.Medium),
+    Font(R.font.geist_mono_medium, FontWeight.SemiBold),
+    Font(R.font.geist_mono_medium, FontWeight.Bold),
+    Font(R.font.geist_mono_medium, FontWeight.ExtraBold),
 )
 
 /** Theme choice saved in settings. Auto follows the phone's light or dark setting. */
@@ -159,9 +117,40 @@ enum class ThemeMode(val label: String) {
     Auto("Auto"),
     Light("Light"),
     Dark("Dark"),
-    PenBlue("Pen blue"),
-    Midnight("Midnight"),
-    Notebook("Notebook"),
+}
+
+/** A colour treatment laid over the launcher's own screens. Saved in settings and in the quick panel. */
+enum class Look(val label: String) {
+    Standard("Standard"),
+    Gray("Gray"),
+    Warm("Warm"),
+    Contrast("Contrast"),
+}
+
+/** The colour filter for a look, or null for Standard (which costs nothing). */
+fun lookFilter(look: Look): ColorFilter? = when (look) {
+    Look.Standard -> null
+    Look.Gray -> ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
+    Look.Warm -> ColorFilter.colorMatrix(
+        ColorMatrix(
+            floatArrayOf(
+                1.05f, 0.05f, 0f, 0f, 6f,
+                0.02f, 0.98f, 0f, 0f, 0f,
+                0f, 0.05f, 0.80f, 0f, -4f,
+                0f, 0f, 0f, 1f, 0f,
+            ),
+        ),
+    )
+    Look.Contrast -> ColorFilter.colorMatrix(
+        ColorMatrix(
+            floatArrayOf(
+                1.2f, 0f, 0f, 0f, -25f,
+                0f, 1.2f, 0f, 0f, -25f,
+                0f, 0f, 1.2f, 0f, -25f,
+                0f, 0f, 0f, 1f, 0f,
+            ),
+        ),
+    )
 }
 
 /** The palette for a theme, or null for Auto (which depends on the phone). */
@@ -169,9 +158,6 @@ fun paletteOf(mode: ThemeMode): Palette? = when (mode) {
     ThemeMode.Auto -> null
     ThemeMode.Light -> LightPalette
     ThemeMode.Dark -> DarkPalette
-    ThemeMode.PenBlue -> PenBluePalette
-    ThemeMode.Midnight -> MidnightPalette
-    ThemeMode.Notebook -> NotebookPalette
 }
 
 @Composable

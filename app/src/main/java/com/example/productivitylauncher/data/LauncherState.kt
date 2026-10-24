@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.productivitylauncher.ui.theme.Look
+import com.example.productivitylauncher.ui.theme.Motion
 import com.example.productivitylauncher.ui.theme.ThemeMode
 import org.json.JSONArray
 import org.json.JSONObject
@@ -78,6 +80,20 @@ class LauncherState(context: Context) {
         private set
 
     fun setTheme(m: ThemeMode) { themeMode = m; save { putString("theme", m.name) } }
+
+    /** A colour treatment over the launcher: Standard, Gray, Warm or Contrast. */
+    var look by mutableStateOf(runCatching { Look.valueOf(str("look", "Standard")) }.getOrDefault(Look.Standard))
+        private set
+
+    fun setLook(l: Look) { look = l; save { putString("look", l.name) } }
+
+    /** Turn off for a faster, calmer feel on slower phones. Every animation in the app follows this one switch. */
+    var animations by mutableStateOf(bool("animations", true))
+        private set
+
+    init { Motion.enabled = animations }
+
+    fun setAnimations(on: Boolean) { animations = on; Motion.enabled = on; save { putBoolean("animations", on) } }
 
     var pipOn by mutableStateOf(bool("pip_on", true))
         private set
@@ -697,6 +713,6 @@ class LauncherState(context: Context) {
         focusEnd = 0L; focusDnd = true; focusLockGated = true
         eveningHour = 21; eveningDoneDay = ""; screenGoalMin = 180
         widgets = DEFAULT_WIDGETS; widgetHeights = emptyMap()
-        themeMode = ThemeMode.Auto; pipOn = true; onboarded = false
+        themeMode = ThemeMode.Auto; look = Look.Standard; animations = true; Motion.enabled = true; pipOn = true; onboarded = false
     }
 }

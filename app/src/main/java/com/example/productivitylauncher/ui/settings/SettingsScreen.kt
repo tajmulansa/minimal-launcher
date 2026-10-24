@@ -45,7 +45,9 @@ import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.ui.components.Toggle
 import com.example.productivitylauncher.ui.components.ValueChevron
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.components.ThemePicker
+import com.example.productivitylauncher.ui.components.Segmented
+import com.example.productivitylauncher.ui.theme.Look
+import com.example.productivitylauncher.ui.theme.ThemeMode
 
 @Composable
 fun SettingsScreen(state: LauncherState, nav: Nav) {
@@ -66,8 +68,18 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             SettingsGroup("Appearance") {
-                SettingRow("Theme", subtitle = state.themeMode.label, onClick = { nav.go(Route.Themes) }) {
-                    AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp)
+                Column(Modifier.padding(vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    AppText("Theme", size = 16.sp, weight = FontWeight.Medium)
+                    Segmented(ThemeMode.entries.map { it.label }, state.themeMode.ordinal, { state.setTheme(ThemeMode.entries[it]) })
+                }
+                Divider()
+                Column(Modifier.padding(vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    AppText("Look", size = 16.sp, weight = FontWeight.Medium)
+                    Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.setLook(Look.entries[it]) })
+                }
+                Divider()
+                SettingRow("Animations", subtitle = "Turn off for a faster, calmer feel on slower phones") {
+                    Toggle(state.animations, { state.setAnimations(it) }, "Animations")
                 }
                 if (PIP_ENABLED) {
                     Divider()

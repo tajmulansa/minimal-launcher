@@ -50,7 +50,7 @@ import com.example.productivitylauncher.ui.components.PageHeader
 import com.example.productivitylauncher.ui.components.RadiusMd
 import com.example.productivitylauncher.ui.components.RadiusPill
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.theme.Inter
+import com.example.productivitylauncher.ui.theme.Sans
 
 private enum class Filter(val label: String) { All("All"), Work("Work"), Gated("Gated") }
 
@@ -87,7 +87,7 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                 value = query,
                 onValueChange = { query = it },
                 singleLine = true,
-                textStyle = TextStyle(color = AppColors.text, fontSize = 16.sp, fontFamily = Inter),
+                textStyle = TextStyle(color = AppColors.text, fontSize = 16.sp, fontFamily = Sans),
                 cursorBrush = SolidColor(AppColors.text),
                 modifier = Modifier.weight(1f),
                 decorationBox = { inner ->

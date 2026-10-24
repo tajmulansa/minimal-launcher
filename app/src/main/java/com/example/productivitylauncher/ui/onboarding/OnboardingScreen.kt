@@ -59,7 +59,9 @@ import com.example.productivitylauncher.ui.components.BtnKind
 import com.example.productivitylauncher.ui.components.CButton
 import com.example.productivitylauncher.ui.components.TextLink
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.components.ThemePicker
+import com.example.productivitylauncher.ui.components.Segmented
+import com.example.productivitylauncher.ui.theme.Look
+import com.example.productivitylauncher.ui.theme.ThemeMode
 
 /** First run: welcome, pick gated apps, pick six Home apps, set the first most important task, choose a theme. */
 @Composable
@@ -118,7 +120,9 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                 else -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
                     AppText("Make it yours", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
                     AppText("Choose a look. You can change it any time in Settings.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
-                    ThemePicker(state.themeMode, { state.setTheme(it) })
+                    Segmented(ThemeMode.entries.map { it.label }, state.themeMode.ordinal, { state.setTheme(ThemeMode.entries[it]) })
+                    Spacer(Modifier.height(12.dp))
+                    Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.setLook(Look.entries[it]) })
                 }
             }
         }

@@ -46,11 +46,12 @@ fun UrgeScreen(remainingMillis: Long) {
     val clock = "%d:%02d".format(totalSeconds / 60L, totalSeconds % 60L)
     // A slow ring that breathes in and out behind the timer, to give the eyes somewhere calm to rest.
     val breathe = rememberInfiniteTransition(label = "breathe")
-    val phase by breathe.animateFloat(
+    val animatedPhase by breathe.animateFloat(
         initialValue = 0f, targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(4500, easing = Motion.EaseInOut), RepeatMode.Reverse),
         label = "phase",
     )
+    val phase = if (Motion.enabled) animatedPhase else 0.5f
     val ringColor = AppColors.gate
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(

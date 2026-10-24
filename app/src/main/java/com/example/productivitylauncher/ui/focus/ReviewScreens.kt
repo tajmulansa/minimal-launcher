@@ -52,7 +52,7 @@ import java.util.Locale
 @Composable
 private fun StepCard(number: Int, title: String, content: @Composable () -> Unit) {
     Column(
-        Modifier.fillMaxWidth().shadow(6.dp, RadiusLg, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)).background(AppColors.card, RadiusLg).padding(22.dp),
+        Modifier.fillMaxWidth().background(AppColors.card, RadiusLg).padding(22.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -171,7 +171,7 @@ fun WeekScreen(state: LauncherState, nav: Nav) {
 @Composable
 private fun StepCardPlain(title: String, content: @Composable () -> Unit) {
     Column(
-        Modifier.fillMaxWidth().shadow(6.dp, RadiusLg, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)).background(AppColors.card, RadiusLg).padding(22.dp),
+        Modifier.fillMaxWidth().background(AppColors.card, RadiusLg).padding(22.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         AppText(title.uppercase(), size = 12.sp, weight = FontWeight.Bold, color = AppColors.muted, letterSpacing = 1.5.sp)
@@ -182,7 +182,7 @@ private fun StepCardPlain(title: String, content: @Composable () -> Unit) {
 @Composable
 private fun StatCard(value: String, label: String, modifier: Modifier, good: Boolean) {
     Column(
-        modifier.shadow(6.dp, RadiusMd, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)).background(AppColors.card, RadiusMd).padding(18.dp),
+        modifier.background(AppColors.card, RadiusMd).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         AppText(value, size = 30.sp, weight = FontWeight.Medium, letterSpacing = (-1).sp, color = if (good) AppColors.focus else AppColors.text)

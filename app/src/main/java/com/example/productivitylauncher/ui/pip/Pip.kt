@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import com.example.productivitylauncher.ui.theme.Motion
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.semantics.Role
@@ -81,8 +82,8 @@ object PipDock {
  */
 @Composable
 fun PipBubble(message: PipMessage, docked: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val slide by animateDpAsState(if (docked) PipDock.Gap + PipDock.Size / 2 else 0.dp, tween(280), label = "pipSlide")
-    val fade by animateFloatAsState(if (docked) 0.5f else 1f, tween(280), label = "pipFade")
+    val slide by animateDpAsState(if (docked) PipDock.Gap + PipDock.Size / 2 else 0.dp, Motion.state(280), label = "pipSlide")
+    val fade by animateFloatAsState(if (docked) 0.5f else 1f, Motion.state(280), label = "pipFade")
     // Pip blinks now and then while it is out: the face closes its eyes for a moment.
     var blink by remember { mutableStateOf(false) }
     LaunchedEffect(docked) {
@@ -103,12 +104,13 @@ fun PipBubble(message: PipMessage, docked: Boolean, onClick: () -> Unit, modifie
             }
         }
     }
-    val pulse by rememberInfiniteTransition(label = "dot").animateFloat(
+    val animatedPulse by rememberInfiniteTransition(label = "dot").animateFloat(
         initialValue = 1f,
         targetValue = 1.3f,
         animationSpec = infiniteRepeatable(tween(650), RepeatMode.Reverse),
         label = "pulse",
     )
+    val pulse = if (Motion.enabled) animatedPulse else 1f
     val label = when {
         !docked -> "Pip, tap to talk"
         message.nudge -> "Pip is tucked away and has a message, tap to bring it out"
@@ -242,12 +244,13 @@ private fun TypingDots(modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "typing")
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         for (i in 0..2) {
-            val a by transition.animateFloat(
+            val animatedA by transition.animateFloat(
                 initialValue = 0.25f,
                 targetValue = 1f,
                 animationSpec = infiniteRepeatable(tween(450, delayMillis = i * 150), RepeatMode.Reverse),
                 label = "dot$i",
             )
+            val a = if (Motion.enabled) animatedA else 0.6f
             Box(Modifier.size(9.dp).alpha(a).background(AppColors.muted, CircleShape))
         }
     }

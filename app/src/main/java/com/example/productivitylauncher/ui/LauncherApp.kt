@@ -54,6 +54,9 @@ import com.example.productivitylauncher.ui.gate.GateScreen
 import com.example.productivitylauncher.ui.gate.LockedScreen
 import com.example.productivitylauncher.ui.gate.TimesUpScreen
 import com.example.productivitylauncher.ui.home.HomeScreen
+import com.example.productivitylauncher.ui.home.QuickPanel
+import com.example.productivitylauncher.ui.theme.lookFilter
+import androidx.compose.ui.graphics.CompositingStrategy
 import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
 import com.example.productivitylauncher.ui.pip.PipBubble
 import com.example.productivitylauncher.ui.pip.PipCard
@@ -62,11 +65,7 @@ import com.example.productivitylauncher.ui.pip.PIP_ENABLED
 import com.example.productivitylauncher.ui.pip.PipDock
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.urge.UrgeScreen
-import com.example.productivitylauncher.ui.settings.ThemesScreen
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.theme.LocalPalette
-import com.example.productivitylauncher.ui.theme.NotebookMargin
-import com.example.productivitylauncher.ui.theme.NotebookRule
 import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
 import com.example.productivitylauncher.ui.widgets.BrainDumpScreen
 import com.example.productivitylauncher.ui.widgets.WidgetsScreen
@@ -87,6 +86,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     // Which way the last move went, so screens slide in from the right and back out to the right.
     var forward by remember { mutableStateOf(true) }
     var pipOpen by remember { mutableStateOf(false) }
+    var quickOpen by remember { mutableStateOf(false) }
     var pipVariant by remember { mutableIntStateOf(0) }
     var pipChip by remember { mutableStateOf<String?>(null) }
     // Pip tucks against the screen edge when nobody touches it. pipTouch restarts the idle timer.
@@ -111,6 +111,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             stack.clear()
             if (route != Route.Onboarding) route = Route.Main
             pipOpen = false
+            quickOpen = false
             pager.scrollToPage(0)
         }
     }
@@ -122,6 +123,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                 if (r == Route.Main) stack.clear() else stack.add(route)
                 route = r
                 pipOpen = false
+                quickOpen = false
             },
             back = {
                 forward = false
@@ -170,6 +172,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             urgeActive -> Unit
             route == Route.Onboarding -> Unit
             route != Route.Main -> nav.back()
+            quickOpen -> quickOpen = false
             pipOpen -> pipOpen = false
             pager.currentPage != 0 -> scope.launch { pager.animateScrollToPage(0) }
         }
@@ -186,23 +189,17 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
         }
     }
 
-    val ruled = LocalPalette.current.ruled
+    val filter = lookFilter(state.look)
     Box(
         Modifier
             .fillMaxSize()
+            .graphicsLayer {
+                if (filter != null) {
+                    colorFilter = filter
+                    compositingStrategy = CompositingStrategy.Offscreen
+                }
+            }
             .background(AppColors.phone)
-            .then(
-                if (ruled) Modifier.drawBehind {
-                    // Notebook paper: a faint ruled line every 34dp and a red margin line near the left edge.
-                    val gap = 34.dp.toPx()
-                    var y = gap + 24.dp.toPx()
-                    while (y < size.height) {
-                        drawLine(NotebookRule, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx())
-                        y += gap
-                    }
-                    drawLine(NotebookMargin, Offset(16.dp.toPx(), 0f), Offset(16.dp.toPx(), size.height), strokeWidth = 1.5.dp.toPx())
-                } else Modifier,
-            )
             .systemBarsPadding(),
     ) {
         AnimatedContent(
@@ -228,10 +225,11 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                             scaleY = 1f - off * 0.05f
                         },
                     ) {
-                        if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0)
+                        if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0, onOpenWidgets = { scope.launch { pager.animateScrollToPage(1) } }, onOpenQuick = { quickOpen = true })
                         else WidgetsScreen(state, nav, widgetHost, page = 1)
                     }
                 }
+                QuickPanel(state, quickOpen, { quickOpen = false })
                 if (PIP_ENABLED && state.pipOn) {
                     // Reading these makes Pip choose again when the minute, the resume or the frog changes.
                     @Suppress("UNUSED_VARIABLE") val clockTick = minute + state.resumeTick
@@ -306,7 +304,6 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             Route.Evening -> EveningScreen(state, nav)
             Route.Week -> WeekScreen(state, nav)
             Route.Settings -> SettingsScreen(state, nav)
-            Route.Themes -> ThemesScreen(state, nav)
             Route.GatedPicker -> GatedPickerScreen(state, nav)
             Route.HomePicker -> HomePickerScreen(state, nav)
             is Route.Locked -> LockedScreen(state, r.reason, state.appByPackage(r.pkg), nav)
