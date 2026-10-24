@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.ui.theme.AppColors
 import com.example.productivitylauncher.ui.theme.Inter
+import com.example.productivitylauncher.ui.theme.enterStagger
 
 /** Shapes: softened from the first Ceramic draft (10 / 16 / 22 / 16) after device feedback. */
 val RadiusSm = RoundedCornerShape(10.dp)
@@ -244,16 +245,18 @@ fun PageHeader(
 
 @Composable
 fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val chipBg by animateColorAsState(if (selected) AppColors.primary else AppColors.card, Motion.state(160), label = "chipBg")
+    val chipFg by animateColorAsState(if (selected) AppColors.onPrimary else AppColors.muted, Motion.state(160), label = "chipFg")
     Box(
         modifier
             .heightIn(min = 44.dp)
             .shadow(3.dp, RadiusPill, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
-            .background(if (selected) AppColors.primary else AppColors.card, RadiusPill)
+            .background(chipBg, RadiusPill)
             .clickableRole(onClick, Role.Tab)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {
-        AppText(text, size = 14.sp, weight = FontWeight.SemiBold, color = if (selected) AppColors.onPrimary else AppColors.muted)
+        AppText(text, size = 14.sp, weight = FontWeight.SemiBold, color = chipFg)
     }
 }
 
@@ -463,7 +466,7 @@ fun ValueChevron(value: String, color: Color = AppColors.muted) {
 
 @Composable
 fun SettingsGroup(label: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxWidth().enterStagger(0), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Caption(label, Modifier.padding(start = 16.dp))
         Column(
             Modifier
