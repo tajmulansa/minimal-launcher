@@ -182,7 +182,7 @@ internal fun QuickActionsWidget(state: LauncherState, nav: Nav) {
 /** A square icon button with its label underneath. The red one only tints its icon. */
 @Composable
 internal fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit, modifier: Modifier, danger: Boolean = false) {
-    val bg by animateColorAsState(if (on) AppColors.primary else AppColors.phone, Motion.state(), label = "tileBg")
+    val bg by animateColorAsState(if (on) AppColors.primary else Color.Transparent, Motion.state(), label = "tileBg")
     val fg by animateColorAsState(when { on -> AppColors.onPrimary; danger -> AppColors.gate; else -> AppColors.text }, Motion.state(), label = "tileFg")
     Column(
         modifier
@@ -191,10 +191,10 @@ internal fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(Modifier.fillMaxWidth().aspectRatio(1f).background(bg, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1f).background(bg, CircleShape).border(1.dp, if (on) Color.Transparent else AppColors.line, CircleShape), contentAlignment = Alignment.Center) {
             AppIcon(icon, fg, size = 22.dp)
         }
-        AppText(label, size = 11.sp, weight = FontWeight.Medium, color = AppColors.muted, maxLines = 1, align = TextAlign.Center)
+        AppText(label.uppercase(), size = 10.sp, weight = FontWeight.Medium, color = AppColors.muted, maxLines = 1, align = TextAlign.Center, letterSpacing = 0.8.sp, mono = true)
     }
 }
 
@@ -209,8 +209,7 @@ internal fun Tile(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, 
     val base = modifier
         .fillMaxWidth()
         .height(TileHeight)
-        
-        .background(AppColors.card, RadiusLg)
+        .border(1.dp, AppColors.line, RadiusLg)
     Box((if (onClick != null) base.clickableRole(onClick) else base).padding(16.dp), content = content)
 }
 

@@ -22,6 +22,7 @@ import com.example.productivitylauncher.data.letterOf
 import com.example.productivitylauncher.ui.Nav
 import com.example.productivitylauncher.ui.components.AppBadge
 import com.example.productivitylauncher.ui.components.AppText
+import com.example.productivitylauncher.ui.components.hairlineBelow
 import com.example.productivitylauncher.ui.components.CheckCircle
 import com.example.productivitylauncher.ui.components.GatedTag
 import com.example.productivitylauncher.ui.components.PageHeader
@@ -53,19 +54,18 @@ fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier) {
                     Modifier
                         .fillMaxWidth()
                         .heightIn(min = 60.dp)
-                        .background(if (gated) AppColors.gateSoft else AppColors.card, RadiusMd)
-                        .clickableRole({
+                                                .clickableRole({
                             if (!gated) state.addGated(app.packageName)
                             else if (pending) state.cancelRemoveGated(app.packageName)
                             else state.requestRemoveGated(app.packageName)
                         })
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .hairlineBelow()
+                        .padding(vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    AppBadge(letterOf(app.label), gated, size = 40.dp)
                     Column(Modifier.weight(1f)) {
-                        AppText(app.label, size = 17.sp, weight = FontWeight.Medium, maxLines = 1, color = if (gated) AppColors.gate else AppColors.text)
+                        AppText(app.label, size = 22.sp, weight = FontWeight.Medium, letterSpacing = (-0.5).sp, maxLines = 1, color = if (gated) AppColors.gate else AppColors.text)
                         if (pending) AppText("Removal in 24 hours. Tap to keep.", size = 12.sp, color = AppColors.muted)
                     }
                     CheckCircle(gated && !pending, size = 28.dp)
@@ -105,20 +105,19 @@ fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
                         .fillMaxWidth()
                         .heightIn(min = 60.dp)
                         .alpha(if (gated) 0.5f else 1f)
-                        .background(AppColors.card, RadiusMd)
-                        .then(
+                                                .then(
                             if (gated) Modifier else Modifier.clickableRole({
                                 if (on) state.updateHomeApps(state.homeApps - app.packageName)
                                 else if (state.homeApps.size < 6) state.updateHomeApps(state.homeApps + app.packageName)
                             }),
                         )
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .hairlineBelow()
+                        .padding(vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    AppBadge(letterOf(app.label), gated, size = 40.dp)
                     Column(Modifier.weight(1f)) {
-                        AppText(app.label, size = 17.sp, weight = FontWeight.Medium, maxLines = 1)
+                        AppText(app.label, size = 22.sp, weight = FontWeight.Medium, letterSpacing = (-0.5).sp, maxLines = 1)
                         if (gated) AppText("Gated apps can't go on Home", size = 12.sp, color = AppColors.muted)
                     }
                     if (gated) GatedTag() else CheckCircle(on, size = 28.dp)

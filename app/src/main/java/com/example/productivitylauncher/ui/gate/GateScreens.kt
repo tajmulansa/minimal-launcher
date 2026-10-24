@@ -92,8 +92,7 @@ fun GateScreen(state: LauncherState, app: AppEntry, nav: Nav) {
 
     Column(Modifier.fillMaxSize().padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            AppBadge(letterOf(app.label), gated = true, size = 64.dp)
-            AppText(app.label, size = 20.sp, weight = FontWeight.SemiBold, color = AppColors.gate)
+            AppText(app.label, size = 34.sp, weight = FontWeight.Medium, letterSpacing = (-1).sp, color = AppColors.gate)
             Caption(
                 when (step) { 1 -> "Step 1 of 3 · Breathe"; 2 -> "Step 2 of 3 · Type"; else -> "Step 3 of 3 · Choose time" },
             )

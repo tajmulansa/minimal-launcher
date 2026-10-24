@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
@@ -127,15 +128,22 @@ fun Rule(modifier: Modifier = Modifier) {
 fun CeramicCard(
     modifier: Modifier = Modifier,
     shape: Shape = RadiusLg,
-    color: Color = AppColors.card,
+    color: Color = Color.Unspecified,
     padding: PaddingValues = PaddingValues(22.dp),
     borderColor: Color? = null,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val filled = color != Color.Unspecified
     val base = modifier
-        .background(color, shape)
-        .then(if (borderColor != null) Modifier.border(2.dp, borderColor, shape) else Modifier)
+        .then(if (filled) Modifier.background(color, shape) else Modifier)
+        .then(
+            when {
+                borderColor != null -> Modifier.border(2.dp, borderColor, shape)
+                !filled -> Modifier.border(1.dp, AppColors.line, shape)
+                else -> Modifier
+            },
+        )
     val clickable = if (onClick != null) base.then(Modifier.clickableRole(onClick)) else base
     Column(clickable.padding(padding), verticalArrangement = Arrangement.spacedBy(14.dp), content = content)
 }
@@ -489,4 +497,10 @@ fun Rolling(value: String, modifier: Modifier = Modifier, content: @Composable (
         },
         label = "rolling",
     ) { content(it) }
+}
+
+/** A one-pixel line along the bottom edge: the Still way of separating list rows. */
+fun Modifier.hairlineBelow(): Modifier = composed {
+    val c = AppColors.line
+    drawBehind { drawLine(c, androidx.compose.ui.geometry.Offset(0f, size.height), androidx.compose.ui.geometry.Offset(size.width, size.height), 1.dp.toPx()) }
 }

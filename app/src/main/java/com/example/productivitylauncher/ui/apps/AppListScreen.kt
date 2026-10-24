@@ -43,6 +43,8 @@ import com.example.productivitylauncher.ui.components.IconButtonLarge
 import com.example.productivitylauncher.ui.components.AppBadge
 import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
+import com.example.productivitylauncher.ui.components.Caption
+import com.example.productivitylauncher.ui.components.Rule
 import com.example.productivitylauncher.ui.components.Chip
 import com.example.productivitylauncher.ui.components.GatedTag
 import com.example.productivitylauncher.ui.components.Ic
@@ -112,7 +114,7 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                 color = AppColors.muted, modifier = Modifier.padding(32.dp),
             )
         }
-        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             var last = ""
             val grouped = shown.map { app ->
                 val sec = sectionOf(app.label)
@@ -121,25 +123,26 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                 app to header
             }
             items(grouped, key = { it.first.packageName + "/" + it.first.activityName }) { (app, header) ->
-                if (header != null) AppText(header, size = 13.sp, weight = FontWeight.Bold, color = AppColors.muted, modifier = Modifier.padding(start = 4.dp, top = 10.dp))
+                if (header != null) Caption(header, Modifier.padding(top = 18.dp, bottom = 4.dp))
                 val gated = state.isGated(app.packageName)
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 60.dp)
-                        .background(if (gated) AppColors.gateSoft else AppColors.card, RadiusMd)
-                        .combinedClickable(role = Role.Button, onClick = { onOpenApp(app) }, onLongClick = { if (!state.lockIn) options = app })
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    AppBadge(letterOf(app.label), gated, size = 40.dp)
-                    AppText(
-                        app.label, Modifier.weight(1f), size = 17.sp, maxLines = 1,
-                        weight = if (gated) FontWeight.SemiBold else FontWeight.Medium,
-                        color = if (gated) AppColors.gate else AppColors.text,
-                    )
-                    if (gated) GatedTag()
+                Column {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp)
+                            .combinedClickable(role = Role.Button, onClick = { onOpenApp(app) }, onLongClick = { if (!state.lockIn) options = app })
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        AppText(
+                            app.label, Modifier.weight(1f), size = 22.sp, maxLines = 1, letterSpacing = (-0.5).sp,
+                            weight = FontWeight.Medium,
+                            color = if (gated) AppColors.gate else AppColors.text,
+                        )
+                        if (gated) GatedTag()
+                    }
+                    Rule()
                 }
             }
         }

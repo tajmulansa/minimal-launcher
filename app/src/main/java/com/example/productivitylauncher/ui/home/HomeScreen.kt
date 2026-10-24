@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -246,7 +246,7 @@ private fun Odometer(digit: Int, delayMs: Int, size: TextUnit) {
     Box(Modifier.width(with(density) { size.toDp() } * 0.6f).height(cell).clipToBounds()) {
         Column(
             Modifier
-                .wrapContentHeight(Alignment.Top, unbounded = true)
+                .wrapContentSize(Alignment.TopCenter, unbounded = true)
                 .graphicsLayer { translationY = -y * cell.toPx() },
         ) {
             for (d in 0..9) {
