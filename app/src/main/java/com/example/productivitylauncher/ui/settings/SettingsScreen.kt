@@ -75,11 +75,11 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 Divider()
                 Column(Modifier.padding(vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     AppText("Look", size = 16.sp, weight = FontWeight.Medium)
-                    Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.setLook(Look.entries[it]) })
+                    Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.updateLook(Look.entries[it]) })
                 }
                 Divider()
                 SettingRow("Animations", subtitle = "Turn off for a faster, calmer feel on slower phones") {
-                    Toggle(state.animations, { state.setAnimations(it) }, "Animations")
+                    Toggle(state.animations, { state.updateAnimations(it) }, "Animations")
                 }
                 if (PIP_ENABLED) {
                     Divider()

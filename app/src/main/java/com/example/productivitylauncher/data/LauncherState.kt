@@ -85,7 +85,7 @@ class LauncherState(context: Context) {
     var look by mutableStateOf(runCatching { Look.valueOf(str("look", "Standard")) }.getOrDefault(Look.Standard))
         private set
 
-    fun setLook(l: Look) { look = l; save { putString("look", l.name) } }
+    fun updateLook(l: Look) { look = l; save { putString("look", l.name) } }
 
     /** Turn off for a faster, calmer feel on slower phones. Every animation in the app follows this one switch. */
     var animations by mutableStateOf(bool("animations", true))
@@ -93,7 +93,7 @@ class LauncherState(context: Context) {
 
     init { Motion.enabled = animations }
 
-    fun setAnimations(on: Boolean) { animations = on; Motion.enabled = on; save { putBoolean("animations", on) } }
+    fun updateAnimations(on: Boolean) { animations = on; Motion.enabled = on; save { putBoolean("animations", on) } }
 
     var pipOn by mutableStateOf(bool("pip_on", true))
         private set

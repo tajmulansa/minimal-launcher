@@ -123,7 +123,7 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                     AppText("Choose a look. You can change it any time in Settings.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
                     Segmented(ThemeMode.entries.map { it.label }, state.themeMode.ordinal, { state.setTheme(ThemeMode.entries[it]) })
                     Spacer(Modifier.height(12.dp))
-                    Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.setLook(Look.entries[it]) })
+                    Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.updateLook(Look.entries[it]) })
                 }
             }
         }

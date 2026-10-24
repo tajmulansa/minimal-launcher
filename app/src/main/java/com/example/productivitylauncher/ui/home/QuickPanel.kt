@@ -118,7 +118,7 @@ fun QuickPanel(state: LauncherState, visible: Boolean, onDismiss: () -> Unit, mo
                         state.updateUrgeButton(on)
                         if (on && !canDrawOverlays(context)) openOverlaySettings(context)
                     }
-                    QuickToggle(Ic.Play, "Animations", state.animations) { state.setAnimations(!state.animations) }
+                    QuickToggle(Ic.Play, "Animations", state.animations) { state.updateAnimations(!state.animations) }
                 }
                 Rule()
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -127,7 +127,7 @@ fun QuickPanel(state: LauncherState, visible: Boolean, onDismiss: () -> Unit, mo
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Caption("Look")
-                    Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.setLook(Look.entries[it]) })
+                    Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.updateLook(Look.entries[it]) })
                 }
                 Box(
                     Modifier
