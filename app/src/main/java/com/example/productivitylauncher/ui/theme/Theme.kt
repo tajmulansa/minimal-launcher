@@ -32,12 +32,9 @@ class Palette(
     val dark: Boolean,
     /** Draws ruled lines and a red margin behind every screen, like a notebook page. */
     val ruled: Boolean = false,
-    /** True for the iOS-style palettes: the accent colour also tints buttons and selections, and cards are flat. */
-    val tinted: Boolean = false,
 )
 
-/** The first Ceramic look: warm paper and sage green. Kept as a theme called Ceramic. */
-val CeramicPalette = Palette(
+val LightPalette = Palette(
     phone = Color(0xFFF2F0E9),
     card = Color(0xFFFFFFFF),
     text = Color(0xFF363431),
@@ -54,43 +51,21 @@ val CeramicPalette = Palette(
     dark = false,
 )
 
-
-/** iOS light: system grouped background, white cards, system blue. */
-val LightPalette = Palette(
-    phone = Color(0xFFF2F2F7),
-    card = Color(0xFFFFFFFF),
-    text = Color(0xFF000000),
-    muted = Color(0xFF6C6C70),
-    focus = Color(0xFF007AFF),
-    onFocus = Color(0xFFFFFFFF),
-    gate = Color(0xFFD70015),
-    gateSoft = Color(0xFFFFE8E6),
-    onGate = Color(0xFFFFFFFF),
-    line = Color(0xFFE5E5EA),
-    dot = Color(0xFFD1D1D6),
-    primary = Color(0xFF007AFF),
-    onPrimary = Color(0xFFFFFFFF),
-    dark = false,
-    tinted = true,
-)
-
-/** iOS dark: true black, elevated grey cards, system blue. */
 val DarkPalette = Palette(
-    phone = Color(0xFF000000),
-    card = Color(0xFF1C1C1E),
-    text = Color(0xFFFFFFFF),
-    muted = Color(0xFF98989F),
-    focus = Color(0xFF0A84FF),
-    onFocus = Color(0xFFFFFFFF),
-    gate = Color(0xFFFF453A),
-    gateSoft = Color(0xFF3A1F1D),
-    onGate = Color(0xFFFFFFFF),
-    line = Color(0xFF38383A),
-    dot = Color(0xFF48484A),
-    primary = Color(0xFF0A84FF),
-    onPrimary = Color(0xFFFFFFFF),
+    phone = Color(0xFF100F0E),
+    card = Color(0xFF1B1A18),
+    text = Color(0xFFEDEAE3),
+    muted = Color(0xFFA09B92),
+    focus = Color(0xFF8DB8A7),
+    onFocus = Color(0xFF12201B),
+    gate = Color(0xFFE58E7E),
+    gateSoft = Color(0xFF3A2723),
+    onGate = Color(0xFF2A1511),
+    line = Color(0xFF292724),
+    dot = Color(0xFF403C37),
+    primary = Color(0xFFEDEAE3),
+    onPrimary = Color(0xFF100F0E),
     dark = true,
-    tinted = true,
 )
 
 /** A pale blue notebook page, written on with a blue pen. */
@@ -164,8 +139,7 @@ const val GlassAlpha = 0.74f
 enum class Accent(val label: String, val light: Color?, val dark: Color?) {
     Default("Theme", null, null),
     Sage("Sage", Color(0xFF4F7165), Color(0xFF8DB8A7)),
-    Blue("Blue", Color(0xFF007AFF), Color(0xFF0A84FF)),
-    Green("Green", Color(0xFF248A3D), Color(0xFF30D158)),
+    Blue("Blue", Color(0xFF2F5FD0), Color(0xFF7FA2FF)),
     Violet("Violet", Color(0xFF6A4FC4), Color(0xFFB39CFF)),
     Rose("Rose", Color(0xFFB23A63), Color(0xFFFF8FB1)),
     Amber("Amber", Color(0xFF9A5B00), Color(0xFFF2B84B)),
@@ -179,12 +153,7 @@ enum class Backdrop(val label: String) { Plain("Plain"), Glow("Glow"), Gradient(
 /** The same palette with the chosen accent as its highlight colour. */
 fun Palette.withAccent(a: Accent): Palette {
     val c = (if (dark) a.dark else a.light) ?: return this
-    val onC = if (dark && a != Accent.Blue) Color(0xFF0E1412) else Color.White
-    return Palette(
-        phone, card, text, muted, c, onC, gate, gateSoft, onGate, line, dot,
-        primary = if (tinted) c else primary, onPrimary = if (tinted) onC else onPrimary,
-        dark = dark, ruled = ruled, tinted = tinted,
-    )
+    return Palette(phone, card, text, muted, c, if (dark) Color(0xFF0E1412) else Color.White, gate, gateSoft, onGate, line, dot, primary, onPrimary, dark, ruled)
 }
 
 /** Short accessors, e.g. AppColors.text. */
@@ -220,7 +189,6 @@ enum class ThemeMode(val label: String) {
     PenBlue("Pen blue"),
     Midnight("Midnight"),
     Notebook("Notebook"),
-    Ceramic("Ceramic"),
 }
 
 /** The palette for a theme, or null for Auto (which depends on the phone). */
@@ -231,7 +199,6 @@ fun paletteOf(mode: ThemeMode): Palette? = when (mode) {
     ThemeMode.PenBlue -> PenBluePalette
     ThemeMode.Midnight -> MidnightPalette
     ThemeMode.Notebook -> NotebookPalette
-    ThemeMode.Ceramic -> CeramicPalette
 }
 
 @Composable
