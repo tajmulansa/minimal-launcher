@@ -139,3 +139,10 @@ A red tile in the Quick actions widget, for a moment when you know you should no
 ### Red button in every app
 
 An optional setting (Settings > Red button). A small red dot sits against the right edge over every app. Tap it, then tap again within 3 seconds, and the launcher opens straight into the 5 minute lock. The dot is hidden while the launcher itself is on screen. It needs "Display over other apps". Known limit: it is drawn by a background service, so if Android stops that service the dot disappears until the launcher is opened again.
+
+## Still (current design)
+
+- One quiet palette in light and dark (Settings → Theme: Auto / Light / Dark). No accent colour; the one warm tone marks gated apps.
+- Look (Standard / Gray / Warm / Contrast) tints the launcher's own screens. Switch it from Settings or from Quick actions (pull Home down).
+- Animations can be turned off in Settings or Quick actions. Every motion goes through `Motion`, which snaps when `Motion.enabled` is false.
+- Fonts: Geist and Geist Mono, bundled, SIL OFL 1.1 (see `docs/OFL-Geist.txt`).
