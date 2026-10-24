@@ -18,7 +18,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import com.example.productivitylauncher.ui.theme.Intro
+import com.example.productivitylauncher.ui.theme.Motion
+import com.example.productivitylauncher.ui.theme.enterStagger
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -95,10 +101,10 @@ fun HomeScreen(
         ) {
             AnalogClock(
                 now,
-                Modifier.semantics { contentDescription = "Clock. Opens settings." }.clickableRole({ nav.go(Route.Settings) }),
+                Modifier.enterStagger(0, once = true).semantics { contentDescription = "Clock. Opens settings." }.clickableRole({ nav.go(Route.Settings) }),
                 diameter = 124.dp,
             )
-            Row(Modifier.padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.padding(top = 14.dp).enterStagger(1, once = true), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 AppText(day, size = 22.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.6).sp)
                 AppText(month.uppercase(), size = 12.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.5.sp)
             }
@@ -107,6 +113,7 @@ fun HomeScreen(
         Column(
             Modifier
                 .fillMaxWidth()
+                .enterStagger(2, once = true)
                 .padding(top = 18.dp, bottom = 18.dp)
                 .clickableRole({ if (state.usageAccess) nav.go(Route.Week) else nav.go(Route.Settings) }),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -128,9 +135,13 @@ fun HomeScreen(
                 AppText("LOCK IN  ·  ONLY YOUR HOME APPS", size = 11.sp, weight = FontWeight.Bold, color = AppColors.muted, letterSpacing = 1.5.sp, modifier = Modifier.padding(start = 4.dp))
             }
             val shown = state.homeApps.filter { !state.isGated(it) }.mapNotNull { state.appByPackage(it) }
-            shown.forEach { app ->
-                AppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
+            shown.forEachIndexed { i, app ->
+                Box(Modifier.enterStagger(3 + i, once = true)) {
+                    AppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
+                }
             }
+            // After the first intro of this run, Home no longer replays it.
+            LaunchedEffect(Unit) { delay(900); Intro.played = true }
             if (shown.size < 6 && !state.lockIn) {
                 CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 16.dp), onClick = { nav.go(Route.HomePicker) }) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -190,11 +201,13 @@ fun Dots(page: Int, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
         for (i in 0..1) {
             val on = i == page
+            val w by animateDpAsState(if (on) 22.dp else 8.dp, Motion.press(), label = "dot")
+            val dotColor by animateColorAsState(if (on) AppColors.text else AppColors.dot, Motion.state(), label = "dotColor")
             Box(
                 Modifier
                     .padding(horizontal = 5.dp)
-                    .size(width = if (on) 22.dp else 8.dp, height = 8.dp)
-                    .background(if (on) AppColors.text else AppColors.dot, RoundedCornerShape(4.dp)),
+                    .size(width = w, height = 8.dp)
+                    .background(dotColor, RoundedCornerShape(4.dp)),
             )
         }
     }

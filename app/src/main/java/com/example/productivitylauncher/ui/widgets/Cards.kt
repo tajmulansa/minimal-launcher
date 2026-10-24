@@ -4,7 +4,9 @@ import android.Manifest
 import android.appwidget.AppWidgetHostView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import com.example.productivitylauncher.ui.components.Rolling
 import com.example.productivitylauncher.ui.theme.Motion
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
@@ -444,10 +446,10 @@ internal fun TodoWidget(state: LauncherState) {
         draft = ""
         adding = false
     }
-    CeramicCard(padding = PaddingValues(start = 14.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
+    CeramicCard(modifier = Modifier.animateContentSize(Motion.lift()), padding = PaddingValues(start = 14.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Caption("Today")
-            if (total > 0) AppText("$done of $total", size = 13.sp, weight = FontWeight.SemiBold, color = AppColors.muted)
+            if (total > 0) Rolling("$done of $total") { AppText(it, size = 13.sp, weight = FontWeight.SemiBold, color = AppColors.muted) }
         }
 
         if (hasMain) {
@@ -516,8 +518,10 @@ internal fun TaskRow(
     onEditDraft: (String) -> Unit = {},
     onEditDone: () -> Unit = {},
 ) {
+    val taskColor by animateColorAsState(if (done) AppColors.muted else AppColors.text, Motion.state(220), label = "taskColor")
+    val rowAlpha by animateFloatAsState(if (dimmed) 0.45f else 1f, Motion.state(220), label = "rowAlpha")
     Row(
-        Modifier.fillMaxWidth().alpha(if (dimmed) 0.45f else 1f),
+        Modifier.fillMaxWidth().alpha(rowAlpha),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(44.dp).clickableRole(onCheck, Role.Checkbox), contentAlignment = Alignment.CenterStart) {
@@ -531,7 +535,7 @@ internal fun TaskRow(
                 size = if (important) 17.sp else 16.sp,
                 weight = if (important) FontWeight.Bold else FontWeight.Normal,
                 lineHeight = 22.sp,
-                color = if (done) AppColors.muted else AppColors.text, strike = done,
+                color = taskColor, strike = done,
             )
         }
         actions.forEach { (ic, run) ->
