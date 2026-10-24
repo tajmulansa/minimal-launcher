@@ -9,6 +9,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -239,7 +240,7 @@ private fun Odometer(digit: Int, delayMs: Int, size: TextUnit) {
     LaunchedEffect(digit) { target = digit }
     val y by animateFloatAsState(
         target.toFloat(),
-        if (Motion.enabled) tween(900, delayMillis = if (Intro.played) 0 else delayMs, easing = Motion.Soft) else androidx.compose.animation.core.snap(),
+        if (Motion.enabled) tween<Float>(900, delayMillis = if (Intro.played) 0 else delayMs, easing = Motion.Soft) else snap(),
         label = "digit",
     )
     Box(Modifier.width(with(density) { size.toDp() } * 0.6f).height(cell).clipToBounds()) {
@@ -280,7 +281,7 @@ fun Hair(index: Int, modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) { shown = true }
     val p by animateFloatAsState(
         if (shown) 1f else 0f,
-        Motion.slow(1000).let { if (Motion.enabled) tween(1000, delayMillis = if (Intro.played) 0 else 200 + index * 120, easing = Motion.Soft) else it },
+        if (Motion.enabled) tween<Float>(1000, delayMillis = if (Intro.played) 0 else 200 + index * 120, easing = Motion.Soft) else snap(),
         label = "hair",
     )
     Box(
