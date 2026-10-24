@@ -404,7 +404,7 @@ fun AppField(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     onDone: (() -> Unit)? = null,
-    fill: Color = AppColors.card,
+    fill: Color = Color.Unspecified,
     mono: Boolean = false,
     center: Boolean = false,
 ) {
@@ -424,7 +424,7 @@ fun AppField(
         modifier = modifier.fillMaxWidth(),
         decorationBox = { inner ->
             Box(
-                Modifier.fillMaxWidth().heightIn(min = 54.dp).background(fill, RoundedCornerShape(18.dp)).padding(horizontal = 18.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().heightIn(min = 54.dp).then(if (fill == Color.Unspecified) Modifier.hairlineBelow().padding(vertical = 14.dp) else Modifier.background(fill, RoundedCornerShape(18.dp)).padding(horizontal = 18.dp, vertical = 14.dp)),
                 contentAlignment = if (center) Alignment.Center else Alignment.CenterStart,
             ) {
                 if (value.isEmpty()) AppText(placeholder, color = AppColors.muted, mono = mono)

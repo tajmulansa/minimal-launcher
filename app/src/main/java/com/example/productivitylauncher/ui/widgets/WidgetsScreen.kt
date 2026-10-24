@@ -109,26 +109,27 @@ import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.ui.components.TextLink
 import com.example.productivitylauncher.ui.components.clickableRole
 import com.example.productivitylauncher.ui.home.Dots
+import com.example.productivitylauncher.ui.home.Hair
+import androidx.compose.foundation.lazy.items
 import com.example.productivitylauncher.ui.theme.AppColors
 import kotlinx.coroutines.delay
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 
-/** Second page: a grid of widget tiles. Small ones sit two to a row. Edit mode: touch and hold a tile, drag it, tap the minus to remove. */
+/** Second page: your widgets as flat sections separated by hairlines. Edit mode: touch and hold a section, drag it, tap the minus to remove it. */
 @Composable
 fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
     var editing by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
-    val gridState = rememberLazyGridState()
-    val reorderState = rememberReorderableLazyGridState(gridState) { from, to ->
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val reorderState = sh.calvin.reorderable.rememberReorderableLazyListState(listState) { from, to ->
         val a = from.key as? String
         val b = to.key as? String
         if (a != null && b != null) state.reorderWidget(a, b)
     }
-    fun isHalf(id: String) = LauncherWidget.byId(id)?.half == true
 
     Column(Modifier.fillMaxSize()) {
-        PageHeader("Widgets", trailing = {
+        PageHeader("Today", trailing = {
             if (editing) {
                 CButton("Done", { editing = false }, kind = BtnKind.Primary, small = true)
             } else {
@@ -137,36 +138,37 @@ fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
                 IconButtonLarge(Ic.Gear, "Settings", { nav.go(Route.Settings) })
             }
         })
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            state = gridState,
+        androidx.compose.foundation.lazy.LazyColumn(
+            state = listState,
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentPadding = PaddingValues(start = 28.dp, end = 28.dp, top = 4.dp, bottom = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(start = 28.dp, end = 28.dp, top = 8.dp, bottom = 12.dp),
         ) {
             if (editing) {
-                item(key = "hint", span = { GridItemSpan(2) }) {
-                    AppText("Touch and hold a widget, then drag it. Tap the minus to remove it.", size = 13.sp, color = AppColors.muted, lineHeight = 18.sp)
+                item(key = "hint") {
+                    AppText("Touch and hold a section, then drag it. Tap the minus to remove it.", size = 13.sp, color = AppColors.muted, lineHeight = 18.sp, modifier = Modifier.padding(bottom = 16.dp))
                 }
             }
             if (state.widgets.isEmpty() && !editing) {
-                item(key = "empty", span = { GridItemSpan(2) }) {
-                    AppText("No widgets yet. Tap + to add one.", color = AppColors.muted, modifier = Modifier.padding(vertical = 24.dp))
+                item(key = "empty") {
+                    AppText("Nothing here yet. Tap + to add a widget.", color = AppColors.muted, modifier = Modifier.padding(vertical = 24.dp))
                 }
             }
-            items(state.widgets, key = { it }, span = { id -> GridItemSpan(if (isHalf(id)) 1 else 2) }) { id ->
+            items(state.widgets, key = { it }) { id ->
                 ReorderableItem(reorderState, key = id) { isDragging ->
                     val dragHandle = Modifier.longPressDraggableHandle(
                         onDragStarted = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
                     )
-                    WidgetFrame(id, state.widgets.indexOf(id), editing, isDragging, dragHandle, state, nav, host)
+                    val index = state.widgets.indexOf(id)
+                    Column {
+                        if (index > 0) Hair(index, Modifier.padding(vertical = 22.dp))
+                        WidgetFrame(id, index, editing, isDragging, dragHandle, state, nav, host)
+                    }
                 }
             }
             if (editing) {
-                item(key = "add", span = { GridItemSpan(2) }) {
+                item(key = "add") {
                     Row(
-                        Modifier.fillMaxWidth().height(56.dp).border(1.5.dp, AppColors.dot, RoundedCornerShape(18.dp)).clickableRole({ nav.go(Route.AddWidget) }),
+                        Modifier.padding(top = 22.dp).fillMaxWidth().height(56.dp).border(1.dp, AppColors.line, RoundedCornerShape(28.dp)).clickableRole({ nav.go(Route.AddWidget) }),
                         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
                     ) {
                         AppIcon(Ic.Plus, AppColors.muted, size = 18.dp)
@@ -186,9 +188,9 @@ private fun WidgetFrame(id: String, index: Int, editing: Boolean, isDragging: Bo
     val scale by animateFloatAsState(if (isDragging) 1.04f else if (editing) 0.97f else 1f, Motion.lift(), label = "tile")
     // Tiles fade and rise in one after another the first time they appear.
     var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { delay(35L * index.coerceIn(0, 6)); shown = true }
-    val appear by animateFloatAsState(if (shown) 1f else 0f, Motion.enter(), label = "appear")
-    Box(Modifier.graphicsLayer { scaleX = scale; scaleY = scale; alpha = appear; translationY = (1f - appear) * 10.dp.toPx() }) {
+    LaunchedEffect(Unit) { delay(80L * index.coerceIn(0, 6)); shown = true }
+    val appear by animateFloatAsState(if (shown) 1f else 0f, Motion.enter(450), label = "appear")
+    Box(Modifier.graphicsLayer { scaleX = scale; scaleY = scale; alpha = appear; translationY = (1f - appear) * 18.dp.toPx() }) {
         if (id.startsWith("ext:")) ExternalWidget(id.removePrefix("ext:").toIntOrNull(), state, host)
         else when (LauncherWidget.byId(id)) {
             LauncherWidget.Frog -> TodoWidget(state)

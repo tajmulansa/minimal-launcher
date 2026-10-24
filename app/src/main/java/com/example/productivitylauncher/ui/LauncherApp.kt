@@ -7,6 +7,7 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -207,7 +208,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             modifier = Modifier.fillMaxSize(),
             transitionSpec = {
                 // One continuous surface: a soft cross-fade with a tiny scale, no sideways page jump.
-                ((fadeIn(Motion.enter(320)) + scaleIn(initialScale = 0.985f, animationSpec = Motion.enter(320))) togetherWith
+                ((fadeIn(Motion.enter(320)) + slideInVertically(Motion.enter(380)) { 40 } + scaleIn(initialScale = 0.985f, animationSpec = Motion.enter(320))) togetherWith
                     (fadeOut(Motion.exit(220)) + scaleOut(targetScale = 1.015f, animationSpec = Motion.exit(220))))
                     .using(SizeTransform(clip = false))
             },

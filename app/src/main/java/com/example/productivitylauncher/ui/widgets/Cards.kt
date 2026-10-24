@@ -101,7 +101,7 @@ import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.BtnKind
 import com.example.productivitylauncher.ui.components.CButton
 import com.example.productivitylauncher.ui.components.Caption
-import com.example.productivitylauncher.ui.components.CeramicCard
+import com.example.productivitylauncher.ui.components.hairlineBelow
 import com.example.productivitylauncher.ui.components.CheckCircle
 import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.IconButtonLarge
@@ -156,7 +156,7 @@ internal fun QuickActionsWidget(state: LauncherState, nav: Nav) {
     }
     var dnd by remember { mutableStateOf(isDndOn(context)) }
 
-    CeramicCard(padding = PaddingValues(16.dp)) {
+    Section {
         val tiles = buildList<@Composable (Modifier) -> Unit> {
             add { m -> QuickTile("Lock In", Ic.Lock, state.lockIn, { state.updateLockIn(!state.lockIn) }, m) }
             add { m -> QuickTile("Break", Ic.Pause, false, { confirmUrge = true }, m, danger = true) }
@@ -201,16 +201,23 @@ internal fun QuickTile(label: String, icon: Ic, on: Boolean, onClick: () -> Unit
 
 // ------------------------------------------------------------------ building blocks
 
-private val TileHeight = 156.dp
+/** A flat block of a widget: no box, no fill. Sections are separated by hairlines on the page. */
+@Composable
+internal fun Section(
+    modifier: Modifier = Modifier,
+    padding: PaddingValues = PaddingValues(0.dp),
+    onClick: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val base = modifier.fillMaxWidth()
+    Column((if (onClick != null) base.clickableRole(onClick) else base).padding(padding), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+}
 
-/** A square-ish tile for the small widgets: two sit side by side. */
+/** A small widget: also flat and full width. */
 @Composable
 internal fun Tile(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable BoxScope.() -> Unit) {
-    val base = modifier
-        .fillMaxWidth()
-        .height(TileHeight)
-        .border(1.dp, AppColors.line, RadiusLg)
-    Box((if (onClick != null) base.clickableRole(onClick) else base).padding(16.dp), content = content)
+    val base = modifier.fillMaxWidth()
+    Box(if (onClick != null) base.clickableRole(onClick) else base, content = content)
 }
 
 /** A ring that fills as [progress] goes from 0 to 1. */
@@ -232,15 +239,15 @@ internal fun Ring(progress: Float, diameter: Dp, stroke: Dp, color: Color, track
 @Composable
 private fun ThinBar(progress: Float, color: Color) {
     val shown by animateFloatAsState(progress.coerceIn(0f, 1f), Motion.fill(), label = "bar")
-    Box(Modifier.fillMaxWidth().height(5.dp).background(AppColors.phone, RoundedCornerShape(3.dp))) {
-        Box(Modifier.fillMaxWidth(shown).height(5.dp).background(color, RoundedCornerShape(3.dp)))
+    Box(Modifier.fillMaxWidth().height(3.dp).background(AppColors.line, RoundedCornerShape(2.dp))) {
+        Box(Modifier.fillMaxWidth(shown).height(3.dp).background(color, RoundedCornerShape(2.dp)))
     }
 }
 
 @Composable
 private fun RoundAction(ic: Ic, description: String, filled: Boolean, onClick: () -> Unit) {
     Box(
-        Modifier.size(44.dp).background(if (filled) AppColors.primary else AppColors.phone, CircleShape).clickableRole(onClick),
+        Modifier.size(44.dp).background(if (filled) AppColors.primary else Color.Transparent, CircleShape).border(1.dp, if (filled) Color.Transparent else AppColors.line, CircleShape).clickableRole(onClick),
         contentAlignment = Alignment.Center,
     ) { AppIcon(ic, if (filled) AppColors.onPrimary else AppColors.text, size = 18.dp, description = description) }
 }
@@ -260,9 +267,9 @@ internal fun FocusTile(state: LauncherState, nav: Nav) {
     val ring = AppColors.focus
     val track = AppColors.line
     Tile(onClick = { nav.go(Route.Focus) }) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Caption("Focus")
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
                 Ring(progress, 72.dp, 7.dp, ring, track) {
                     if (active) AppText(formatClock(left), size = 15.sp, weight = FontWeight.SemiBold)
                     else AppIcon(Ic.Play, AppColors.text, size = 22.dp)
@@ -281,7 +288,7 @@ internal fun FocusTile(state: LauncherState, nav: Nav) {
 @Composable
 internal fun WaterTile(state: LauncherState) {
     Tile {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Caption("Water")
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
@@ -311,7 +318,7 @@ internal fun BudgetTile(state: LauncherState) {
     val left = (limit - used).coerceAtLeast(0)
     val over = limit > 0 && used >= limit
     Tile(onClick = if (!state.usageAccess) ({ openUsageAccessSettings(context) }) else null) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Caption("Gated apps")
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 AppText(formatMillis(left), size = 34.sp, weight = FontWeight.Medium, letterSpacing = (-1).sp, color = if (over) AppColors.gate else AppColors.text, maxLines = 1)
@@ -334,11 +341,11 @@ internal fun ExamTile(state: LauncherState) {
     val has = state.examDay > 0
     val days = if (has) daysUntil(state.examDay) else 0L
     Tile(onClick = { open = true }) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Caption("Exam")
             if (!has) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Box(Modifier.size(44.dp).background(AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                    Box(Modifier.size(44.dp).border(1.dp, AppColors.line, CircleShape), contentAlignment = Alignment.Center) {
                         AppIcon(Ic.Plus, AppColors.text, size = 18.dp)
                     }
                 }
@@ -402,7 +409,7 @@ internal fun ExamTile(state: LauncherState) {
 @Composable
 internal fun DumpTile(state: LauncherState, nav: Nav) {
     Tile(onClick = { nav.go(Route.BrainDump) }) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Caption("Brain dump")
             AppText(if (state.dumps.isEmpty()) "0" else "${state.dumps.size}", size = 40.sp, weight = FontWeight.Medium, letterSpacing = (-1.5).sp)
             AppText(if (state.dumps.isEmpty()) "Tap to empty your head" else "saved · tap to open", size = 12.sp, color = AppColors.muted, maxLines = 1)
@@ -414,7 +421,7 @@ internal fun DumpTile(state: LauncherState, nav: Nav) {
 
 @Composable
 internal fun NoteWidget(state: LauncherState) {
-    CeramicCard(padding = PaddingValues(16.dp)) {
+    Section {
         Caption("Quick note")
         AppField(state.note, { state.updateNote(it) }, "Jot one thing…", singleLine = false)
     }
@@ -445,14 +452,14 @@ internal fun TodoWidget(state: LauncherState) {
         draft = ""
         adding = false
     }
-    CeramicCard(modifier = Modifier.animateContentSize(Motion.lift()), padding = PaddingValues(start = 14.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)) {
-        Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+    Section(modifier = Modifier.animateContentSize(Motion.lift()), padding = PaddingValues(0.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Caption("Today")
             if (total > 0) Rolling("$done of $total") { AppText(it, size = 13.sp, weight = FontWeight.SemiBold, color = AppColors.muted) }
         }
 
         if (hasMain) {
-            Box(Modifier.fillMaxWidth().background(AppColors.focus.copy(alpha = pillAlpha), RoundedCornerShape(14.dp)).padding(start = 2.dp)) {
+            Box(Modifier.fillMaxWidth()) {
                 TaskRow(
                     done = state.frogDone, text = state.frog, important = true, dimmed = false,
                     editing = editingMain, editDraft = mainDraft, onEditDraft = { mainDraft = it },
@@ -481,14 +488,14 @@ internal fun TodoWidget(state: LauncherState) {
 
         if (adding) {
             if (!hasMain && state.tasks.isEmpty()) {
-                AppText("What is the one thing that matters most today?", size = 15.sp, color = AppColors.muted, lineHeight = 21.sp, modifier = Modifier.padding(start = 4.dp, end = 10.dp))
+                AppText("What is the one thing that matters most today?", size = 15.sp, color = AppColors.muted, lineHeight = 21.sp, modifier = Modifier)
             }
-            Box(Modifier.padding(start = 4.dp, end = 10.dp, bottom = 6.dp)) {
+            Box(Modifier.padding(bottom = 6.dp)) {
                 AppField(draft, { draft = it }, if (!hasMain) "e.g. Finish chemistry chapter 4" else "Add a task", onDone = { submit() })
             }
         } else {
             Row(
-                Modifier.fillMaxWidth().heightIn(min = 44.dp).clickableRole({ adding = true }).padding(start = 4.dp),
+                Modifier.fillMaxWidth().heightIn(min = 44.dp).clickableRole({ adding = true }),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -520,7 +527,7 @@ internal fun TaskRow(
     val taskColor by animateColorAsState(if (done) AppColors.muted else AppColors.text, Motion.state(220), label = "taskColor")
     val rowAlpha by animateFloatAsState(if (dimmed) 0.45f else 1f, Motion.state(220), label = "rowAlpha")
     Row(
-        Modifier.fillMaxWidth().alpha(rowAlpha),
+        Modifier.fillMaxWidth().alpha(rowAlpha).hairlineBelow(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(44.dp).clickableRole(onCheck, Role.Checkbox), contentAlignment = Alignment.CenterStart) {
@@ -532,7 +539,7 @@ internal fun TaskRow(
             AppText(
                 text, Modifier.weight(1f).clickableRole(onSelect).padding(vertical = 10.dp),
                 size = if (important) 17.sp else 16.sp,
-                weight = if (important) FontWeight.Bold else FontWeight.Normal,
+                weight = if (important) FontWeight.SemiBold else FontWeight.Normal,
                 lineHeight = 22.sp,
                 color = taskColor, strike = done,
             )
@@ -553,7 +560,7 @@ internal fun AgendaWidget() {
     var granted by remember { mutableStateOf(hasCalendarPermission(context)) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it }
     val events = remember(granted) { if (granted) todayEvents(context) else emptyList() }
-    CeramicCard {
+    Section {
         WidgetHeader("Agenda")
         when {
             !granted -> {
@@ -568,9 +575,9 @@ internal fun AgendaWidget() {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         AppText(if (e.allDay) "All day" else clockLabel(e.begin), Modifier.width(52.dp), size = 13.sp, weight = FontWeight.SemiBold, color = AppColors.muted)
                         Box(
-                            Modifier.weight(1f).background(if (active) AppColors.primary else AppColors.phone, RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
+                            Modifier.weight(1f).hairlineBelow().padding(vertical = 12.dp),
                         ) {
-                            AppText(e.title, size = 15.sp, weight = FontWeight.Medium, color = if (active) AppColors.onPrimary else AppColors.text, maxLines = 2)
+                            AppText(e.title, size = 16.sp, weight = if (active) FontWeight.SemiBold else FontWeight.Normal, color = if (active) AppColors.text else AppColors.muted, maxLines = 2)
                         }
                     }
                 }
@@ -586,7 +593,7 @@ internal fun HabitsWidget(state: LauncherState) {
     var adding by remember { mutableStateOf(false) }
     var anchor by remember { mutableStateOf("") }
     var action by remember { mutableStateOf("") }
-    CeramicCard {
+    Section {
         WidgetHeader("Habit stack", link = if (adding) null else "Add", onLink = { adding = true })
         if (state.habits.isEmpty() && !adding) {
             AppText("Link a new habit to one you already have. For example: after I brush my teeth, I read one page.", size = 14.sp, color = AppColors.muted, lineHeight = 20.sp)
@@ -595,7 +602,7 @@ internal fun HabitsWidget(state: LauncherState) {
         state.habits.forEach { h ->
             val done = today in h.doneDays
             Row(
-                Modifier.fillMaxWidth().background(AppColors.phone, RoundedCornerShape(14.dp)).clickableRole({ state.toggleHabit(h.id) }).padding(horizontal = 14.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().hairlineBelow().clickableRole({ state.toggleHabit(h.id) }).padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
@@ -631,7 +638,7 @@ internal fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: Widge
     val info = remember(appWidgetId) { host.manager.getAppWidgetInfo(appWidgetId) }
     if (info == null) {
         // The app that provided this widget was removed.
-        CeramicCard {
+        Section {
             WidgetHeader("Widget unavailable", link = "Remove", onLink = { host.delete(appWidgetId); state.removeWidgetId("ext:$appWidgetId") })
             AppText("This widget's app is no longer installed.", color = AppColors.muted)
         }
@@ -643,7 +650,7 @@ internal fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: Widge
     val widthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp - 80
     var resizing by remember { mutableStateOf(false) }
     val label = remember(appWidgetId) { info.loadLabel(context.packageManager) }
-    CeramicCard(padding = androidx.compose.foundation.layout.PaddingValues(12.dp)) {
+    Section(padding = PaddingValues(0.dp)) {
         WidgetHeader(label, link = if (resizing) "Done" else "Resize", onLink = { resizing = !resizing })
         AndroidView(
             modifier = Modifier.fillMaxWidth().height(heightDp.dp),
