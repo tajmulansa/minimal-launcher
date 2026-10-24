@@ -79,14 +79,6 @@ class LauncherState(context: Context) {
 
     fun setTheme(m: ThemeMode) { themeMode = m; save { putString("theme", m.name) } }
 
-    /** The highlight colour. Default keeps each theme's own. */
-        private set
-
-
-    /** What is drawn behind the screens. */
-        private set
-
-
     var pipOn by mutableStateOf(bool("pip_on", true))
         private set
 
