@@ -30,23 +30,35 @@ object Motion {
     /** Strong ease-in-out for things that move or morph on screen. */
     val EaseInOut = CubicBezierEasing(0.77f, 0f, 0.175f, 1f)
 
+    /** Soft, continuous curve for surfaces that move or morph: starts quickly, then settles very gently. */
+    val Soft = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
+
+    /** Even softer landing for things that arrive: a long, quiet tail. */
+    val SoftOut = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
+
     /** Press feedback: quick and settled. Interruptible, so a second tap never restarts from zero. */
     fun <T> press(): FiniteAnimationSpec<T> = spring(dampingRatio = 0.85f, stiffness = 700f)
 
     /** A colour or small state change. */
-    fun <T> state(ms: Int = 180): FiniteAnimationSpec<T> = tween(ms, easing = EaseOut)
+    fun <T> state(ms: Int = 180): FiniteAnimationSpec<T> = tween(ms, easing = SoftOut)
 
     /** Something appearing on a screen the person sees now and then. */
-    fun <T> enter(ms: Int = 240): FiniteAnimationSpec<T> = tween(ms, easing = EaseOut)
+    fun <T> enter(ms: Int = 240): FiniteAnimationSpec<T> = tween(ms, easing = SoftOut)
+
+    /** Something leaving: a little quicker than it arrived, so the next thing is not kept waiting. */
+    fun <T> exit(ms: Int = 200): FiniteAnimationSpec<T> = tween(ms, easing = Soft)
+
+    /** One surface turning into another (a step becoming the next step). */
+    fun <T> morph(ms: Int = 320): FiniteAnimationSpec<T> = tween(ms, easing = Soft)
 
     /** A bar or ring filling to its value. */
-    fun <T> fill(ms: Int = 360): FiniteAnimationSpec<T> = tween(ms, easing = EaseOut)
+    fun <T> fill(ms: Int = 360): FiniteAnimationSpec<T> = tween(ms, easing = SoftOut)
 
     /** A small, gentle spring for drag lift and similar. Bounce stays low. */
     fun <T> lift(): FiniteAnimationSpec<T> = spring(dampingRatio = 0.8f, stiffness = 500f)
 
-    /** Pressed scale: subtle, 0.95 to 0.98. */
-    const val PressScale = 0.97f
+    /** Pressed scale: subtle and tactile. */
+    const val PressScale = 0.975f
 }
 
 /** True once the launch intro has played in this run, so Home only introduces itself once, not on every return. */
@@ -58,11 +70,11 @@ object Intro {
  * Fades and lifts an element in, one after another by [index] (35 ms apart, capped).
  * With [once] it only plays during the very first screen of a run, because Home is opened hundreds of times a day.
  */
-fun Modifier.enterStagger(index: Int, once: Boolean = false, rise: Dp = 14.dp): Modifier = composed {
+fun Modifier.enterStagger(index: Int, once: Boolean = false, rise: Dp = 10.dp): Modifier = composed {
     val skip = once && Intro.played
     var shown by remember { mutableStateOf(skip) }
     LaunchedEffect(Unit) {
-        if (!skip) { delay(40L + 35L * index.coerceIn(0, 10)); shown = true }
+        if (!skip) { delay(40L + 30L * index.coerceIn(0, 10)); shown = true }
     }
     val a by animateFloatAsState(if (shown) 1f else 0f, Motion.enter(), label = "enter")
     Modifier.graphicsLayer { alpha = a; translationY = (1f - a) * rise.toPx() }
