@@ -20,9 +20,7 @@ import com.example.productivitylauncher.data.canDrawOverlays
 import com.example.productivitylauncher.service.UrgeButtonService
 import com.example.productivitylauncher.ui.LauncherApp
 import com.example.productivitylauncher.ui.theme.LauncherTheme
-import com.example.productivitylauncher.ui.theme.Backdrop
 import com.example.productivitylauncher.ui.theme.resolvePalette
-import com.example.productivitylauncher.ui.theme.withAccent
 
 /**
  * The single activity of the app. It is registered as a HOME activity in the manifest,
@@ -44,7 +42,7 @@ class MainActivity : ComponentActivity() {
         state = LauncherState(this)
         widgetHost = WidgetHost(this)
         setContent {
-            val palette = resolvePalette(state.themeMode).withAccent(state.accent)
+            val palette = resolvePalette(state.themeMode)
             val dark = palette.dark
             // Keep the system bar icons readable on both themes, including a manual theme choice.
             DisposableEffect(dark) {
@@ -57,7 +55,7 @@ class MainActivity : ComponentActivity() {
             // Everything is drawn a little smaller than the Android default: sizes and text scale together.
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density * UI_SCALE, density.fontScale)) {
-                LauncherTheme(palette, glass = state.backdrop != Backdrop.Plain && !palette.ruled) {
+                LauncherTheme(palette) {
                     LauncherApp(state = state, widgetHost = widgetHost, homeSignal = homeSignal)
                 }
             }

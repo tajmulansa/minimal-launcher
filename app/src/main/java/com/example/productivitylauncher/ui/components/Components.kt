@@ -40,8 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
-import com.example.productivitylauncher.ui.theme.GlassAlpha
-import com.example.productivitylauncher.ui.theme.LocalGlass
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -127,12 +125,9 @@ fun CeramicCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val glass = LocalGlass.current
-    val edge = AppColors.text.copy(alpha = 0.08f)
     val base = modifier
-        .then(if (glass) Modifier else Modifier.shadow(6.dp, shape, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000)))
-        .background(if (glass) color.copy(alpha = GlassAlpha) else color, shape)
-        .then(if (glass && borderColor == null) Modifier.border(1.dp, edge, shape) else Modifier)
+        .shadow(6.dp, shape, clip = false, ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+        .background(color, shape)
         .then(if (borderColor != null) Modifier.border(2.dp, borderColor, shape) else Modifier)
     val clickable = if (onClick != null) base.then(Modifier.clickableRole(onClick)) else base
     Column(clickable.padding(padding), verticalArrangement = Arrangement.spacedBy(14.dp), content = content)
@@ -212,8 +207,8 @@ fun IconButtonLarge(ic: Ic, description: String, onClick: () -> Unit, modifier: 
     Box(
         modifier
             .size(48.dp)
-            .then(if (LocalGlass.current) Modifier else Modifier.shadow(4.dp, RoundedCornerShape(14.dp), ambientColor = Color(0x14000000), spotColor = Color(0x14000000)))
-            .background(if (LocalGlass.current) AppColors.card.copy(alpha = GlassAlpha) else AppColors.card, RoundedCornerShape(14.dp))
+            .shadow(4.dp, RoundedCornerShape(14.dp), ambientColor = Color(0x14000000), spotColor = Color(0x14000000))
+            .background(AppColors.card, RoundedCornerShape(14.dp))
             .semantics { contentDescription = description }
             .clickableRole(onClick),
         contentAlignment = Alignment.Center,
