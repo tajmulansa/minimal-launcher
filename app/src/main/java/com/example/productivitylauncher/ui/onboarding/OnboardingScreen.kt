@@ -5,7 +5,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
+import com.example.productivitylauncher.ui.theme.Motion
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
@@ -64,15 +72,25 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp), horizontalArrangement = Arrangement.Center) {
             for (i in 0..last) {
+                val w by animateDpAsState(if (i == step) 22.dp else 8.dp, Motion.press(), label = "dot")
                 Box(
-                    Modifier.padding(horizontal = 4.dp).size(width = if (i == step) 22.dp else 8.dp, height = 8.dp)
+                    Modifier.padding(horizontal = 4.dp).size(width = w, height = 8.dp)
                         .background(if (i == step) AppColors.text else AppColors.dot, RoundedCornerShape(4.dp)),
                 )
             }
         }
-        Column(Modifier.weight(1f).fillMaxWidth()) {
-            when (step) {
-                0 -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.Center) {
+        AnimatedContent(
+            targetState = step,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            transitionSpec = {
+                val dir = if (targetState > initialState) 1 else -1
+                (slideInHorizontally(Motion.enter(300)) { (it * 0.14f).toInt() * dir } + fadeIn(Motion.enter(260))) togetherWith
+                    (slideOutHorizontally(Motion.enter(300)) { -(it * 0.14f).toInt() * dir } + fadeOut(Motion.state(140)))
+            },
+            label = "step",
+        ) { shownStep ->
+            when (shownStep) {
+                0 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.Center) {
                     AppText("Made for students.", size = 32.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
                     AppText(
                         "Your phone is full of things that pull you away from studying. This launcher puts you back in charge.",
@@ -83,21 +101,21 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                     WelcomePoint("Focus when you need it", "Focus sessions, Lock In and a red button for the hard moments.")
                     WelcomePoint("Private by design", "No account, no ads, no internet. Everything stays on this phone.")
                 }
-                1 -> Column(Modifier.weight(1f)) {
+                1 -> Column(Modifier.fillMaxSize()) {
                     AppText("Gate your distractions", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
                     GatedPickerBody(state, Modifier.weight(1f))
                 }
-                2 -> Column(Modifier.weight(1f)) {
+                2 -> Column(Modifier.fillMaxSize()) {
                     AppText("Pick your six", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
                     HomePickerBody(state, Modifier.weight(1f))
                 }
-                3 -> Column(Modifier.weight(1f).padding(28.dp), verticalArrangement = Arrangement.Center) {
+                3 -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
                     AppText("Your most important task", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
                     AppText("What is the one task that matters most today? It shows in bold at the top of your list. Do it first and your other tasks unlock.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
                     AppField(frog, { frog = it }, "e.g. Finish chemistry chapter 4", fill = AppColors.card)
                 }
-                5 -> PermissionsStep(state, Modifier.weight(1f))
-                else -> Column(Modifier.weight(1f).padding(28.dp), verticalArrangement = Arrangement.Center) {
+                5 -> PermissionsStep(state, Modifier.fillMaxSize())
+                else -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
                     AppText("Make it yours", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
                     AppText("Choose a look. You can change it any time in Settings.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
                     ThemePicker(state.themeMode, { state.setTheme(it) })

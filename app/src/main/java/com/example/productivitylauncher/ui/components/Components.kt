@@ -25,6 +25,12 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
@@ -251,21 +257,32 @@ fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifie
     }
 }
 
-/** Segmented control, e.g. Auto / Light / Dark. */
+/** Segmented control, e.g. Auto / Light / Dark. The selected pill slides to the new option. */
 @Composable
 fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth().background(AppColors.line, RadiusPill).padding(3.dp)) {
-        options.forEachIndexed { i, label ->
-            val on = i == selected
-            Box(
-                Modifier
-                    .weight(1f)
-                    .heightIn(min = 40.dp)
-                    .background(if (on) AppColors.card else Color.Transparent, RadiusPill)
-                    .clickableRole({ onSelect(i) }, Role.Tab),
-                contentAlignment = Alignment.Center,
-            ) {
-                AppText(label, size = 13.sp, weight = FontWeight.SemiBold, color = if (on) AppColors.text else AppColors.muted)
+    val haptic = LocalHapticFeedback.current
+    BoxWithConstraints(modifier.fillMaxWidth().background(AppColors.line, RadiusPill).padding(3.dp)) {
+        val segment = maxWidth / options.size
+        val x by animateDpAsState(segment * selected, Motion.press(), label = "segment")
+        Box(Modifier.matchParentSize()) {
+            Box(Modifier.offset(x = x).width(segment).fillMaxHeight().background(AppColors.card, RadiusPill))
+        }
+        Row(Modifier.fillMaxWidth()) {
+            options.forEachIndexed { i, label ->
+                val on = i == selected
+                val textColor by animateColorAsState(if (on) AppColors.text else AppColors.muted, Motion.state(160), label = "segmentText")
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .heightIn(min = 40.dp)
+                        .clickableRole({
+                            if (!on) haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                            onSelect(i)
+                        }, Role.Tab),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AppText(label, size = 13.sp, weight = FontWeight.SemiBold, color = textColor)
+                }
             }
         }
     }
@@ -277,12 +294,16 @@ fun Toggle(on: Boolean, onChange: (Boolean) -> Unit, description: String) {
     val track by animateColorAsState(if (on) AppColors.focus else AppColors.dot, Motion.state(160), label = "toggleTrack")
     val thumb by animateColorAsState(if (on) AppColors.onFocus else AppColors.card, Motion.state(160), label = "toggleThumb")
     val slide by animateFloatAsState(if (on) 1f else 0f, Motion.press(), label = "toggleSlide")
+    val haptic = LocalHapticFeedback.current
     // The tap area is 48 dp tall even though the track is 32 dp, and it shrinks a little when pressed.
     Box(
         Modifier
             .size(width = 52.dp, height = 48.dp)
             .semantics { contentDescription = description }
-            .clickableRole({ onChange(!on) }, Role.Switch),
+            .clickableRole({
+                haptic.performHapticFeedback(if (on) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn)
+                onChange(!on)
+            }, Role.Switch),
         contentAlignment = Alignment.Center,
     ) {
         Box(Modifier.size(width = 52.dp, height = 32.dp).background(track, RoundedCornerShape(16.dp)).padding(3.dp)) {
@@ -298,9 +319,10 @@ fun CheckCircle(checked: Boolean, size: Dp = 34.dp) {
     // A little pop when it becomes checked (not when the screen first shows it already checked).
     val pop = remember { Animatable(1f) }
     var first by remember { mutableStateOf(true) }
+    val haptic = LocalHapticFeedback.current
     LaunchedEffect(checked) {
         if (first) first = false
-        else if (checked) { pop.snapTo(0.88f); pop.animateTo(1f, spring(dampingRatio = 0.65f, stiffness = 600f)) }
+        else if (checked) { haptic.performHapticFeedback(HapticFeedbackType.Confirm); pop.snapTo(0.88f); pop.animateTo(1f, spring(dampingRatio = 0.65f, stiffness = 600f)) }
     }
     Box(
         Modifier
@@ -326,12 +348,13 @@ fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit, modifier: Mo
 
 @Composable
 private fun StepBtn(ic: Ic, description: String, onClick: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     Box(
         Modifier
             .size(44.dp)
             .background(AppColors.phone, CircleShape)
             .semantics { contentDescription = description }
-            .clickableRole(onClick),
+            .clickableRole({ haptic.performHapticFeedback(HapticFeedbackType.SegmentTick); onClick() }),
         contentAlignment = Alignment.Center,
     ) { AppIcon(ic, AppColors.text, size = 18.dp) }
 }
@@ -456,4 +479,19 @@ fun SettingsGroup(label: String, content: @Composable ColumnScope.() -> Unit) {
 @Composable
 fun Divider() {
     Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.line))
+}
+
+
+/** A value that rolls up to its new text (a counter going from "1 of 3" to "2 of 3") instead of just changing. */
+@Composable
+fun Rolling(value: String, modifier: Modifier = Modifier, content: @Composable (String) -> Unit) {
+    androidx.compose.animation.AnimatedContent(
+        targetState = value,
+        modifier = modifier,
+        transitionSpec = {
+            (androidx.compose.animation.slideInVertically(Motion.enter(220)) { it / 2 } + androidx.compose.animation.fadeIn(Motion.enter(200))) togetherWith
+                (androidx.compose.animation.slideOutVertically(Motion.enter(220)) { -it / 2 } + androidx.compose.animation.fadeOut(Motion.state(120)))
+        },
+        label = "rolling",
+    ) { content(it) }
 }

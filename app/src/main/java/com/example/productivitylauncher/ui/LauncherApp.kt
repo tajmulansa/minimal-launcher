@@ -2,7 +2,18 @@ package com.example.productivitylauncher.ui
 
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.ui.graphics.graphicsLayer
+import com.example.productivitylauncher.ui.theme.Motion
+import kotlin.math.absoluteValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -74,6 +85,8 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
 
     var route by remember { mutableStateOf<Route>(if (state.onboarded) Route.Main else Route.Onboarding) }
     val stack = remember { ArrayList<Route>() }
+    // Which way the last move went, so screens slide in from the right and back out to the right.
+    var forward by remember { mutableStateOf(true) }
     var pipOpen by remember { mutableStateOf(false) }
     var pipVariant by remember { mutableIntStateOf(0) }
     var pipChip by remember { mutableStateOf<String?>(null) }
@@ -106,11 +119,13 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     val nav = remember {
         Nav(
             go = { r ->
+                forward = r != Route.Main
                 if (r == Route.Main) stack.clear() else stack.add(route)
                 route = r
                 pipOpen = false
             },
             back = {
+                forward = false
                 route = if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex) else Route.Main
             },
         )
@@ -191,11 +206,42 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             )
             .systemBarsPadding(),
     ) {
-        if (urgeActive) UrgeScreen(state.urgeEnd - urgeNow) else when (val r = route) {
-            Route.Main -> {
+        AnimatedContent(
+            targetState = if (urgeActive) null else route,
+            modifier = Modifier.fillMaxSize(),
+            transitionSpec = {
+                val push = forward
+                when {
+                    // The red button and the screens around it just fade, calmly.
+                    initialState == null || targetState == null ->
+                        fadeIn(Motion.enter(320)) togetherWith fadeOut(Motion.state(200))
+                    // Going deeper: the new screen glides in from the right while the old one steps back.
+                    push ->
+                        (slideInHorizontally(Motion.enter(300)) { (it * 0.16f).toInt() } + fadeIn(Motion.enter(260))) togetherWith
+                            (slideOutHorizontally(Motion.enter(300)) { -(it * 0.06f).toInt() } + fadeOut(Motion.state(160)))
+                    // Coming back: the reverse, so the path feels the same both ways.
+                    else ->
+                        (slideInHorizontally(Motion.enter(300)) { -(it * 0.06f).toInt() } + fadeIn(Motion.enter(260))) togetherWith
+                            (slideOutHorizontally(Motion.enter(300)) { (it * 0.16f).toInt() } + fadeOut(Motion.state(160)))
+                }.using(SizeTransform(clip = false))
+            },
+            label = "route",
+        ) { r ->
+        if (r == null) UrgeScreen(state.urgeEnd - urgeNow) else when (r) {
+            Route.Main -> Box(Modifier.fillMaxSize()) {
                 HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
-                    if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0)
-                    else WidgetsScreen(state, nav, widgetHost, page = 1)
+                    // While you swipe, the page that is leaving softens and shrinks a little, like a card behind.
+                    Box(
+                        Modifier.fillMaxSize().graphicsLayer {
+                            val off = ((pager.currentPage - page) + pager.currentPageOffsetFraction).absoluteValue.coerceIn(0f, 1f)
+                            alpha = 1f - off * 0.55f
+                            scaleX = 1f - off * 0.05f
+                            scaleY = 1f - off * 0.05f
+                        },
+                    ) {
+                        if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0)
+                        else WidgetsScreen(state, nav, widgetHost, page = 1)
+                    }
                 }
                 if (PIP_ENABLED && state.pipOn) {
                     // Reading these makes Pip choose again when the minute, the resume or the frog changes.
@@ -277,6 +323,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             is Route.Locked -> LockedScreen(state, r.reason, state.appByPackage(r.pkg), nav)
             is Route.TimesUp -> TimesUpScreen(state, state.appByPackage(r.pkg), nav)
             Route.Onboarding -> OnboardingScreen(state, nav)
+        }
         }
     }
 }
