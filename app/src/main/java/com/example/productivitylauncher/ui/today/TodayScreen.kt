@@ -148,8 +148,6 @@ internal fun Section(
     Column((if (onClick != null) base.clickableRole(onClick) else base).padding(padding), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
 }
 
-/** A small widget: also flat and full width. */
-@Composable
 /** A ring that fills as [progress] goes from 0 to 1. */
 @Composable
 internal fun Ring(progress: Float, diameter: Dp, stroke: Dp, color: Color, track: Color, content: @Composable () -> Unit = {}) {
