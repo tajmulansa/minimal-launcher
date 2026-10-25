@@ -120,6 +120,9 @@ import androidx.compose.foundation.layout.BoxScope
 
 @Composable
 import com.example.productivitylauncher.data.DAY_MS
+import com.example.productivitylauncher.ui.theme.enterStagger
+import androidx.compose.foundation.layout.widthIn
+import com.example.productivitylauncher.ui.components.RadiusPill
 import com.example.productivitylauncher.data.dayKey
 import com.example.productivitylauncher.data.formatClock
 import com.example.productivitylauncher.data.formatMillis
