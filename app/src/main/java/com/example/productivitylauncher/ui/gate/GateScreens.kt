@@ -253,7 +253,7 @@ private fun ColumnScope.PhraseStep(app: AppEntry, onContinue: () -> Unit, onCanc
             modifier = Modifier.size(1.dp).focusRequester(focus),
             textStyle = TextStyle(color = Color.Transparent),
             cursorBrush = SolidColor(Color.Transparent),
-            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.None, keyboardType = androidx.compose.ui.text.input.KeyboardType.VisiblePassword, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.None, keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { if (ok) onContinue() }),
             singleLine = true,
         )
