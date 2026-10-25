@@ -118,7 +118,6 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import androidx.compose.foundation.layout.BoxScope
 
-@Composable
 import com.example.productivitylauncher.data.DAY_MS
 import com.example.productivitylauncher.ui.theme.enterStagger
 import androidx.compose.foundation.layout.widthIn
