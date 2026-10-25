@@ -10,6 +10,7 @@ cat > /tmp/launcher.xml <<'X'
 <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
 <map>
 <boolean name="onboarded" value="true" />
+<string name="user_name">Tajmul</string>
 <string name="tasks">[{"id":"1","text":"Read chapter 3","done":true},{"id":"2","text":"Email Prof. Rao","done":true},{"id":"3","text":"Finish chemistry chapter 4","done":false},{"id":"4","text":"Physics problem sheet","done":false},{"id":"5","text":"Plan revision","done":false}]</string>
 <string name="home_apps">["com.android.settings","com.android.chrome","com.android.contacts","com.android.camera2","com.google.android.calendar","com.google.android.deskclock","com.android.calculator2"]</string>
 <set name="gated"><string>com.android.chrome</string></set>
