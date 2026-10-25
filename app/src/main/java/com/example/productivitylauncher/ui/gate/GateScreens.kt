@@ -128,7 +128,7 @@ fun GateScreen(state: LauncherState, app: AppEntry, nav: Nav) {
             Column(Modifier.fillMaxSize()) {
                 when (s) {
                     1 -> BreatheStep(state, app, onContinue = { step = 2 }, onCancel = { cancel() })
-                    2 -> PhraseStep(state, onContinue = { step = 3 }, onCancel = { cancel() })
+                    2 -> PhraseStep(app, onContinue = { step = 3 }, onCancel = { cancel() })
                     else -> TimeStep(state, app, nav, onCancel = { cancel() })
                 }
             }
@@ -219,8 +219,8 @@ private fun ColumnScope.BreatheStep(state: LauncherState, app: AppEntry, onConti
 }
 
 @Composable
-private fun ColumnScope.PhraseStep(state: LauncherState, onContinue: () -> Unit, onCancel: () -> Unit) {
-    val target = remember { generatePhrase(state.phraseWords) }
+private fun ColumnScope.PhraseStep(app: AppEntry, onContinue: () -> Unit, onCancel: () -> Unit) {
+    val target = remember { "I choose to open ${app.label}" }
     var typed by remember { mutableStateOf("") }
     val ok = phraseMatches(typed, target)
     val focus = remember { FocusRequester() }
@@ -249,11 +249,12 @@ private fun ColumnScope.PhraseStep(state: LauncherState, onContinue: () -> Unit,
         // The real input is invisible; the phrase above is what you read.
         BasicTextField(
             value = typed,
-            onValueChange = { new -> if (new.length - typed.length <= 1) typed = new }, // no pasting
+            onValueChange = { new -> if (new.length - typed.length <= 3) typed = new }, // no pasting; a keyboard may add a word and a space at once
             modifier = Modifier.size(1.dp).focusRequester(focus),
             textStyle = TextStyle(color = Color.Transparent),
             cursorBrush = SolidColor(Color.Transparent),
-            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.None, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.None, keyboardType = androidx.compose.ui.text.input.KeyboardType.VisiblePassword, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { if (ok) onContinue() }),
             singleLine = true,
         )
     }

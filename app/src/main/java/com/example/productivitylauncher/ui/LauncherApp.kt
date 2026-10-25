@@ -34,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -238,7 +239,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                 HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
                     // While you swipe, the page that is leaving softens and shrinks a little, like a card behind.
                     Box(
-                        Modifier.fillMaxSize().graphicsLayer {
+                        Modifier.fillMaxSize().clipToBounds().graphicsLayer {
                             // Like the prototype: the page slides a third further and fades as it leaves.
                             val signed = page - (pager.currentPage + pager.currentPageOffsetFraction)
                             translationX = -signed * size.width * 0.32f

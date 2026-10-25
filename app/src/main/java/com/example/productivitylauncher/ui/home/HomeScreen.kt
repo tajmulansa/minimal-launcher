@@ -49,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -121,7 +122,8 @@ fun HomeScreen(
         else -> "Rest well."
     }
 
-    Column(Modifier.fillMaxSize().verticalSwipes(onUp = onOpenDrawer, onDown = onOpenQuick)) {
+    val listScroll = rememberScrollState()
+    Column(Modifier.fillMaxSize().verticalSwipes(onUp = { if (!listScroll.canScrollForward) onOpenDrawer() }, onDown = onOpenQuick)) {
         // Top row. Tap the date to open Quick actions. Swipe up anywhere to open All apps, swipe down from the top for Quick actions.
         Column {
             Row(
@@ -138,11 +140,6 @@ fun HomeScreen(
                     AppIcon(Ic.Chevron, AppColors.muted, size = 12.dp, modifier = Modifier.graphicsLayer { rotationZ = 90f })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    val st = state.screenTimeMs
-                    Caption(
-                        if (st != null) formatMillis(st) + " today" else "Usage off",
-                        Modifier.clickableRole({ if (state.usageAccess) nav.go(Route.Week) else nav.go(Route.Settings) }).padding(vertical = 8.dp),
-                    )
                     Box(
                         Modifier
                             .size(40.dp)
@@ -164,14 +161,25 @@ fun HomeScreen(
                     Odometer(minute / 10, 180, 112.sp)
                     Odometer(minute % 10, 270, 112.sp)
                 }
-                AppText(greeting, Modifier.padding(top = 8.dp), size = 22.sp, weight = FontWeight.Normal, color = AppColors.muted)
+                Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.Bottom) {
+                    AppText(if (state.userName.isBlank()) greeting else greeting.removeSuffix(".") + ", ", size = 22.sp, weight = FontWeight.Normal, color = AppColors.muted)
+                    if (state.userName.isNotBlank()) {
+                        val underline by animateFloatAsState(1f, if (Motion.enabled) tween<Float>(1100, delayMillis = if (Intro.played) 0 else 900, easing = Motion.Soft) else snap(), label = "nameLine")
+                        val ink = AppColors.text
+                        AppText(
+                            state.userName, Modifier.drawBehind { drawLine(ink, androidx.compose.ui.geometry.Offset(0f, size.height * 0.93f), androidx.compose.ui.geometry.Offset(size.width * underline, size.height * 0.93f), 1.5.dp.toPx()) },
+                            size = 22.sp, weight = FontWeight.Medium, color = AppColors.text, maxLines = 1,
+                        )
+                        AppText(".", size = 22.sp, color = AppColors.muted)
+                    }
+                }
             }
         }
 
         Hair(0, Modifier.padding(horizontal = 28.dp, vertical = 20.dp))
 
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 28.dp, end = 28.dp, bottom = 150.dp),
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(listScroll).padding(start = 28.dp, end = 28.dp, bottom = 150.dp),
         ) {
             // Next task: tap to complete it, like the prototype.
             val next = state.nextTask
@@ -207,10 +215,7 @@ fun HomeScreen(
             Hair(1, Modifier.padding(vertical = 20.dp))
 
             val shown = state.homeApps.filter { !state.isGated(it) }.mapNotNull { state.appByPackage(it) }
-            Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Caption(if (state.lockIn) "Locked in · only your home apps" else "Home apps")
-                Caption("%02d".format(shown.size))
-            }
+            if (state.lockIn) Caption("Locked in \u00B7 only your home apps", Modifier.padding(bottom = 6.dp))
             shown.forEachIndexed { i, app ->
                 Box(Modifier.enterStagger(3 + i, once = true)) {
                     AppRow(app, gated = state.isGated(app.packageName), meta = state.appMsToday[app.packageName]?.takeIf { it >= 60_000L }?.let { formatMillis(it) } ?: "", onClick = { onOpenApp(app) })
@@ -316,7 +321,7 @@ private fun AppRow(app: AppEntry, gated: Boolean, meta: String, onClick: () -> U
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AppText(
-            app.label, Modifier.weight(1f), size = 32.sp, weight = FontWeight.Medium, letterSpacing = (-1.3).sp, lineHeight = 36.8.sp,
+            app.label, Modifier.weight(1f), size = 28.sp, weight = FontWeight.Medium, letterSpacing = (-1.1).sp, lineHeight = 32.sp,
             color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
         )
         if (gated) GatedTag()

@@ -102,6 +102,10 @@ class LauncherState(context: Context) {
 
     // ------------------------------------------------------------ frog
 
+    var userName by mutableStateOf(str("user_name"))
+        private set
+    fun updateUserName(n: String) { userName = n.trim(); save { putString("user_name", userName) } }
+
     var frog by mutableStateOf(str("frog"))
         private set
     var frogDoneDay by mutableStateOf(str("frog_done_day"))

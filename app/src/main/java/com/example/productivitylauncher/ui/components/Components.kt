@@ -449,6 +449,8 @@ fun AppField(
     )
 }
 
+val LocalRowLines = androidx.compose.runtime.compositionLocalOf { true }
+
 /** Settings row: title, optional subtitle and a trailing slot. */
 @Composable
 fun SettingRow(
@@ -464,8 +466,8 @@ fun SettingRow(
             .fillMaxWidth()
             .heightIn(min = 64.dp)
             .then(if (onClick != null) Modifier.clickableRole(onClick) else Modifier)
-            .hairlineBelow()
-            .padding(vertical = 14.dp),
+            .then(if (LocalRowLines.current) Modifier.hairlineBelow() else Modifier)
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -490,7 +492,7 @@ fun ValueChevron(value: String, color: Color = AppColors.muted) {
 fun SettingsGroup(label: String, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxWidth().enterStagger(0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Rule()
-        Caption(label, Modifier.padding(top = 18.dp))
+        Caption(label, Modifier.padding(top = 18.dp, bottom = 4.dp))
         Column(Modifier.fillMaxWidth(), content = content)
     }
 }

@@ -63,26 +63,24 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
 
     Column(Modifier.fillMaxSize()) {
         PageHeader("Preferences", onBack = nav.back, label = "Settings")
+        androidx.compose.runtime.CompositionLocalProvider(com.example.productivitylauncher.ui.components.LocalRowLines provides false) {
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            verticalArrangement = Arrangement.spacedBy(22.dp),
         ) {
             SettingsGroup("Appearance") {
                 Column(Modifier.padding(vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     AppText("Theme", size = 16.sp, weight = FontWeight.Medium)
                     Segmented(ThemeMode.entries.map { it.label }, state.themeMode.ordinal, { state.setTheme(ThemeMode.entries[it]) })
                 }
-                Divider()
                 Column(Modifier.padding(vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     AppText("Look", size = 16.sp, weight = FontWeight.Medium)
                     Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.updateLook(Look.entries[it]) })
                 }
-                Divider()
                 SettingRow("Animations", subtitle = "Turn off for a faster, calmer feel on slower phones") {
                     Toggle(state.animations, { state.updateAnimations(it) }, "Animations")
                 }
                 if (PIP_ENABLED) {
-                    Divider()
                     SettingRow("Pip", subtitle = "The little [^_^] helper on your Home and Widgets pages") {
                         Toggle(state.pipOn, { state.updatePipOn(it) }, "Show Pip")
                     }
@@ -91,11 +89,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
 
             SettingsGroup("Gate") {
                 GateStepper(state, GateSetting.Limit, "Daily gated limit", "Total time in gated apps per day", state.dailyLimitMin, 15, 15, 480, { formatMinutes(it.toLong()) })
-                Divider()
                 GateStepper(state, GateSetting.Breaths, "Breaths", "Slow breaths before a gated app", state.breaths, 1, 1, 10, { "$it" })
-                Divider()
-                GateStepper(state, GateSetting.PhraseWords, "Phrase length", "Words to type at the gate", state.phraseWords, 1, 2, 8, { "$it" })
-                Divider()
                 val growPending = state.pendingFor(GateSetting.GrowingWait)
                 SettingRow(
                     "Longer wait each open",
@@ -105,7 +99,6 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                         state.changeGateSetting(GateSetting.GrowingWait, if (on) 1 else 0)
                     }, "Longer wait each open")
                 }
-                Divider()
                 AppText(
                     "Making the gate easier takes 24 hours to apply, so a weak moment can't undo your own rules. Making it stricter works at once.",
                     size = 13.sp, color = AppColors.muted, lineHeight = 19.sp, modifier = Modifier.padding(vertical = 14.dp),
@@ -116,29 +109,22 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Focus length", subtitle = "Default session for your most important task") {
                     Stepper("${state.frogMinutes} min", { state.updateFrogMinutes(state.frogMinutes - 5) }, { state.updateFrogMinutes(state.frogMinutes + 5) }, valueWidth = 70.dp)
                 }
-                Divider()
                 SettingRow("Do Not Disturb in focus", subtitle = "Silence notifications during a session") {
                     Toggle(state.focusDnd, { state.updateFocusDnd(it) }, "Do Not Disturb in focus")
                 }
-                Divider()
                 SettingRow("Lock gated apps in focus") {
                     Toggle(state.focusLockGated, { state.updateFocusLockGated(it) }, "Lock gated apps in focus")
                 }
-                Divider()
                 SettingRow("Water goal", subtitle = "Glasses per day") {
                     Stepper("${state.waterGoal}", { state.updateWaterGoal(state.waterGoal - 1) }, { state.updateWaterGoal(state.waterGoal + 1) }, valueWidth = 40.dp)
                 }
-                Divider()
                 SettingRow("Screen time goal", subtitle = "Shown in your weekly review") {
                     Stepper(formatMinutes(state.screenGoalMin.toLong()), { state.setScreenGoal(state.screenGoalMin - 30) }, { state.setScreenGoal(state.screenGoalMin + 30) }, valueWidth = 70.dp)
                 }
-                Divider()
                 SettingRow("Evening shutdown", subtitle = "When the day should wrap up") {
                     Stepper("${state.eveningHour}:00", { state.updateEveningHour(state.eveningHour - 1) }, { state.updateEveningHour(state.eveningHour + 1) }, valueWidth = 64.dp)
                 }
-                Divider()
                 SettingRow("Close the day now", onClick = { nav.go(Route.Evening) }) { ValueChevron("") }
-                Divider()
                 SettingRow("Weekly review", onClick = { nav.go(Route.Week) }) { ValueChevron("") }
             }
 
@@ -146,7 +132,6 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Gated apps", subtitle = "Apps that get a gate", onClick = { nav.go(Route.GatedPicker) }) {
                     ValueChevron("${state.gated.size}", AppColors.gate)
                 }
-                Divider()
                 SettingRow("Home apps", subtitle = "Up to six on your Home page", onClick = { nav.go(Route.HomePicker) }) {
                     ValueChevron("${state.homeApps.size} of 6")
                 }
@@ -169,15 +154,12 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Usage access", subtitle = "Screen time and exact gated time", onClick = { openUsageAccessSettings(context) }) {
                     ValueChevron(if (usage) "Allowed" else "Allow", if (usage) AppColors.focus else AppColors.gate)
                 }
-                Divider()
                 SettingRow("Display over other apps", subtitle = "For the floating timer and the red button", onClick = { openOverlaySettings(context) }) {
                     ValueChevron(if (overlay) "Allowed" else "Allow", if (overlay) AppColors.focus else AppColors.gate)
                 }
-                Divider()
                 SettingRow("Do Not Disturb access", subtitle = "For the Moon button and focus", onClick = { openDndSettings(context) }) {
                     ValueChevron(if (dnd) "Allowed" else "Allow", if (dnd) AppColors.focus else AppColors.gate)
                 }
-                Divider()
                 SettingRow("Default home app", subtitle = "Make this your launcher", onClick = { openDefaultLauncherSettings(context) }) {
                     ValueChevron(if (isHome) "This app" else "Change", if (isHome) AppColors.focus else AppColors.muted)
                 }
@@ -185,9 +167,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
 
             SettingsGroup("Data and privacy") {
                 SettingRow("Privacy policy", subtitle = "What is stored and what each permission does", onClick = { showPolicy = true }) { ValueChevron("") }
-                Divider()
                 SettingRow("Stays on this phone", subtitle = "This app has no internet permission. Nothing is sent anywhere.") {}
-                Divider()
                 SettingRow("Delete all my data", titleColor = AppColors.gate, subtitle = "Resets settings, tasks, notes and gated apps", onClick = { confirmReset = true }) {}
             }
 
@@ -196,6 +176,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Version", subtitle = "Open source, made for students") { AppText(version, size = 15.sp, color = AppColors.muted, weight = FontWeight.Medium) }
             }
             Spacer(Modifier.height(16.dp))
+        }
         }
     }
 

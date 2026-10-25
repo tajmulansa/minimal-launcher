@@ -64,12 +64,12 @@ import com.example.productivitylauncher.ui.components.Segmented
 import com.example.productivitylauncher.ui.theme.Look
 import com.example.productivitylauncher.ui.theme.ThemeMode
 
-/** First run: welcome, pick gated apps, pick six Home apps, set the first most important task, choose a theme. */
+/** First run: welcome, pick gated apps, pick six Home apps, ask your name, choose a theme. */
 @Composable
 fun OnboardingScreen(state: LauncherState, nav: Nav) {
     val context = LocalContext.current
     var step by remember { mutableIntStateOf(0) }
-    var frog by remember { mutableStateOf(state.frog) }
+    var name by remember { mutableStateOf(state.userName) }
     val last = 5
 
     Column(Modifier.fillMaxSize()) {
@@ -113,9 +113,9 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                     HomePickerBody(state, Modifier.weight(1f))
                 }
                 3 -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    AppText("Your most important task", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
-                    AppText("What is the one task that matters most today? It shows in bold at the top of your list. Do it first and your other tasks unlock.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
-                    AppField(frog, { frog = it }, "e.g. Finish chemistry chapter 4", fill = AppColors.card)
+                    AppText("What should we call you?", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
+                    AppText("Your name shows in the greeting on Home. It stays on this phone.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
+                    AppField(name, { name = it }, "Your name", fill = AppColors.card)
                 }
                 5 -> PermissionsStep(state, Modifier.fillMaxSize())
                 else -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
@@ -131,7 +131,7 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
             CButton(
                 if (step == last) "Start" else "Next",
                 {
-                    if (step == 3 && frog.isNotBlank()) state.updateFrog(frog.trim())
+                    if (step == 3) state.updateUserName(name)
                     if (step == last) {
                         state.finishOnboarding()
                         nav.go(Route.Main)
@@ -191,7 +191,6 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
         PermRow("Usage access", "Reads how long apps were used, on this phone only, to show screen time and your gated time.", usage) { openUsageAccessSettings(context) }
         PermRow("Display over other apps", "Lets the small timer show over a gated app, and the optional red button show over every app.", overlay) { openOverlaySettings(context) }
         PermRow("Do Not Disturb", "Lets the moon button and focus sessions silence notifications.", dnd) { openDndSettings(context) }
-        PermRow("Calendar (read only)", "Shows today's events in the Agenda widget. Nothing is copied or sent.", calendar) { calLauncher.launch(Manifest.permission.READ_CALENDAR) }
         PermRow("Home app", "Make this your launcher so it opens when you press Home.", home) { openDefaultLauncherSettings(context) }
         TextLink(if (showPolicy) "Hide privacy policy" else "Read the full privacy policy", { showPolicy = !showPolicy })
         if (showPolicy) {
