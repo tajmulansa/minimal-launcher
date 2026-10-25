@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -49,6 +51,7 @@ import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.PageHeader
 import com.example.productivitylauncher.ui.components.RadiusMd
 import com.example.productivitylauncher.ui.components.clickableRole
+import com.example.productivitylauncher.ui.components.hairlineBelow
 import com.example.productivitylauncher.ui.theme.AppColors
 
 /** Add or remove widgets: the launcher's own, or widgets from other apps. */
@@ -154,13 +157,13 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
             LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(groups, key = { it.pkg }) { g ->
                     val open = openPkg == g.pkg
-                    Column(Modifier.fillMaxWidth().background(AppColors.card, RadiusMd)) {
+                    Column(Modifier.fillMaxWidth().hairlineBelow()) {
                         Row(
                             Modifier.fillMaxWidth().clickableRole({ openPkg = if (open) null else g.pkg }, Role.Button).padding(horizontal = 20.dp, vertical = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
-                            Box(Modifier.size(40.dp).background(AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(40.dp).border(1.dp, AppColors.line, CircleShape), contentAlignment = Alignment.Center) {
                                 AppText(g.label.firstOrNull()?.uppercaseChar()?.toString() ?: "?", size = 16.sp, weight = FontWeight.SemiBold)
                             }
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -189,7 +192,7 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
                                     verticalArrangement = Arrangement.spacedBy(10.dp),
                                 ) {
                                     Box(
-                                        Modifier.fillMaxWidth().heightIn(min = 72.dp, max = 190.dp).background(AppColors.phone, RoundedCornerShape(14.dp)).padding(10.dp),
+                                        Modifier.fillMaxWidth().heightIn(min = 72.dp, max = 190.dp).border(1.dp, AppColors.line, RoundedCornerShape(14.dp)).padding(10.dp),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         if (preview != null) {
@@ -223,18 +226,18 @@ private class AppWidgets(val pkg: String, val label: String, val widgets: List<A
 @Composable
 private fun AddRow(letter: String, title: String, subtitle: String, added: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().background(AppColors.card, RadiusMd).clickableRole(onClick).padding(horizontal = 20.dp, vertical = 16.dp),
+        Modifier.fillMaxWidth().hairlineBelow().clickableRole(onClick).padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Box(Modifier.size(40.dp).background(AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(40.dp).border(1.dp, AppColors.line, CircleShape), contentAlignment = Alignment.Center) {
             AppText(letter, size = 16.sp, weight = FontWeight.SemiBold)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             AppText(title, size = 16.sp, weight = FontWeight.SemiBold, maxLines = 1)
             AppText(subtitle, size = 13.sp, color = AppColors.muted, maxLines = 1)
         }
-        Box(Modifier.size(44.dp).background(if (added) AppColors.focus else AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(44.dp).background(if (added) AppColors.focus else Color.Transparent, CircleShape).border(1.dp, if (added) Color.Transparent else AppColors.line, CircleShape), contentAlignment = Alignment.Center) {
             AppIcon(if (added) Ic.Check else Ic.Plus, if (added) AppColors.onFocus else AppColors.text, size = 20.dp, description = if (added) "Added" else "Add")
         }
     }

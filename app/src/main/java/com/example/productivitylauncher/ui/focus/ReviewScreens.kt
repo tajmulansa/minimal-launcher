@@ -1,6 +1,7 @@
 package com.example.productivitylauncher.ui.focus
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,8 @@ import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.BtnKind
 import com.example.productivitylauncher.ui.components.CButton
 import com.example.productivitylauncher.ui.components.CheckCircle
+import com.example.productivitylauncher.ui.components.Caption
+import com.example.productivitylauncher.ui.components.Rule
 import com.example.productivitylauncher.ui.components.RadiusLg
 import com.example.productivitylauncher.ui.components.RadiusMd
 import com.example.productivitylauncher.ui.components.PageHeader
@@ -51,15 +54,11 @@ import java.util.Locale
 
 @Composable
 private fun StepCard(number: Int, title: String, content: @Composable () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().background(AppColors.card, RadiusLg).padding(22.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(Modifier.size(22.dp).background(AppColors.phone, CircleShape), contentAlignment = Alignment.Center) {
-                AppText("$number", size = 11.sp, weight = FontWeight.Bold)
-            }
-            AppText(title.uppercase(), size = 12.sp, weight = FontWeight.Bold, color = AppColors.muted, letterSpacing = 1.5.sp)
+    Column(Modifier.fillMaxWidth().padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Rule()
+        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Caption("%02d".format(number), color = AppColors.text)
+            Caption(title)
         }
         content()
     }
@@ -80,7 +79,7 @@ fun EveningScreen(state: LauncherState, nav: Nav) {
         ) {
             if (done) {
                 Spacer(Modifier.height(40.dp))
-                AppText("Day closed", size = 32.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                AppText("Day closed", size = 40.sp, weight = FontWeight.Medium, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 AppText("Your mind is clear and tomorrow's most important task is ready.", size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, modifier = Modifier.fillMaxWidth())
                 AppText("[-_-] phone down. sleep well.", size = 14.sp, color = AppColors.muted, mono = true, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 CButton("Back to Home", { nav.back() }, Modifier.fillMaxWidth().padding(top = 16.dp), BtnKind.Primary)
@@ -170,11 +169,9 @@ fun WeekScreen(state: LauncherState, nav: Nav) {
 
 @Composable
 private fun StepCardPlain(title: String, content: @Composable () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().background(AppColors.card, RadiusLg).padding(22.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        AppText(title.uppercase(), size = 12.sp, weight = FontWeight.Bold, color = AppColors.muted, letterSpacing = 1.5.sp)
+    Column(Modifier.fillMaxWidth().padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Rule()
+        Caption(title, Modifier.padding(top = 8.dp))
         content()
     }
 }
@@ -182,7 +179,7 @@ private fun StepCardPlain(title: String, content: @Composable () -> Unit) {
 @Composable
 private fun StatCard(value: String, label: String, modifier: Modifier, good: Boolean) {
     Column(
-        modifier.background(AppColors.card, RadiusMd).padding(18.dp),
+        modifier.border(1.dp, AppColors.line, RadiusMd).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         AppText(value, size = 30.sp, weight = FontWeight.Medium, letterSpacing = (-1).sp, color = if (good) AppColors.focus else AppColors.text)

@@ -14,6 +14,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import com.example.productivitylauncher.ui.components.clickableRole
+import com.example.productivitylauncher.ui.components.RadiusPill
+import com.example.productivitylauncher.ui.components.Rule
+import com.example.productivitylauncher.ui.components.Caption
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.border
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -93,7 +102,7 @@ fun FocusScreen(state: LauncherState, nav: Nav) {
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             if (completed) {
                 CompleteBlock(state, nav, onAgain = { completed = false })
@@ -104,51 +113,72 @@ fun FocusScreen(state: LauncherState, nav: Nav) {
             val progress = if (active && total > 0) (left.toFloat() / total).coerceIn(0f, 1f) else 1f
             val ringTrack = AppColors.line
             val ringColor = AppColors.focus
-            Box(Modifier.size(260.dp), contentAlignment = Alignment.Center) {
-                Canvas(Modifier.size(260.dp)) {
-                    val w = 10.dp.toPx()
+            Box(Modifier.size(236.dp), contentAlignment = Alignment.Center) {
+                Canvas(Modifier.size(236.dp)) {
+                    val w = 2.dp.toPx()
                     val inset = w / 2
                     val arcSize = Size(size.width - w, size.height - w)
                     drawArc(ringTrack, 0f, 360f, false, topLeft = Offset(inset, inset), size = arcSize, style = Stroke(w))
                     drawArc(ringColor, -90f, 360f * progress, false, topLeft = Offset(inset, inset), size = arcSize, style = Stroke(w, cap = StrokeCap.Round))
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    AppText(if (active) formatClock(left) else "%02d:00".format(state.frogMinutes), size = 56.sp, letterSpacing = (-2).sp)
-                    AppText(if (active) "FOCUSING" else "READY", size = 12.sp, weight = FontWeight.Bold, color = AppColors.muted, letterSpacing = 2.sp)
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AppText(if (active) formatClock(left) else "%02d:00".format(state.frogMinutes), size = 60.sp, weight = FontWeight.Light, letterSpacing = (-3).sp)
+                    Caption(
+                        if (state.frog.isBlank()) "No task set" else state.frog,
+                        Modifier.padding(horizontal = 32.dp),
+                    )
                 }
             }
-            AppText(
-                if (state.frog.isBlank()) "No most important task set yet. Add one on the Widgets page." else state.frog,
-                size = 20.sp, weight = FontWeight.SemiBold, align = TextAlign.Center, lineHeight = 26.sp,
-            )
             if (!active) {
-                Stepper("${state.frogMinutes} min", { state.updateFrogMinutes(state.frogMinutes - 5) }, { state.updateFrogMinutes(state.frogMinutes + 5) }, valueWidth = 90.dp)
-                CeramicCard(padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 22.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    StepCircle("−5") { state.updateFrogMinutes(state.frogMinutes - 5) }
+                    Box(
+                        Modifier
+                            .height(56.dp)
+                            .widthIn(min = 132.dp)
+                            .alpha(if (state.frog.isNotBlank()) 1f else 0.3f)
+                            .background(AppColors.text, RadiusPill)
+                            .then(if (state.frog.isNotBlank()) Modifier.clickableRole({ start() }) else Modifier),
+                        contentAlignment = Alignment.Center,
+                    ) { AppText("Start", size = 16.sp, weight = FontWeight.Medium, color = AppColors.phone, display = false) }
+                    StepCircle("+5") { state.updateFrogMinutes(state.frogMinutes + 5) }
+                }
+                Column(Modifier.fillMaxWidth()) {
+                    Rule()
                     SettingRow("Do Not Disturb", subtitle = if (hasDndAccess(context)) "Silence notifications while you focus" else "Needs permission, tap to allow", onClick = if (hasDndAccess(context)) null else ({ openDndSettings(context) })) {
                         Toggle(state.focusDnd, { state.updateFocusDnd(it) }, "Do Not Disturb during focus")
                     }
-                    Divider()
                     SettingRow("Lock gated apps", subtitle = "They stay closed until you're done") {
                         Toggle(state.focusLockGated, { state.updateFocusLockGated(it) }, "Lock gated apps during focus")
                     }
                 }
-                CButton("Start focus", { start() }, Modifier.fillMaxWidth(), BtnKind.Accent, enabled = state.frog.isNotBlank(), leading = Ic.Play)
             } else {
                 AppText("[-_-] shh. Just this one thing.", size = 14.sp, color = AppColors.muted, mono = true)
-                CButton("End early", { stopEarly() }, Modifier.fillMaxWidth(), BtnKind.Soft)
+                Box(
+                    Modifier.height(56.dp).widthIn(min = 132.dp).border(1.dp, AppColors.line, RadiusPill).clickableRole({ stopEarly() }),
+                    contentAlignment = Alignment.Center,
+                ) { AppText("End early", size = 16.sp, weight = FontWeight.Medium, display = false, modifier = Modifier.padding(horizontal = 28.dp)) }
             }
         }
     }
 }
 
 @Composable
-private fun CompleteBlock(state: LauncherState, nav: Nav, onAgain: () -> Unit) {
-    Box(Modifier.size(96.dp).background(AppColors.focus.copy(alpha = 0.18f), CircleShape), contentAlignment = Alignment.Center) {
-        AppIcon(Ic.Check, AppColors.focus, size = 40.dp)
+private fun StepCircle(text: String, onClick: () -> Unit) {
+    Box(Modifier.size(48.dp).border(1.dp, AppColors.line, CircleShape).clickableRole(onClick), contentAlignment = Alignment.Center) {
+        AppText(text, size = 12.sp, mono = true)
     }
-    AppText("Focus complete", size = 28.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
-    AppText("Did you finish \"${state.frog}\"?", size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp)
-    CButton("Yes, done", { state.setFrogDone(true); nav.back() }, Modifier.fillMaxWidth(), BtnKind.Accent, leading = Ic.Check)
-    CButton("Not yet", { nav.back() }, Modifier.fillMaxWidth(), BtnKind.Soft)
-    TextLink("Another session", onAgain)
+}
+
+@Composable
+private fun CompleteBlock(state: LauncherState, nav: Nav, onAgain: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Caption("Focus complete")
+        AppText("Did you finish it?", size = 40.sp, weight = FontWeight.Medium)
+        AppText("\"${state.frog}\"", size = 16.sp, color = AppColors.muted, lineHeight = 24.sp, display = false)
+        Spacer(Modifier.height(16.dp))
+        CButton("Yes, done", { state.setFrogDone(true); nav.back() }, Modifier.fillMaxWidth(), BtnKind.Primary, leading = Ic.Check)
+        CButton("Not yet", { nav.back() }, Modifier.fillMaxWidth(), BtnKind.Soft)
+        TextLink("Another session", onAgain, Modifier.align(Alignment.CenterHorizontally))
+    }
 }

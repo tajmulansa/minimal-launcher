@@ -62,7 +62,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
     val isHome = remember(tick) { isDefaultLauncher(context) }
 
     Column(Modifier.fillMaxSize()) {
-        PageHeader("Settings", onBack = nav.back)
+        PageHeader("Preferences", onBack = nav.back, label = "Settings")
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),

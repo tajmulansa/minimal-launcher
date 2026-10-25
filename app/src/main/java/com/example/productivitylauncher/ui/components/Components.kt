@@ -228,32 +228,36 @@ fun TextLink(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, e
 fun IconButtonLarge(ic: Ic, description: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier
-            .size(48.dp)
+            .size(40.dp)
             .border(1.dp, AppColors.line, CircleShape)
             .semantics { contentDescription = description }
             .clickableRole(onClick),
         contentAlignment = Alignment.Center,
     ) {
-        AppIcon(ic, AppColors.text, size = 20.dp)
+        AppIcon(ic, AppColors.text, size = 18.dp)
     }
 }
 
-/** Page title row with an optional back button and trailing action. */
+/**
+ * Page header as in the prototype: a slim top row (back circle, small label, actions on the right)
+ * and a big display title under it.
+ */
 @Composable
 fun PageHeader(
     title: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    label: String? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    Row(
-        modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 12.dp, bottom = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (onBack != null) IconButtonLarge(Ic.Back, "Back", onBack)
-        AppText(title, Modifier.weight(1f), size = if (onBack != null) 26.sp else 38.sp, weight = FontWeight.Medium, letterSpacing = (-1.2).sp, maxLines = 1)
-        if (trailing != null) trailing()
+    Column(modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 12.dp, bottom = 14.dp)) {
+        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (onBack != null) IconButtonLarge(Ic.Back, "Back", onBack)
+            if (label != null) Caption(label)
+            Spacer(Modifier.weight(1f))
+            if (trailing != null) trailing()
+        }
+        AppText(title, Modifier.padding(top = 12.dp), size = 44.sp, weight = FontWeight.Medium, letterSpacing = (-2).sp, maxLines = 1)
     }
 }
 
@@ -358,7 +362,7 @@ fun CheckCircle(checked: Boolean, size: Dp = 34.dp) {
 fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit, modifier: Modifier = Modifier, valueWidth: Dp = 72.dp) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         StepBtn(Ic.Minus, "Less", onMinus)
-        AppText(value, Modifier.width(valueWidth), size = 17.sp, weight = FontWeight.SemiBold, align = TextAlign.Center)
+        AppText(value, Modifier.width(valueWidth), size = 13.sp, color = AppColors.text, align = TextAlign.Center, mono = true)
         StepBtn(Ic.Plus, "More", onPlus)
     }
 }
@@ -369,11 +373,12 @@ private fun StepBtn(ic: Ic, description: String, onClick: () -> Unit) {
     Box(
         Modifier
             .size(44.dp)
-            .border(1.dp, AppColors.line, CircleShape)
             .semantics { contentDescription = description }
             .clickableRole({ haptic.performHapticFeedback(HapticFeedbackType.SegmentTick); onClick() }),
         contentAlignment = Alignment.Center,
-    ) { AppIcon(ic, AppColors.text, size = 18.dp) }
+    ) {
+        Box(Modifier.size(34.dp).border(1.dp, AppColors.line, CircleShape), contentAlignment = Alignment.Center) { AppIcon(ic, AppColors.text, size = 16.dp) }
+    }
 }
 
 /** The round-square letter icon used for apps. Gated apps use the terracotta colour. */
@@ -457,12 +462,13 @@ fun SettingRow(
             .fillMaxWidth()
             .heightIn(min = 64.dp)
             .then(if (onClick != null) Modifier.clickableRole(onClick) else Modifier)
+            .hairlineBelow()
             .padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            AppText(title, size = 16.sp, weight = FontWeight.Medium, color = titleColor)
+            AppText(title, size = 17.sp, letterSpacing = (-0.17).sp, color = titleColor)
             if (subtitle != null) AppText(subtitle, size = 13.sp, color = AppColors.muted, lineHeight = 18.sp)
         }
         trailing()

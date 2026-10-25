@@ -118,7 +118,7 @@ import sh.calvin.reorderable.rememberReorderableLazyGridState
 
 /** Second page: your widgets as flat sections separated by hairlines. Edit mode: touch and hold a section, drag it, tap the minus to remove it. */
 @Composable
-fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
+fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onOpenHome: () -> Unit = {}) {
     var editing by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -177,8 +177,8 @@ fun WidgetsScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int) {
                 }
             }
         }
-        Dots(page)
-        Spacer(Modifier.height(20.dp))
+        Dots(page, onSelect = { if (it == 0) onOpenHome() })
+        Spacer(Modifier.height(8.dp))
     }
 }
 

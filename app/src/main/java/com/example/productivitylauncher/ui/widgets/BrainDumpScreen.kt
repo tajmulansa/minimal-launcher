@@ -28,6 +28,7 @@ import com.example.productivitylauncher.ui.components.CeramicCard
 import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.PageHeader
 import com.example.productivitylauncher.ui.components.RadiusMd
+import com.example.productivitylauncher.ui.components.hairlineBelow
 import com.example.productivitylauncher.ui.theme.AppColors
 
 /** Capture everything on your mind now. Sort it later: make it the frog, or let it go. */
@@ -38,16 +39,16 @@ fun BrainDumpScreen(state: LauncherState, nav: Nav) {
         PageHeader("Brain dump", onBack = nav.back)
         Row(Modifier.padding(horizontal = 28.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(Modifier.weight(1f)) {
-                AppField(text, { text = it }, "What's on your mind?", fill = AppColors.card, onDone = { state.addDump(text); text = "" })
+                AppField(text, { text = it }, "What's on your mind?", onDone = { state.addDump(text); text = "" })
             }
             CButton("Add", { state.addDump(text); text = "" }, kind = BtnKind.Primary, small = true, enabled = text.isNotBlank(), leading = Ic.Plus)
         }
         if (state.dumps.isEmpty()) {
             AppText("Nothing here. Your head is clear.", color = AppColors.muted, modifier = Modifier.padding(28.dp))
         }
-        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             items(state.dumps, key = { it.id }) { d ->
-                CeramicCard(shape = RadiusMd, padding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
+                CeramicCard(shape = RadiusMd, color = androidx.compose.ui.graphics.Color.Transparent, padding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp), modifier = Modifier.hairlineBelow()) {
                     AppText(d.text, size = 16.sp, lineHeight = 22.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         CButton("Make it my most important task", {

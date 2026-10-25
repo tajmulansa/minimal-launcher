@@ -1,6 +1,7 @@
 package com.example.productivitylauncher.ui.apps
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -80,7 +81,8 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                 .fillMaxWidth()
                 .padding(horizontal = 28.dp)
                 .background(AppColors.card, RadiusPill)
-                .padding(horizontal = 22.dp, vertical = 16.dp),
+                .border(1.dp, AppColors.line, RadiusPill)
+                .padding(horizontal = 22.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -123,7 +125,7 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                 app to header
             }
             items(grouped, key = { it.first.packageName + "/" + it.first.activityName }) { (app, header) ->
-                if (header != null) Caption(header, Modifier.padding(top = 18.dp, bottom = 4.dp))
+                if (header != null) AppText(header, Modifier.padding(top = 16.dp, bottom = 2.dp), size = 15.sp, weight = FontWeight.Medium, color = AppColors.muted, display = true)
                 val gated = state.isGated(app.packageName)
                 Column {
                     Row(
@@ -136,7 +138,7 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         AppText(
-                            app.label, Modifier.weight(1f), size = 22.sp, maxLines = 1, letterSpacing = (-0.5).sp,
+                            app.label, Modifier.weight(1f), size = 24.sp, maxLines = 1, letterSpacing = (-0.7).sp,
                             weight = FontWeight.Medium,
                             color = if (gated) AppColors.gate else AppColors.text,
                         )

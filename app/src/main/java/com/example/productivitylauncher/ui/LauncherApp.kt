@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -207,6 +208,12 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             targetState = if (urgeActive) null else route,
             modifier = Modifier.fillMaxSize(),
             transitionSpec = {
+                if (targetState == Route.Apps) {
+                    // All apps rises like a drawer.
+                    (slideInVertically(Motion.morph(650)) { it } + fadeIn(Motion.enter(300))) togetherWith fadeOut(Motion.exit(400))
+                } else if (initialState == Route.Apps) {
+                    fadeIn(Motion.enter(400)) togetherWith (slideOutVertically(Motion.morph(550)) { it } + fadeOut(Motion.exit(400)))
+                } else
                 // One continuous surface: a soft cross-fade with a tiny scale, no sideways page jump.
                 ((fadeIn(Motion.enter(320)) + slideInVertically(Motion.enter(380)) { 40 } + scaleIn(initialScale = 0.985f, animationSpec = Motion.enter(320))) togetherWith
                     (fadeOut(Motion.exit(220)) + scaleOut(targetScale = 1.015f, animationSpec = Motion.exit(220))))
@@ -227,7 +234,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                         },
                     ) {
                         if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0, onOpenWidgets = { scope.launch { pager.animateScrollToPage(1) } }, onOpenQuick = { quickOpen = true })
-                        else WidgetsScreen(state, nav, widgetHost, page = 1)
+                        else WidgetsScreen(state, nav, widgetHost, page = 1, onOpenHome = { scope.launch { pager.animateScrollToPage(0) } })
                     }
                 }
                 QuickPanel(state, quickOpen, { quickOpen = false })

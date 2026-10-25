@@ -13,6 +13,8 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +47,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -135,7 +139,7 @@ fun HomeScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     val st = state.screenTimeMs
                     Caption(
-                        if (st != null) formatMillis(st) else "Usage off",
+                        if (st != null) formatMillis(st) + " today" else "Usage off",
                         Modifier.clickableRole({ if (state.usageAccess) nav.go(Route.Week) else nav.go(Route.Settings) }).padding(vertical = 8.dp),
                     )
                     Box(
@@ -159,7 +163,7 @@ fun HomeScreen(
                     Odometer(minute / 10, 180, 92.sp)
                     Odometer(minute % 10, 270, 92.sp)
                 }
-                AppText(greeting, Modifier.padding(top = 6.dp), size = 20.sp, color = AppColors.muted, letterSpacing = (-0.4).sp)
+                AppText(greeting, Modifier.padding(top = 8.dp), size = 22.sp, weight = FontWeight.Normal, color = AppColors.muted)
             }
         }
 
@@ -181,7 +185,7 @@ fun HomeScreen(
                         CheckCircle(done, size = 30.dp)
                     }
                     Column(Modifier.weight(1f)) {
-                        Caption("Next task")
+                        Caption("Up next")
                         AppText(
                             frog, Modifier.padding(top = 2.dp), size = 18.sp, weight = FontWeight.Medium, letterSpacing = (-0.3).sp,
                             color = if (done) AppColors.muted else AppColors.text, maxLines = 2,
@@ -189,7 +193,7 @@ fun HomeScreen(
                     }
                 } else {
                     Column(Modifier.weight(1f).clickableRole(onOpenWidgets).padding(vertical = 4.dp)) {
-                        Caption("Next task")
+                        Caption("Up next")
                         AppText("Set it on your Widgets page", Modifier.padding(top = 2.dp), size = 18.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = (-0.3).sp)
                     }
                     AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp)
@@ -201,7 +205,7 @@ fun HomeScreen(
             val shown = state.homeApps.filter { !state.isGated(it) }.mapNotNull { state.appByPackage(it) }
             Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Caption(if (state.lockIn) "Locked in · only your home apps" else "Home apps")
-                Caption("${shown.size}")
+                Caption("%02d".format(shown.size))
             }
             shown.forEachIndexed { i, app ->
                 Box(Modifier.enterStagger(3 + i, once = true)) {
@@ -221,7 +225,7 @@ fun HomeScreen(
             }
         }
 
-        Dots(page)
+        Dots(page, onSelect = { if (it == 1) onOpenWidgets() })
         Dock(
             onApps = { nav.go(Route.Apps) },
             onPhone = { openPhone(context) },
@@ -295,31 +299,55 @@ fun Hair(index: Int, modifier: Modifier = Modifier) {
 
 @Composable
 private fun AppRow(app: AppEntry, gated: Boolean, onClick: () -> Unit) {
+    val source = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val shift by animateFloatAsState(if (pressed) 8f else 0f, Motion.press(), label = "shift")
     Row(
-        Modifier.fillMaxWidth().clickableRole(onClick).padding(vertical = 8.dp),
+        Modifier
+            .fillMaxWidth()
+            .graphicsLayer { translationX = shift.dp.toPx(); scaleX = if (pressed) 0.985f else 1f; scaleY = if (pressed) 0.985f else 1f }
+            .clickable(interactionSource = source, indication = null, onClick = onClick)
+            .padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AppText(
-            app.label, Modifier.weight(1f, fill = false), size = 30.sp, weight = FontWeight.Medium, letterSpacing = (-1).sp,
+            app.label, Modifier.weight(1f, fill = false), size = 32.sp, weight = FontWeight.Medium, letterSpacing = (-1.3).sp,
             color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
         )
         if (gated) GatedTag()
     }
 }
 
+/** The Home / Today text tabs with a line that slides under the current one. */
 @Composable
-fun Dots(page: Int, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-        for (i in 0..1) {
-            val on = i == page
-            val w by animateDpAsState(if (on) 20.dp else 6.dp, Motion.press(), label = "dot")
-            val dotColor by animateColorAsState(if (on) AppColors.text else AppColors.dot, Motion.state(), label = "dotColor")
+fun Dots(page: Int, modifier: Modifier = Modifier, onSelect: ((Int) -> Unit)? = null) {
+    val labels = listOf("Home", "Today")
+    val density = LocalDensity.current
+    val widths = remember { androidx.compose.runtime.mutableStateListOf(0f, 0f) }
+    val offsets = remember { androidx.compose.runtime.mutableStateListOf(0f, 0f) }
+    val x by animateFloatAsState(offsets[page.coerceIn(0, 1)] + (widths[page.coerceIn(0, 1)] - with(density) { 20.dp.toPx() }) / 2f, Motion.morph(550), label = "tabX")
+    Box(modifier.fillMaxWidth().padding(top = 6.dp, bottom = 10.dp), contentAlignment = Alignment.TopCenter) {
+        Box {
+            Row(horizontalArrangement = Arrangement.spacedBy(26.dp)) {
+                labels.forEachIndexed { i, l ->
+                    val tint by animateColorAsState(if (i == page) AppColors.text else AppColors.muted, Motion.state(300), label = "tabTint")
+                    Caption(
+                        l,
+                        Modifier
+                            .onGloballyPositioned { c -> widths[i] = c.size.width.toFloat(); offsets[i] = c.positionInParent().x }
+                            .then(if (onSelect != null) Modifier.clickableRole({ onSelect(i) }) else Modifier)
+                            .padding(vertical = 8.dp),
+                        color = tint,
+                    )
+                }
+            }
             Box(
                 Modifier
-                    .padding(horizontal = 4.dp)
-                    .size(width = w, height = 6.dp)
-                    .background(dotColor, RoundedCornerShape(3.dp)),
+                    .align(Alignment.BottomStart)
+                    .graphicsLayer { translationX = x }
+                    .size(width = 20.dp, height = 1.5.dp)
+                    .background(AppColors.text),
             )
         }
     }
@@ -328,25 +356,27 @@ fun Dots(page: Int, modifier: Modifier = Modifier) {
 @Composable
 private fun Dock(onApps: () -> Unit, onPhone: () -> Unit, onMessages: () -> Unit, onFocus: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 20.dp),
+        Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(
             Modifier
-                .weight(1f)
-                .height(50.dp)
+                .height(48.dp)
                 .background(AppColors.text, RadiusPill)
-                .clickableRole(onApps),
+                .clickableRole(onApps)
+                .padding(start = 16.dp, end = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            AppIcon(Ic.Search, AppColors.phone, size = 18.dp)
-            AppText("All apps", Modifier.padding(start = 10.dp), size = 16.sp, weight = FontWeight.Medium, color = AppColors.phone)
+            AppIcon(Ic.Chevron, AppColors.phone, size = 18.dp, modifier = Modifier.graphicsLayer { rotationZ = -90f })
+            AppText("All apps", size = 15.sp, weight = FontWeight.Medium, color = AppColors.phone, display = false)
         }
-        DockButton(Ic.Phone, "Phone", onPhone)
-        DockButton(Ic.Message, "Messages", onMessages)
-        DockButton(Ic.Target, "Focus", onFocus)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DockButton(Ic.Phone, "Phone", onPhone)
+            DockButton(Ic.Message, "Messages", onMessages)
+            DockButton(Ic.Target, "Focus", onFocus)
+        }
     }
 }
 
@@ -354,12 +384,12 @@ private fun Dock(onApps: () -> Unit, onPhone: () -> Unit, onMessages: () -> Unit
 private fun DockButton(ic: Ic, description: String, onClick: () -> Unit) {
     Box(
         Modifier
-            .size(50.dp)
+            .size(48.dp)
             .border(1.dp, AppColors.line, CircleShape)
             .semantics { contentDescription = description }
             .clickableRole(onClick),
         contentAlignment = Alignment.Center,
     ) {
-        AppIcon(ic, AppColors.text, size = 22.dp)
+        AppIcon(ic, AppColors.text, size = 20.dp)
     }
 }

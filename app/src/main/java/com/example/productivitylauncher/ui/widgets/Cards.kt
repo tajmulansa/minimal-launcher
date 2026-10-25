@@ -270,7 +270,7 @@ internal fun FocusTile(state: LauncherState, nav: Nav) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Caption("Focus")
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                Ring(progress, 72.dp, 7.dp, ring, track) {
+                Ring(progress, 76.dp, 2.dp, ring, track) {
                     if (active) AppText(formatClock(left), size = 15.sp, weight = FontWeight.SemiBold)
                     else AppIcon(Ic.Play, AppColors.text, size = 22.dp)
                 }
