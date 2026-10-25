@@ -248,7 +248,7 @@ private fun ColumnScope.PhraseStep(state: LauncherState, onContinue: () -> Unit,
     }
     Box(Modifier.padding(top = 30.dp).fillMaxWidth().pointerInput(Unit) { detectTapGestures { focus.requestFocus() } }) {
         androidx.compose.material3.Text(
-            text = text, fontSize = 38.sp, fontFamily = Display, fontWeight = FontWeight.Medium, letterSpacing = (-0.04).sp * 0 + (-1.5).sp, lineHeight = 44.sp,
+            text = text, fontSize = 38.sp, fontFamily = Display, fontWeight = FontWeight.Medium, letterSpacing = (-1.5).sp, lineHeight = 44.sp,
         )
         // The real input is invisible; the phrase above is what you read.
         BasicTextField(
