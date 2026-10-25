@@ -3,7 +3,6 @@ package com.example.productivitylauncher.ui
 /** Every full screen the launcher can show. Home and Widgets are the two pages of [Route.Main]. */
 sealed interface Route {
     data object Main : Route
-    data object Apps : Route
     data class Gate(val pkg: String) : Route
     data object BrainDump : Route
     data object AddWidget : Route

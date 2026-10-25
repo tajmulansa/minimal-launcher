@@ -119,6 +119,26 @@ import sh.calvin.reorderable.rememberReorderableLazyGridState
 import androidx.compose.foundation.layout.BoxScope
 
 import com.example.productivitylauncher.data.DAY_MS
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.runtime.key
+import com.example.productivitylauncher.data.Task
+import com.example.productivitylauncher.ui.theme.Sans
 import com.example.productivitylauncher.ui.theme.enterStagger
 import androidx.compose.foundation.layout.widthIn
 import com.example.productivitylauncher.ui.components.RadiusPill
@@ -129,7 +149,6 @@ import com.example.productivitylauncher.data.hasDndAccess
 import com.example.productivitylauncher.data.openUsageAccessSettings
 import com.example.productivitylauncher.data.setDnd
 import com.example.productivitylauncher.ui.home.Hair
-import com.example.productivitylauncher.ui.home.QuickRow
 import com.example.productivitylauncher.ui.components.TextLink
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -166,125 +185,67 @@ internal fun Ring(progress: Float, diameter: Dp, stroke: Dp, color: Color, track
 
 // ------------------------------------------------------------------ to-do list
 
-/**
- * A plain to-do list. One task is the most important of the day: it sits first, bold, in a soft pill,
- * and the rest unlock once it is checked. Tap a task to show its actions.
- */
+/** The to-do list exactly like the prototype: check circle, text that gets struck through, hairline per row. Long-press a task to remove it. */
 @Composable
-internal fun TodoWidget(state: LauncherState) {
-    var adding by remember { mutableStateOf(state.frog.isBlank() && state.tasks.isEmpty()) }
+internal fun TodoList(state: LauncherState) {
     var draft by remember { mutableStateOf("") }
-    var selected by remember { mutableStateOf<String?>(null) }
-    var editingMain by remember { mutableStateOf(false) }
-    var mainDraft by remember { mutableStateOf("") }
-    val locked = state.tasksLocked
     val haptic = LocalHapticFeedback.current
-    val pillAlpha by animateFloatAsState(if (state.frogDone) 0.24f else 0.10f, Motion.state(200), label = "pill")
-    val hasMain = state.frog.isNotBlank()
-    val total = state.tasks.size + if (hasMain) 1 else 0
-    val done = state.tasks.count { it.done } + if (hasMain && state.frogDone) 1 else 0
-    fun submit() {
-        val text = draft.trim()
-        if (text.isNotEmpty()) { if (state.frog.isBlank()) state.updateFrog(text) else state.addTask(text) }
-        draft = ""
-        adding = false
-    }
-    Section(modifier = Modifier.animateContentSize(Motion.lift()), padding = PaddingValues(0.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Caption("Tasks")
-            if (total > 0) Rolling("$done of $total") { AppText(it, size = 13.sp, weight = FontWeight.SemiBold, color = AppColors.muted) }
-        }
-
-        if (hasMain) {
-            Box(Modifier.fillMaxWidth()) {
-                TaskRow(
-                    done = state.frogDone, text = state.frog, important = true, dimmed = false,
-                    editing = editingMain, editDraft = mainDraft, onEditDraft = { mainDraft = it },
-                    onEditDone = { if (mainDraft.isNotBlank()) state.updateFrog(mainDraft.trim()); editingMain = false },
-                    onCheck = { if (!state.frogDone) haptic.performHapticFeedback(HapticFeedbackType.LongPress); state.setFrogDone(!state.frogDone) },
-                    onSelect = { selected = if (selected == "main") null else "main" },
-                    actions = if (selected == "main") listOf(
-                        Ic.Edit to { mainDraft = state.frog; editingMain = true; selected = null },
-                        Ic.Close to { state.updateFrog(""); selected = null },
-                    ) else emptyList(),
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        state.allTasks.forEachIndexed { i, t ->
+            key(t.id) {
+                TodoRow(
+                    t, Modifier.enterStagger(i, rise = 14.dp),
+                    onToggle = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); state.toggleAny(t.id) },
+                    onRemove = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); state.removeAny(t.id) },
                 )
             }
         }
-
-        state.tasks.forEach { t ->
-            TaskRow(
-                done = t.done, text = t.text, important = false, dimmed = locked && !t.done,
-                onCheck = { state.toggleTask(t.id) },
-                onSelect = { selected = if (selected == t.id) null else t.id },
-                actions = if (selected == t.id) buildList {
-                    if (!state.frogDone && !t.done) add(Ic.Star to { state.makeFrog(t.id); selected = null })
-                    add(Ic.Close to { state.removeTask(t.id); selected = null })
-                } else emptyList(),
+        Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            AppText("+", size = 16.sp, mono = true, color = AppColors.muted)
+            BasicTextField(
+                value = draft, onValueChange = { draft = it }, singleLine = true,
+                textStyle = TextStyle(color = AppColors.text, fontSize = 17.sp, fontFamily = Sans, letterSpacing = (-0.17).sp),
+                cursorBrush = SolidColor(AppColors.text),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { state.addAny(draft); draft = "" }),
+                modifier = Modifier.weight(1f),
+                decorationBox = { inner ->
+                    Box(contentAlignment = Alignment.CenterStart) {
+                        if (draft.isEmpty()) AppText("Add a task", size = 17.sp, color = AppColors.muted, display = false)
+                        inner()
+                    }
+                },
             )
-        }
-
-        if (adding) {
-            if (!hasMain && state.tasks.isEmpty()) {
-                AppText("What is the one thing that matters most today?", size = 15.sp, color = AppColors.muted, lineHeight = 21.sp, modifier = Modifier)
-            }
-            Box(Modifier.padding(bottom = 6.dp)) {
-                AppField(draft, { draft = it }, if (!hasMain) "e.g. Finish chemistry chapter 4" else "Add a task", onDone = { submit() })
-            }
-        } else {
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = 44.dp).clickableRole({ adding = true }),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                AppIcon(Ic.Plus, AppColors.muted, size = 18.dp)
-                AppText("Add a task", size = 15.sp, color = AppColors.muted)
-            }
-        }
-        if (locked && state.tasks.isNotEmpty()) {
-            AppText("Do the bold task first. The rest unlock after.", size = 12.sp, color = AppColors.muted, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
         }
     }
 }
 
-/** One task line: round check, text, and (when tapped) its action icons. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun TaskRow(
-    done: Boolean,
-    text: String,
-    important: Boolean,
-    dimmed: Boolean,
-    onCheck: () -> Unit,
-    onSelect: () -> Unit,
-    actions: List<Pair<Ic, () -> Unit>>,
-    editing: Boolean = false,
-    editDraft: String = "",
-    onEditDraft: (String) -> Unit = {},
-    onEditDone: () -> Unit = {},
-) {
-    val taskColor by animateColorAsState(if (done) AppColors.muted else AppColors.text, Motion.state(220), label = "taskColor")
-    val rowAlpha by animateFloatAsState(if (dimmed) 0.45f else 1f, Motion.state(220), label = "rowAlpha")
+private fun TodoRow(t: Task, modifier: Modifier, onToggle: () -> Unit, onRemove: () -> Unit) {
+    val strike by animateFloatAsState(if (t.done) 1f else 0f, Motion.state(450), label = "strike")
+    val alpha by animateFloatAsState(if (t.done) 0.4f else 1f, Motion.state(400), label = "tkAlpha")
+    val line = AppColors.text
     Row(
-        Modifier.fillMaxWidth().alpha(rowAlpha).hairlineBelow(),
+        modifier.fillMaxWidth().hairlineBelow().padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Box(Modifier.size(44.dp).clickableRole(onCheck, Role.Checkbox), contentAlignment = Alignment.CenterStart) {
-            CheckCircle(done, size = if (important) 24.dp else 22.dp)
-        }
-        if (editing) {
-            Box(Modifier.weight(1f)) { AppField(editDraft, onEditDraft, "Your most important task", onDone = onEditDone) }
-        } else {
-            AppText(
-                text, Modifier.weight(1f).clickableRole(onSelect).padding(vertical = 10.dp),
-                size = if (important) 17.sp else 16.sp,
-                weight = if (important) FontWeight.SemiBold else FontWeight.Normal,
-                lineHeight = 22.sp,
-                color = taskColor, strike = done,
-            )
-        }
-        actions.forEach { (ic, run) ->
-            Box(Modifier.size(44.dp).clickableRole(run), contentAlignment = Alignment.Center) {
-                AppIcon(ic, AppColors.muted, size = 18.dp, description = if (ic == Ic.Close) "Remove" else if (ic == Ic.Star) "Make most important" else "Edit")
-            }
+        Box(Modifier.semantics { contentDescription = "Toggle task" }.clickableRole(onToggle, Role.Checkbox)) { CheckCircle(t.done, size = 30.dp) }
+        Box(
+            Modifier
+                .weight(1f)
+                .combinedClickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onToggle, onLongClick = onRemove)
+                .graphicsLayer { this.alpha = alpha }
+                .drawWithContent {
+                    drawContent()
+                    if (strike > 0f) {
+                        val y = size.height * 0.55f
+                        drawLine(line, Offset(0f, y), Offset(size.width * strike, y), strokeWidth = 1.5.dp.toPx())
+                    }
+                },
+        ) {
+            AppText(t.text, size = 17.sp, letterSpacing = (-0.17).sp, display = false)
         }
     }
 }
@@ -315,15 +276,16 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
         if (state.focusDnd) setDnd(context, false)
     }
 
-    val total = state.tasks.size + if (state.frog.isNotBlank()) 1 else 0
-    val done = state.tasks.count { it.done } + if (state.frog.isNotBlank() && state.frogDone) 1 else 0
+    val total = state.allTasks.size
+    val done = state.allTasks.count { it.done }
 
     Column(Modifier.fillMaxSize()) {
-        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 28.dp, end = 28.dp, top = 12.dp, bottom = 12.dp)) {
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 28.dp, end = 28.dp, top = 12.dp, bottom = 150.dp)) {
             Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Caption("Today")
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (total > 0) Caption("$done of $total done")
+                    if (total > 0) Caption("$done/$total done")
+                    IconButtonLarge(Ic.Plus, "Add widget", { nav.go(Route.AddWidget) })
                     IconButtonLarge(Ic.Sliders, "Settings", { nav.go(Route.Settings) })
                 }
             }
@@ -336,7 +298,7 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
                 Ring(progress, 236.dp, 2.dp, AppColors.focus, AppColors.line) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         AppText(if (active) formatClock(left) else "%02d:00".format(state.frogMinutes), size = 60.sp, weight = FontWeight.Light, letterSpacing = (-3).sp)
-                        Caption(if (state.frog.isBlank()) "Add a task below" else state.frog, Modifier.padding(horizontal = 36.dp), )
+                        Caption(state.nextTask?.text ?: if (total == 0) "Add a task below" else "Rest", Modifier.padding(horizontal = 36.dp))
                     }
                 }
             }
@@ -356,10 +318,6 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
             }
 
             Hair(0, Modifier.padding(vertical = 22.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Caption("Quick actions"); Caption("Pull down on Home") }
-            Box(Modifier.padding(top = 14.dp)) { QuickRow(state) }
-
-            Hair(1, Modifier.padding(vertical = 22.dp))
             WeekDots(state)
 
             Hair(1, Modifier.padding(vertical = 22.dp))
@@ -370,23 +328,19 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
             ScreenBars(state, context)
 
             Hair(2, Modifier.padding(vertical = 22.dp))
-            TodoWidget(state)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Caption("Tasks")
+                if (total > 0) Caption("$done of $total")
+            }
+            TodoList(state)
 
-            Hair(3, Modifier.padding(vertical = 22.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Caption("Widgets")
-                Caption("+ Add", Modifier.clickableRole({ nav.go(Route.AddWidget) }).padding(vertical = 8.dp), color = AppColors.text)
-            }
             val ext = state.widgets.filter { it.startsWith("ext:") }
-            if (ext.isEmpty()) {
-                AppText("Add a widget from another app, like a calendar or weather.", Modifier.padding(top = 4.dp), size = 15.sp, color = AppColors.muted, display = false)
-            }
             ext.forEach { id ->
-                Column(Modifier.padding(top = 16.dp)) { ExternalWidget(id.removePrefix("ext:").toIntOrNull(), state, host) }
+                Hair(3, Modifier.padding(vertical = 22.dp))
+                ExternalWidget(id.removePrefix("ext:").toIntOrNull(), state, host)
             }
             Spacer(Modifier.height(24.dp))
         }
-        Dots(page, onSelect = { if (it == 0) onOpenHome() })
     }
 }
 
@@ -492,10 +446,50 @@ internal fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: Widge
             update = { view -> view.updateAppWidgetSize(null, widthDp, heightDp, widthDp, heightDp) },
         )
         if (resizing) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Stepper("${heightDp}dp", { state.updateWidgetHeight("ext:$appWidgetId", heightDp - 40) }, { state.updateWidgetHeight("ext:$appWidgetId", heightDp + 40) }, valueWidth = 64.dp)
-                Caption("Remove", Modifier.clickableRole({ host.delete(appWidgetId); state.removeWidgetId("ext:$appWidgetId") }).padding(vertical = 8.dp), color = AppColors.gate)
-            }
+            HeightSlider(heightDp) { state.updateWidgetHeight("ext:$appWidgetId", it) }
+            Caption("Remove widget", Modifier.clickableRole({ host.delete(appWidgetId); state.removeWidgetId("ext:$appWidgetId") }).padding(vertical = 8.dp), color = AppColors.gate)
+        }
+    }
+}
+
+/** Flat height control: a hairline track with a round thumb. Drag or tap anywhere on it. Value is shown in mono. */
+@Composable
+private fun HeightSlider(heightDp: Int, onCommit: (Int) -> Unit) {
+    val minH = 80f; val maxH = 420f
+    var live by remember(heightDp) { mutableStateOf(heightDp.toFloat()) }
+    var widthPx by remember { mutableStateOf(1f) }
+    val thumb = 26.dp
+    fun toValue(x: Float) = (minH + (x / widthPx).coerceIn(0f, 1f) * (maxH - minH))
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Caption("Height")
+            Caption("${live.toInt()}dp", color = AppColors.text)
+        }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .onSizeChanged { widthPx = it.width.toFloat().coerceAtLeast(1f) }
+                .pointerInput(Unit) {
+                    detectTapGestures { live = toValue(it.x); onCommit(live.toInt()) }
+                }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = { onCommit(live.toInt()) },
+                        onHorizontalDrag = { c, _ -> live = toValue(c.position.x) },
+                    )
+                },
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.line))
+            val frac = ((live - minH) / (maxH - minH)).coerceIn(0f, 1f)
+            Box(Modifier.fillMaxWidth(frac).height(1.5.dp).background(AppColors.text))
+            Box(
+                Modifier
+                    .graphicsLayer { translationX = (widthPx - thumb.toPx()) * frac }
+                    .size(thumb)
+                    .background(AppColors.text, CircleShape),
+            )
         }
     }
 }

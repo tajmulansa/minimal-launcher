@@ -55,16 +55,16 @@ fun UrgeScreen(remainingMillis: Long) {
     )
     val phase = if (Motion.enabled) animatedPhase else 0.5f
     val ringColor = AppColors.gate
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().padding(bottom = 190.dp), contentAlignment = Alignment.Center) {
         Box(
             Modifier
-                .size(300.dp)
+                .size(250.dp)
                 .graphicsLayer { scaleX = 0.7f + 0.3f * phase; scaleY = 0.7f + 0.3f * phase }
                 .background(AppColors.text.copy(alpha = 0.05f), CircleShape),
         )
         Box(
             Modifier
-                .size(300.dp)
+                .size(250.dp)
                 .graphicsLayer { scaleX = 0.7f + 0.3f * phase; scaleY = 0.7f + 0.3f * phase }
                 .border(1.5.dp, AppColors.text.copy(alpha = 0.5f), CircleShape),
         )

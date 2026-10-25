@@ -47,7 +47,7 @@ import com.example.productivitylauncher.data.PipAction
 import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.data.launchApp
 import com.example.productivitylauncher.data.pipMessage
-import com.example.productivitylauncher.ui.apps.AppListScreen
+import com.example.productivitylauncher.ui.apps.AppDrawer
 import com.example.productivitylauncher.ui.apps.GatedPickerScreen
 import com.example.productivitylauncher.ui.apps.HomePickerScreen
 import com.example.productivitylauncher.ui.focus.EveningScreen
@@ -89,6 +89,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     var forward by remember { mutableStateOf(true) }
     var pipOpen by remember { mutableStateOf(false) }
     var quickOpen by remember { mutableStateOf(false) }
+    var drawerOpen by remember { mutableStateOf(false) }
     var pipVariant by remember { mutableIntStateOf(0) }
     var pipChip by remember { mutableStateOf<String?>(null) }
     // Pip tucks against the screen edge when nobody touches it. pipTouch restarts the idle timer.
@@ -114,6 +115,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             if (route != Route.Onboarding) route = Route.Main
             pipOpen = false
             quickOpen = false
+            drawerOpen = false
             pager.scrollToPage(0)
         }
     }
@@ -126,6 +128,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                 route = r
                 pipOpen = false
                 quickOpen = false
+                drawerOpen = false
             },
             back = {
                 forward = false
@@ -140,6 +143,8 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             stack.clear()
             if (route != Route.Onboarding) route = Route.Main
             pipOpen = false
+            drawerOpen = false
+            quickOpen = false
             pager.scrollToPage(0)
         }
     }
@@ -173,6 +178,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
         when {
             urgeActive -> Unit
             route == Route.Onboarding -> Unit
+            drawerOpen -> drawerOpen = false
             route != Route.Main -> nav.back()
             quickOpen -> quickOpen = false
             pipOpen -> pipOpen = false
@@ -220,12 +226,6 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             targetState = if (urgeActive) null else route,
             modifier = Modifier.fillMaxSize(),
             transitionSpec = {
-                if (targetState == Route.Apps) {
-                    // All apps rises like a drawer.
-                    (slideInVertically(Motion.morph(650)) { it } + fadeIn(Motion.enter(300))) togetherWith fadeOut(Motion.exit(400))
-                } else if (initialState == Route.Apps) {
-                    fadeIn(Motion.enter(400)) togetherWith (slideOutVertically(Motion.morph(550)) { it } + fadeOut(Motion.exit(400)))
-                } else
                 // One continuous surface: a soft cross-fade with a tiny scale, no sideways page jump.
                 ((fadeIn(Motion.enter(320)) + slideInVertically(Motion.enter(380)) { 40 } + scaleIn(initialScale = 0.985f, animationSpec = Motion.enter(320))) togetherWith
                     (fadeOut(Motion.exit(220)) + scaleOut(targetScale = 1.015f, animationSpec = Motion.exit(220))))
@@ -239,16 +239,25 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                     // While you swipe, the page that is leaving softens and shrinks a little, like a card behind.
                     Box(
                         Modifier.fillMaxSize().graphicsLayer {
-                            val off = ((pager.currentPage - page) + pager.currentPageOffsetFraction).absoluteValue.coerceIn(0f, 1f)
-                            alpha = 1f - off * 0.55f
-                            scaleX = 1f - off * 0.05f
-                            scaleY = 1f - off * 0.05f
+                            // Like the prototype: the page slides a third further and fades as it leaves.
+                            val signed = page - (pager.currentPage + pager.currentPageOffsetFraction)
+                            translationX = -signed * size.width * 0.32f
+                            alpha = 1f - signed.absoluteValue.coerceIn(0f, 1f) * 0.8f
                         },
                     ) {
-                        if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0, onOpenWidgets = { scope.launch { pager.animateScrollToPage(1) } }, onOpenQuick = { quickOpen = true })
+                        if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0, onOpenWidgets = { scope.launch { pager.animateScrollToPage(1) } }, onOpenQuick = { quickOpen = true }, onOpenDrawer = { drawerOpen = true })
                         else TodayScreen(state, nav, widgetHost, page = 1, onOpenHome = { scope.launch { pager.animateScrollToPage(0) } })
                     }
                 }
+                com.example.productivitylauncher.ui.home.BottomBar(
+                    pager,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    onApps = { drawerOpen = true },
+                    onPhone = { com.example.productivitylauncher.data.openPhone(context) },
+                    onMessages = { com.example.productivitylauncher.data.openMessages(context) },
+                    onFocus = { scope.launch { pager.animateScrollToPage(1) } },
+                    onSelect = { scope.launch { pager.animateScrollToPage(it) } },
+                )
                 QuickPanel(state, quickOpen, { quickOpen = false })
                 if (PIP_ENABLED && state.pipOn) {
                     // Reading these makes Pip choose again when the minute, the resume or the frog changes.
@@ -312,8 +321,8 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                         )
                     }
                 }
+                AppDrawer(state, drawerOpen, { drawerOpen = false }, onOpenApp = { openApp(it) })
             }
-            Route.Apps -> AppListScreen(state, nav, onOpenApp = { openApp(it) })
             is Route.Gate -> {
                 val app = state.appByPackage(r.pkg)
                 if (app == null) nav.back() else GateScreen(state, app, nav)

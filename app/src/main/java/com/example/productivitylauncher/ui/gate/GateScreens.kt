@@ -179,9 +179,9 @@ private fun ColumnScope.BreatheStep(state: LauncherState, app: AppEntry, onConti
         for (i in 1..total) {
             breathNo = i
             phase = 0
-            scale.animateTo(1f, Motion.slow(4000))
+            scale.animateTo(1f, orbSpec())
             phase = 1
-            scale.animateTo(0.55f, Motion.slow(4000))
+            scale.animateTo(0.55f, orbSpec())
         }
         phase = 2
         scale.animateTo(0.8f, Motion.slow(1500))
@@ -191,17 +191,16 @@ private fun ColumnScope.BreatheStep(state: LauncherState, app: AppEntry, onConti
         }
     }
 
-    Caption("Gated · ${app.label}", color = AppColors.gate)
+    AppText((app.label + " \u00B7 pause first").uppercase(), Modifier.fillMaxWidth(), size = 11.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.sp, mono = true, maxLines = 1)
     AppText("One slow breath\nbefore you decide.", Modifier.padding(top = 10.dp), size = 34.sp, weight = FontWeight.Medium)
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
         Box(Modifier.size(250.dp).scale(scale.value).background(AppColors.text.copy(alpha = 0.07f), CircleShape))
         Box(Modifier.size(250.dp).scale(scale.value).border(1.5.dp, AppColors.text, CircleShape))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             AppText(
-                when (phase) { 0 -> "Breathe in"; 1 -> "Breathe out"; else -> "Well done" },
+                when (phase) { 0 -> "Breathe in"; 1 -> "Breathe out"; else -> "Good" },
                 size = 26.sp, weight = FontWeight.Normal,
             )
-            if (phase < 2) Caption("Breath $breathNo of $total", Modifier.padding(top = 8.dp))
         }
     }
     if (extraWait > 0) {
@@ -378,3 +377,7 @@ fun TimesUpScreen(state: LauncherState, app: AppEntry?, nav: Nav) {
         onSecondary = { if (app != null) nav.go(Route.Gate(app.packageName)) },
     )
 }
+
+private fun <T> orbSpec(): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+    if (Motion.enabled) androidx.compose.animation.core.tween(3000, easing = androidx.compose.animation.core.CubicBezierEasing(0.45f, 0f, 0.3f, 1f))
+    else androidx.compose.animation.core.snap()

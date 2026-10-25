@@ -15,7 +15,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import kotlinx.coroutines.launch
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -90,7 +97,9 @@ fun HomeScreen(
     page: Int,
     onOpenWidgets: () -> Unit,
     onOpenQuick: () -> Unit,
+    onOpenDrawer: () -> Unit,
 ) {
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     val context = LocalContext.current
     val now by produceState(initialValue = Date()) {
         while (true) {
@@ -111,19 +120,9 @@ fun HomeScreen(
         else -> "Rest well."
     }
 
-    Column(Modifier.fillMaxSize()) {
-        // Top row. Tap the date or pull this area down to open Quick actions.
-        Column(
-            Modifier.pointerInput(Unit) {
-                var total = 0f
-                detectVerticalDragGestures(
-                    onDragStart = { total = 0f },
-                    onDragEnd = { if (total > 70f) onOpenQuick() },
-                    onDragCancel = { total = 0f },
-                    onVerticalDrag = { _, dy -> total += dy },
-                )
-            },
-        ) {
+    Column(Modifier.fillMaxSize().verticalSwipes(onUp = onOpenDrawer, onDown = onOpenQuick)) {
+        // Top row. Tap the date to open Quick actions. Swipe up anywhere to open All apps, swipe down from the top for Quick actions.
+        Column {
             Row(
                 Modifier.fillMaxWidth().padding(start = 28.dp, end = 20.dp, top = 12.dp).enterStagger(0, once = true),
                 verticalAlignment = Alignment.CenterVertically,
@@ -147,8 +146,8 @@ fun HomeScreen(
                         Modifier
                             .size(40.dp)
                             .border(1.dp, AppColors.line, CircleShape)
-                            .semantics { contentDescription = "Settings" }
-                            .clickableRole({ nav.go(Route.Settings) }),
+                            .semantics { contentDescription = "Quick actions" }
+                            .clickableRole(onOpenQuick),
                         contentAlignment = Alignment.Center,
                     ) { AppIcon(Ic.Sliders, AppColors.text, size = 18.dp) }
                 }
@@ -171,33 +170,39 @@ fun HomeScreen(
         Hair(0, Modifier.padding(horizontal = 28.dp, vertical = 20.dp))
 
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp),
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 28.dp, end = 28.dp, bottom = 150.dp),
         ) {
-            // Next task.
-            val frog = state.frog
+            // Next task: tap to complete it, like the prototype.
+            val next = state.nextTask
+            var checking by remember { mutableStateOf(false) }
+            val nextText = next?.text ?: if (state.allTasks.isEmpty()) "Add a task on Today" else "All done for today"
             Row(
-                Modifier.fillMaxWidth().enterStagger(2, once = true),
+                Modifier
+                    .fillMaxWidth()
+                    .enterStagger(2, once = true)
+                    .clickableRole({
+                        if (next == null) { if (state.allTasks.isEmpty()) onOpenWidgets() }
+                        else if (!checking) {
+                            checking = true
+                            scope.launch { delay(520); state.toggleAny(next.id); checking = false }
+                        }
+                    }),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                if (frog.isNotBlank()) {
-                    val done = state.frogDone
-                    Box(Modifier.semantics { contentDescription = if (done) "Mark not done" else "Mark done" }.clickableRole({ state.setFrogDone(!done) })) {
-                        CheckCircle(done, size = 30.dp)
+                CheckCircle(checking, size = 30.dp)
+                Column(Modifier.weight(1f)) {
+                    Caption("Up next")
+                    androidx.compose.animation.AnimatedContent(
+                        targetState = nextText,
+                        transitionSpec = {
+                            (androidx.compose.animation.fadeIn(Motion.enter(300)) + androidx.compose.animation.slideInVertically(Motion.enter(300)) { 10 }) togetherWith
+                                androidx.compose.animation.fadeOut(Motion.exit(200))
+                        },
+                        label = "nextTask",
+                    ) { txt ->
+                        AppText(txt, Modifier.padding(top = 2.dp), size = 18.sp, weight = FontWeight.Medium, letterSpacing = (-0.3).sp, maxLines = 2, color = if (next == null) AppColors.muted else AppColors.text)
                     }
-                    Column(Modifier.weight(1f)) {
-                        Caption("Up next")
-                        AppText(
-                            frog, Modifier.padding(top = 2.dp), size = 18.sp, weight = FontWeight.Medium, letterSpacing = (-0.3).sp,
-                            color = if (done) AppColors.muted else AppColors.text, maxLines = 2,
-                        )
-                    }
-                } else {
-                    Column(Modifier.weight(1f).clickableRole(onOpenWidgets).padding(vertical = 4.dp)) {
-                        Caption("Up next")
-                        AppText("Set it on your Widgets page", Modifier.padding(top = 2.dp), size = 18.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = (-0.3).sp)
-                    }
-                    AppIcon(Ic.Chevron, AppColors.muted, size = 18.dp)
                 }
             }
 
@@ -226,13 +231,6 @@ fun HomeScreen(
             }
         }
 
-        Dots(page, onSelect = { if (it == 1) onOpenWidgets() })
-        Dock(
-            onApps = { nav.go(Route.Apps) },
-            onPhone = { openPhone(context) },
-            onMessages = { openMessages(context) },
-            onFocus = { nav.go(Route.Focus) },
-        )
     }
 }
 
@@ -321,24 +319,81 @@ private fun AppRow(app: AppEntry, gated: Boolean, meta: String, onClick: () -> U
     }
 }
 
-/** The Home / Today text tabs with a line that slides under the current one. */
+/** One vertical swipe detector that never steals touches from children or the pager: up opens All apps, down from the top opens Quick actions. */
+fun Modifier.verticalSwipes(onUp: () -> Unit, onDown: () -> Unit): Modifier = pointerInput(Unit) {
+    val limit = 70.dp.toPx()
+    val side = 50.dp.toPx()
+    val topZone = 320.dp.toPx()
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        var last = down.position
+        while (true) {
+            val e = awaitPointerEvent(PointerEventPass.Initial)
+            val c = e.changes.firstOrNull { it.id == down.id } ?: break
+            last = c.position
+            if (!c.pressed) break
+        }
+        val dy = last.y - down.position.y
+        val dx = last.x - down.position.x
+        if (kotlin.math.abs(dx) < side) {
+            if (dy < -limit) onUp() else if (dy > limit && down.position.y < topZone) onDown()
+        }
+    }
+}
+
+/**
+ * The bar under both pages, as in the prototype: All apps pill and three round buttons, then the Home / Today tabs
+ * with a line that follows the pager while you swipe.
+ */
 @Composable
-fun Dots(page: Int, modifier: Modifier = Modifier, onSelect: ((Int) -> Unit)? = null) {
+fun BottomBar(pager: PagerState, onApps: () -> Unit, onPhone: () -> Unit, onMessages: () -> Unit, onFocus: () -> Unit, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier
+            .fillMaxWidth()
+            .background(Brush.verticalGradient(0f to Color.Transparent, 0.38f to AppColors.phone, 1f to AppColors.phone))
+            .padding(start = 22.dp, end = 22.dp, bottom = 14.dp, top = 34.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                Modifier
+                    .height(48.dp)
+                    .background(AppColors.text, RadiusPill)
+                    .clickableRole(onApps)
+                    .padding(start = 16.dp, end = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                AppIcon(Ic.Chevron, AppColors.phone, size = 18.dp, modifier = Modifier.graphicsLayer { rotationZ = -90f })
+                AppText("All apps", size = 15.sp, weight = FontWeight.Medium, color = AppColors.phone, display = false)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                DockButton(Ic.Phone, "Phone", onPhone)
+                DockButton(Ic.Message, "Messages", onMessages)
+                DockButton(Ic.Target, "Focus", onFocus)
+            }
+        }
+        Tabs(pager, onSelect)
+    }
+}
+
+@Composable
+private fun Tabs(pager: PagerState, onSelect: (Int) -> Unit) {
     val labels = listOf("Home", "Today")
-    val density = LocalDensity.current
     val widths = remember { androidx.compose.runtime.mutableStateListOf(0f, 0f) }
     val offsets = remember { androidx.compose.runtime.mutableStateListOf(0f, 0f) }
-    val x by animateFloatAsState(offsets[page.coerceIn(0, 1)] + (widths[page.coerceIn(0, 1)] - with(density) { 20.dp.toPx() }) / 2f, Motion.morph(550), label = "tabX")
-    Box(modifier.fillMaxWidth().padding(top = 6.dp, bottom = 10.dp), contentAlignment = Alignment.TopCenter) {
+    val p = (pager.currentPage + pager.currentPageOffsetFraction).coerceIn(0f, 1f)
+    val idx = Math.round(p)
+    Box(Modifier.fillMaxWidth().padding(bottom = 4.dp), contentAlignment = Alignment.TopCenter) {
         Box {
             Row(horizontalArrangement = Arrangement.spacedBy(26.dp)) {
                 labels.forEachIndexed { i, l ->
-                    val tint by animateColorAsState(if (i == page) AppColors.text else AppColors.muted, Motion.state(300), label = "tabTint")
+                    val tint by animateColorAsState(if (i == idx) AppColors.text else AppColors.muted, Motion.state(160), label = "tabTint")
                     Caption(
                         l,
                         Modifier
                             .onGloballyPositioned { c -> widths[i] = c.size.width.toFloat(); offsets[i] = c.positionInParent().x }
-                            .then(if (onSelect != null) Modifier.clickableRole({ onSelect(i) }) else Modifier)
+                            .clickableRole({ onSelect(i) })
                             .padding(vertical = 8.dp),
                         color = tint,
                     )
@@ -347,37 +402,11 @@ fun Dots(page: Int, modifier: Modifier = Modifier, onSelect: ((Int) -> Unit)? = 
             Box(
                 Modifier
                     .align(Alignment.BottomStart)
-                    .graphicsLayer { translationX = x }
-                    .size(width = 20.dp, height = 1.5.dp)
+                    .graphicsLayer { translationX = offsets[0] + (offsets[1] - offsets[0]) * p }
+                    .width(with(LocalDensity.current) { (widths[0] + (widths[1] - widths[0]) * p).toDp() })
+                    .height(1.5.dp)
                     .background(AppColors.text),
             )
-        }
-    }
-}
-
-@Composable
-private fun Dock(onApps: () -> Unit, onPhone: () -> Unit, onMessages: () -> Unit, onFocus: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Row(
-            Modifier
-                .height(48.dp)
-                .background(AppColors.text, RadiusPill)
-                .clickableRole(onApps)
-                .padding(start = 16.dp, end = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            AppIcon(Ic.Chevron, AppColors.phone, size = 18.dp, modifier = Modifier.graphicsLayer { rotationZ = -90f })
-            AppText("All apps", size = 15.sp, weight = FontWeight.Medium, color = AppColors.phone, display = false)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            DockButton(Ic.Phone, "Phone", onPhone)
-            DockButton(Ic.Message, "Messages", onMessages)
-            DockButton(Ic.Target, "Focus", onFocus)
         }
     }
 }

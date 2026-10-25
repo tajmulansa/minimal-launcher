@@ -161,7 +161,30 @@ class LauncherState(context: Context) {
     }
 
     /** The other tasks wait until the frog is eaten. With no frog set, nothing waits. */
-    val tasksLocked: Boolean get() = frog.isNotBlank() && !frogDone
+    val tasksLocked: Boolean get() = false
+
+    /** One plain list for the UI: the first task (kept as the "frog" for Pip and Focus) followed by the rest. */
+    val allTasks: List<Task> get() =
+        (if (frog.isNotBlank()) listOf(Task(MAIN_ID, frog, frogDone)) else emptyList()) + tasks
+
+    /** The first task that is not done yet. */
+    val nextTask: Task? get() = allTasks.firstOrNull { !it.done }
+
+    fun toggleAny(id: String) {
+        if (id == MAIN_ID) setFrogDone(!frogDone) else writeTasks(tasks.map { if (it.id == id) it.copy(done = !it.done) else it })
+    }
+
+    fun addAny(text: String) {
+        if (text.isBlank()) return
+        if (frog.isBlank()) updateFrog(text.trim()) else addTask(text)
+    }
+
+    fun removeAny(id: String) {
+        if (id != MAIN_ID) { removeTask(id); return }
+        val first = tasks.firstOrNull()
+        setFrogDone(false)
+        if (first == null) updateFrog("") else { updateFrog(first.text); writeTasks(tasks.drop(1)) }
+    }
 
     fun addTask(text: String) {
         if (text.isBlank()) return
@@ -169,7 +192,6 @@ class LauncherState(context: Context) {
     }
 
     fun toggleTask(id: String) {
-        if (tasksLocked) return
         writeTasks(tasks.map { if (it.id == id) it.copy(done = !it.done) else it })
     }
 

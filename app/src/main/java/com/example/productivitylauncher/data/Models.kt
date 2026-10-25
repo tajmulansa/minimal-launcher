@@ -47,3 +47,4 @@ enum class GateSetting(val key: String) {
 
 /** A weakening change that is waiting for its 24 hour delay to pass. */
 data class PendingChange(val value: Int, val applyAt: Long)
+const val MAIN_ID = "main"
