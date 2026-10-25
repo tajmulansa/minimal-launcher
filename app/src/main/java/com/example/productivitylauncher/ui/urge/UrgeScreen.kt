@@ -6,6 +6,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.graphicsLayer
@@ -34,6 +35,7 @@ import com.example.productivitylauncher.data.openMessages
 import com.example.productivitylauncher.data.openPhone
 import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
+import com.example.productivitylauncher.ui.components.Caption
 import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.clickableRole
 import com.example.productivitylauncher.ui.theme.AppColors
@@ -57,14 +59,14 @@ fun UrgeScreen(remainingMillis: Long) {
         Box(
             Modifier
                 .size(300.dp)
-                .graphicsLayer { scaleX = 0.8f + 0.28f * phase; scaleY = 0.8f + 0.28f * phase; alpha = 0.55f + 0.45f * phase }
-                .background(ringColor.copy(alpha = 0.07f), CircleShape),
+                .graphicsLayer { scaleX = 0.7f + 0.3f * phase; scaleY = 0.7f + 0.3f * phase }
+                .background(AppColors.text.copy(alpha = 0.05f), CircleShape),
         )
         Box(
             Modifier
-                .size(210.dp)
-                .graphicsLayer { scaleX = 0.9f + 0.18f * phase; scaleY = 0.9f + 0.18f * phase }
-                .background(ringColor.copy(alpha = 0.07f), CircleShape),
+                .size(300.dp)
+                .graphicsLayer { scaleX = 0.7f + 0.3f * phase; scaleY = 0.7f + 0.3f * phase }
+                .border(1.5.dp, AppColors.text.copy(alpha = 0.5f), CircleShape),
         )
     }
     Column(
@@ -72,17 +74,17 @@ fun UrgeScreen(remainingMillis: Long) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        AppText("TAKE A BREAK", Modifier.enterStagger(0), size = 13.sp, weight = FontWeight.Bold, color = AppColors.gate, letterSpacing = 2.sp)
-        Spacer(Modifier.height(16.dp))
-        AppText(clock, size = 88.sp, weight = FontWeight.Bold, mono = true)
+        Caption("Take a break", Modifier.enterStagger(0), color = AppColors.gate)
+        Spacer(Modifier.height(12.dp))
+        AppText(clock, Modifier.enterStagger(1), size = 88.sp, weight = FontWeight.Light, letterSpacing = (-4).sp)
         Spacer(Modifier.height(12.dp))
         AppText(
             modifier = Modifier.enterStagger(2),
             text = "This feeling passes. Put the phone down, breathe, or talk to someone.",
-            size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp,
+            size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, display = false,
         )
         Spacer(Modifier.height(44.dp))
-        Row(Modifier.enterStagger(3), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+        Row(Modifier.enterStagger(3), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
             UrgeButton(Ic.Phone, "Call") { openPhone(context) }
             UrgeButton(Ic.Message, "Message") { openMessages(context) }
         }
@@ -94,11 +96,11 @@ private fun UrgeButton(icon: Ic, label: String, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier
-                .size(88.dp)
-                .background(AppColors.card, RoundedCornerShape(20.dp))
+                .size(72.dp)
+                .border(1.dp, AppColors.line, CircleShape)
                 .clickableRole(onClick, Role.Button),
             contentAlignment = Alignment.Center,
-        ) { AppIcon(icon, AppColors.text, size = 34.dp) }
-        AppText(label, size = 14.sp, weight = FontWeight.SemiBold, color = AppColors.muted, modifier = Modifier.padding(top = 10.dp))
+        ) { AppIcon(icon, AppColors.text, size = 26.dp) }
+        Caption(label, Modifier.padding(top = 10.dp))
     }
 }

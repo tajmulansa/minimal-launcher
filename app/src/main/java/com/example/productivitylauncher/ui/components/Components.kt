@@ -66,9 +66,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.ui.theme.AppColors
+import com.example.productivitylauncher.ui.theme.Display
 import com.example.productivitylauncher.ui.theme.Mono
 import com.example.productivitylauncher.ui.theme.Sans
 import com.example.productivitylauncher.ui.theme.enterStagger
@@ -95,17 +97,23 @@ fun AppText(
     maxLines: Int = Int.MAX_VALUE,
     mono: Boolean = false,
     strike: Boolean = false,
+    display: Boolean? = null,
 ) {
+    // Large text uses the display face with tight tracking, like the prototype. Small text stays in Geist.
+    val useDisplay = !mono && (display ?: (size.value >= 19f))
+    val tracking = if (letterSpacing != TextUnit.Unspecified || !useDisplay) letterSpacing
+        else if (size.value >= 48f) (-0.05).em else if (size.value >= 28f) (-0.04).em else (-0.02).em
+    val leading = if (lineHeight != TextUnit.Unspecified || !useDisplay || size.value < 24f) lineHeight else size * 1.1f
     androidx.compose.material3.Text(
         text = text,
         modifier = modifier,
         color = color,
         fontSize = size,
         fontWeight = weight,
-        fontFamily = if (mono) Mono else Sans,
-        letterSpacing = letterSpacing,
+        fontFamily = if (mono) Mono else if (useDisplay) Display else Sans,
+        letterSpacing = tracking,
         textAlign = align,
-        lineHeight = lineHeight,
+        lineHeight = leading,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         textDecoration = if (strike) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,

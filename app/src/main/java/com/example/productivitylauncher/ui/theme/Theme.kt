@@ -103,6 +103,16 @@ val Sans = FontFamily(
     Font(R.font.geist_semibold, FontWeight.ExtraBold),
 )
 
+/** Bricolage Grotesque: display type (titles, clock, big numbers, app names), as in the Still prototype. */
+val Display = FontFamily(
+    Font(R.font.bricolage_light, FontWeight.Light),
+    Font(R.font.bricolage_regular, FontWeight.Normal),
+    Font(R.font.bricolage_medium, FontWeight.Medium),
+    Font(R.font.bricolage_semibold, FontWeight.SemiBold),
+    Font(R.font.bricolage_semibold, FontWeight.Bold),
+    Font(R.font.bricolage_semibold, FontWeight.ExtraBold),
+)
+
 /** Geist Mono: small uppercase labels and data. */
 val Mono = FontFamily(
     Font(R.font.geist_mono_regular, FontWeight.Normal),
