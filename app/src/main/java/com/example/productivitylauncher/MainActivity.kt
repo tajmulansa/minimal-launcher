@@ -27,7 +27,7 @@ import com.example.productivitylauncher.ui.theme.resolvePalette
  * so Android can offer it as the default launcher.
  */
 /** 1.0 is Android's normal size. */
-private const val UI_SCALE = 0.88f
+private const val DESIGN_WIDTH_DP = 390f
 
 class MainActivity : ComponentActivity() {
 
@@ -53,8 +53,11 @@ class MainActivity : ComponentActivity() {
                 onDispose { }
             }
             // Everything is drawn a little smaller than the Android default: sizes and text scale together.
+            // Like the prototype, whatever the phone: the screen is always 390 design units wide, so every proportion matches.
             val density = LocalDensity.current
-            CompositionLocalProvider(LocalDensity provides Density(density.density * UI_SCALE, density.fontScale)) {
+            val widthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+            val scale = (widthDp / DESIGN_WIDTH_DP).coerceIn(0.8f, 1.3f)
+            CompositionLocalProvider(LocalDensity provides Density(density.density * scale, density.fontScale)) {
                 LauncherTheme(palette) {
                     LauncherApp(state = state, widgetHost = widgetHost, homeSignal = homeSignal)
                 }

@@ -11,7 +11,7 @@ cat > /tmp/launcher.xml <<'X'
 <map>
 <boolean name="onboarded" value="true" />
 <string name="tasks">[{"id":"1","text":"Read chapter 3","done":true},{"id":"2","text":"Email Prof. Rao","done":true},{"id":"3","text":"Finish chemistry chapter 4","done":false},{"id":"4","text":"Physics problem sheet","done":false},{"id":"5","text":"Plan revision","done":false}]</string>
-<string name="home_apps">["com.android.settings","com.android.chrome","com.android.contacts","com.android.camera2"]</string>
+<string name="home_apps">["com.android.settings","com.android.chrome","com.android.contacts","com.android.camera2","com.google.android.calendar","com.google.android.deskclock","com.android.calculator2"]</string>
 <set name="gated"><string>com.android.chrome</string></set>
 </map>
 X
@@ -22,27 +22,33 @@ adb shell cmd package set-home-activity $P/.MainActivity
 adb shell input keyevent 3; sleep 1
 adb shell am start -n $P/.MainActivity
 shot 01_home 7
-adb shell input swipe 900 1200 150 1200 300
-shot 02_today 3
+tap_text(){ adb shell uiautomator dump /sdcard/u.xml >/dev/null; adb pull /sdcard/u.xml /tmp/u.xml >/dev/null
+  python3 - "$1" <<'PY'
+import re,sys,subprocess
+x=open('/tmp/u.xml',encoding='utf8').read()
+for m in re.finditer(r'(?:text|content-desc)="([^"]*)"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',x):
+    if m.group(1).lower().startswith(sys.argv[1].lower()):
+        cx=(int(m.group(2))+int(m.group(4)))//2;cy=(int(m.group(3))+int(m.group(5)))//2
+        subprocess.call(['adb','shell','input','tap',str(cx),str(cy)]);print('tapped',m.group(1),cx,cy);break
+else: print('not found',sys.argv[1])
+PY
+}
+tap_text TODAY; shot 02_today 3
 adb shell input swipe 540 1900 540 700 400
 shot 03_today_scrolled 2
-adb shell input swipe 540 700 540 1900 400
-adb shell input swipe 540 1200 540 1900 400
-adb shell input swipe 150 1200 900 1200 300
-sleep 2
+tap_text HOME; sleep 2
 adb shell input swipe 540 1700 540 800 250
 shot 04_drawer 3
-adb shell input tap 540 400
+tap_text "Search apps"; sleep 1
 adb shell input text Chrome
 shot 05_drawer_search 2
-adb shell input tap 300 560
+tap_text Chrome; sleep 1
 shot 06_gate 2
 shot 07_gate_later 8
 adb shell input keyevent 4
-adb shell input keyevent 4
+sleep 1
 adb shell input keyevent 3
 sleep 2
-adb shell input tap 300 200
+tap_text "Quick actions"
 shot 08_quick 3
-adb shell uiautomator dump /sdcard/ui.xml; adb pull /sdcard/ui.xml shots/ui.xml
 adb logcat -d -s AndroidRuntime:E > shots/crash.txt

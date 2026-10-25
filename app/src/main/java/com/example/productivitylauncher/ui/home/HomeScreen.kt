@@ -201,7 +201,7 @@ fun HomeScreen(
                         },
                         label = "nextTask",
                     ) { txt ->
-                        AppText(txt, Modifier.padding(top = 2.dp), size = 18.sp, weight = FontWeight.Medium, letterSpacing = (-0.3).sp, maxLines = 2, color = if (next == null) AppColors.muted else AppColors.text)
+                        AppText(txt, Modifier.padding(top = 2.dp), size = 19.sp, weight = FontWeight.Medium, letterSpacing = (-0.4).sp, maxLines = 1, color = if (next == null) AppColors.muted else AppColors.text)
                     }
                 }
             }
@@ -370,7 +370,7 @@ fun BottomBar(pager: PagerState, onApps: () -> Unit, onPhone: () -> Unit, onMess
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DockButton(Ic.Phone, "Phone", onPhone)
                 DockButton(Ic.Message, "Messages", onMessages)
-                DockButton(Ic.Target, "Focus", onFocus)
+                DockButton(Ic.Timer, "Focus", onFocus)
             }
         }
         Tabs(pager, onSelect)
