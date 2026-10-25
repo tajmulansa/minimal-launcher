@@ -98,6 +98,7 @@ fun AppText(
     mono: Boolean = false,
     strike: Boolean = false,
     display: Boolean? = null,
+    tnum: Boolean = false,
 ) {
     // Large text uses the display face with tight tracking, like the prototype. Small text stays in Geist.
     val useDisplay = !mono && (display ?: (size.value >= 19f))
@@ -117,6 +118,7 @@ fun AppText(
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         textDecoration = if (strike) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
+        style = if (tnum) androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum") else androidx.compose.ui.text.TextStyle.Default,
     )
 }
 

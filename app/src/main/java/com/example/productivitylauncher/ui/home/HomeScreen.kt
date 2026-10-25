@@ -107,7 +107,7 @@ fun HomeScreen(
             delay(60_000L - System.currentTimeMillis() % 60_000L)
         }
     }
-    val dateLine = SimpleDateFormat("EEEE, d MMM", Locale.getDefault()).format(now)
+    val dateLine = SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(now)
     val cal = Calendar.getInstance().apply { time = now }
     val hour24 = cal.get(Calendar.HOUR_OF_DAY)
     val use24 = DateFormat.is24HourFormat(context)
@@ -193,12 +193,9 @@ fun HomeScreen(
                 CheckCircle(checking, size = 30.dp)
                 Column(Modifier.weight(1f)) {
                     Caption("Up next")
-                    androidx.compose.animation.AnimatedContent(
+                    androidx.compose.animation.Crossfade(
                         targetState = nextText,
-                        transitionSpec = {
-                            (androidx.compose.animation.fadeIn(Motion.enter(300)) + androidx.compose.animation.slideInVertically(Motion.enter(300)) { 10 }) togetherWith
-                                androidx.compose.animation.fadeOut(Motion.exit(200))
-                        },
+                        animationSpec = Motion.enter(300),
                         label = "nextTask",
                     ) { txt ->
                         AppText(txt, Modifier.padding(top = 2.dp), size = 19.sp, weight = FontWeight.Medium, letterSpacing = (-0.4).sp, maxLines = 1, color = if (next == null) AppColors.muted else AppColors.text)
@@ -246,15 +243,14 @@ private fun Odometer(digit: Int, delayMs: Int, size: TextUnit) {
         if (Motion.enabled) tween<Float>(900, delayMillis = if (Intro.played) 0 else delayMs, easing = Motion.Soft) else snap(),
         label = "digit",
     )
-    Box(Modifier.width(with(density) { size.toDp() } * 0.56f).height(cell).clipToBounds()) {
+    Box(Modifier.height(cell).clipToBounds()) {
         Column(
-            Modifier
-                .wrapContentSize(Alignment.TopCenter, unbounded = true)
-                .graphicsLayer { translationY = -y * cell.toPx() },
+            Modifier.graphicsLayer { translationY = -y * cell.toPx() },
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             for (d in 0..9) {
                 Box(Modifier.height(cell), contentAlignment = Alignment.Center) {
-                    AppText(d.toString(), size = size, weight = FontWeight.Light, letterSpacing = (-0.06).em, lineHeight = size)
+                    AppText(d.toString(), size = size, weight = FontWeight.Light, letterSpacing = (-0.06).em, lineHeight = size, tnum = true)
                 }
             }
         }
@@ -311,7 +307,7 @@ private fun AppRow(app: AppEntry, gated: Boolean, meta: String, onClick: () -> U
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AppText(
-            app.label, Modifier.weight(1f), size = 32.sp, weight = FontWeight.Medium, letterSpacing = (-1.3).sp,
+            app.label, Modifier.weight(1f), size = 32.sp, weight = FontWeight.Medium, letterSpacing = (-1.3).sp, lineHeight = 36.8.sp,
             color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
         )
         if (gated) GatedTag()

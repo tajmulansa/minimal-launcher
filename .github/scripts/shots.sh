@@ -42,13 +42,13 @@ shot 04_drawer 3
 tap_text "Search apps"; sleep 1
 adb shell input text Chrome
 shot 05_drawer_search 2
-tap_text Chrome; sleep 1
+adb shell input tap 300 810; sleep 1
 shot 06_gate 2
 shot 07_gate_later 8
 adb shell input keyevent 4
 sleep 1
 adb shell input keyevent 3
 sleep 2
-tap_text "Quick actions"
+sleep 3; tap_text "Quick actions"
 shot 08_quick 3
 adb logcat -d -s AndroidRuntime:E > shots/crash.txt

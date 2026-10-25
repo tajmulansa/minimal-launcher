@@ -292,15 +292,15 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
             val left = (state.focusEnd - now).coerceAtLeast(0)
             val totalMs = if (active) state.focusTotalMs else state.frogMinutes * 60_000L
             val progress = if (active && totalMs > 0) (left.toFloat() / totalMs).coerceIn(0f, 1f) else 1f
-            Box(Modifier.padding(top = 26.dp).fillMaxWidth().enterStagger(1), contentAlignment = Alignment.Center) {
+            Box(Modifier.padding(top = 40.dp).fillMaxWidth().enterStagger(1), contentAlignment = Alignment.Center) {
                 Ring(progress, 236.dp, 2.dp, AppColors.focus, AppColors.line) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        AppText(if (active) formatClock(left) else "%02d:00".format(state.frogMinutes), size = 60.sp, weight = FontWeight.Light, letterSpacing = (-3).sp)
+                        AppText(if (active) formatClock(left) else "%02d:00".format(state.frogMinutes), size = 60.sp, weight = FontWeight.Light, letterSpacing = (-3).sp, tnum = true)
                         AppText((state.nextTask?.text ?: if (total == 0) "Add a task below" else "Rest").uppercase(), Modifier.padding(horizontal = 12.dp), size = 11.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.sp, mono = true, maxLines = 1, align = TextAlign.Center)
                     }
                 }
             }
-            Row(Modifier.padding(top = 22.dp).fillMaxWidth().enterStagger(2), horizontalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(top = 44.dp).fillMaxWidth().enterStagger(2), horizontalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
                 if (!active) StepCircle("−5") { state.updateFrogMinutes(state.frogMinutes - 5) }
                 val canStart = active || state.nextTask != null
                 Box(
