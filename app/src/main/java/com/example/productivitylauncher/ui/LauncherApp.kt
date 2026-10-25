@@ -68,9 +68,8 @@ import com.example.productivitylauncher.ui.pip.PipDock
 import com.example.productivitylauncher.ui.settings.SettingsScreen
 import com.example.productivitylauncher.ui.urge.UrgeScreen
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.widgets.AddWidgetScreen
 import com.example.productivitylauncher.ui.widgets.BrainDumpScreen
-import com.example.productivitylauncher.ui.widgets.WidgetsScreen
+import com.example.productivitylauncher.ui.today.TodayScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -234,7 +233,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                         },
                     ) {
                         if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0, onOpenWidgets = { scope.launch { pager.animateScrollToPage(1) } }, onOpenQuick = { quickOpen = true })
-                        else WidgetsScreen(state, nav, widgetHost, page = 1, onOpenHome = { scope.launch { pager.animateScrollToPage(0) } })
+                        else TodayScreen(state, nav, page = 1, onOpenHome = { scope.launch { pager.animateScrollToPage(0) } })
                     }
                 }
                 QuickPanel(state, quickOpen, { quickOpen = false })
@@ -307,7 +306,6 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                 if (app == null) nav.back() else GateScreen(state, app, nav)
             }
             Route.BrainDump -> BrainDumpScreen(state, nav)
-            Route.AddWidget -> AddWidgetScreen(state, nav, widgetHost)
             Route.Focus -> FocusScreen(state, nav)
             Route.Evening -> EveningScreen(state, nav)
             Route.Week -> WeekScreen(state, nav)

@@ -6,7 +6,6 @@ sealed interface Route {
     data object Apps : Route
     data class Gate(val pkg: String) : Route
     data object BrainDump : Route
-    data object AddWidget : Route
     data object Focus : Route
     data object Evening : Route
     data object Week : Route

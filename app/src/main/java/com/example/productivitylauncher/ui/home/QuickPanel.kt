@@ -86,7 +86,6 @@ fun QuickPanel(state: LauncherState, visible: Boolean, onDismiss: () -> Unit, mo
             enter = slideInVertically(Motion.morph(520)) { -it } + fadeIn(Motion.enter(260)),
             exit = slideOutVertically(Motion.exit(320)) { -it } + fadeOut(Motion.exit(220)),
         ) {
-            var dnd by remember { mutableStateOf(isDndOn(context)) }
             Column(
                 Modifier
                     .fillMaxWidth()
@@ -108,18 +107,7 @@ fun QuickPanel(state: LauncherState, visible: Boolean, onDismiss: () -> Unit, mo
                     Caption("Quick actions")
                     Caption("Swipe up to close")
                 }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    QuickToggle(Ic.Moon, "Silent", dnd) {
-                        if (setDnd(context, !dnd)) dnd = !dnd else openDndSettings(context)
-                    }
-                    QuickToggle(Ic.Lock, "Lock in", state.lockIn) { state.updateLockIn(!state.lockIn) }
-                    QuickToggle(Ic.Bolt, "Red button", state.urgeButtonOn) {
-                        val on = !state.urgeButtonOn
-                        state.updateUrgeButton(on)
-                        if (on && !canDrawOverlays(context)) openOverlaySettings(context)
-                    }
-                    QuickToggle(Ic.Play, "Animations", state.animations) { state.updateAnimations(!state.animations) }
-                }
+                QuickRow(state)
                 Rule()
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Caption("Theme")
@@ -141,6 +129,25 @@ fun QuickPanel(state: LauncherState, visible: Boolean, onDismiss: () -> Unit, mo
                 }
             }
         }
+    }
+}
+
+/** The four everyday switches. Used in the quick panel and on the Today page. */
+@Composable
+fun QuickRow(state: LauncherState) {
+    val context = LocalContext.current
+    var dnd by remember { mutableStateOf(isDndOn(context)) }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        QuickToggle(Ic.Moon, "Silent", dnd) {
+            if (setDnd(context, !dnd)) dnd = !dnd else openDndSettings(context)
+        }
+        QuickToggle(Ic.Lock, "Lock in", state.lockIn) { state.updateLockIn(!state.lockIn) }
+        QuickToggle(Ic.Bolt, "Red button", state.urgeButtonOn) {
+            val on = !state.urgeButtonOn
+            state.updateUrgeButton(on)
+            if (on && !canDrawOverlays(context)) openOverlaySettings(context)
+        }
+        QuickToggle(Ic.Play, "Animations", state.animations) { state.updateAnimations(!state.animations) }
     }
 }
 
