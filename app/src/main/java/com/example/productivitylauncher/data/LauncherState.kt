@@ -644,6 +644,10 @@ class LauncherState(context: Context) {
     var weekMs by mutableStateOf<List<Long>>(emptyList())
         private set
 
+    /** Time spent in each app today (package name to milliseconds), without this launcher. */
+    var appMsToday by mutableStateOf<Map<String, Long>>(emptyMap())
+        private set
+
     /** Reads usage numbers on the calling thread. Call it off the main thread. */
     fun refreshUsage() {
         val reader = UsageReader(appContext)
@@ -654,6 +658,7 @@ class LauncherState(context: Context) {
             gatedMs = null
             activeMs45 = null
             weekMs = emptyList()
+            appMsToday = emptyMap()
             return
         }
         val now = System.currentTimeMillis()
@@ -672,6 +677,7 @@ class LauncherState(context: Context) {
         gatedMs = gatedTotal
         activeMs45 = reader.activeMsInLast(45 * 60_000L)
         weekMs = week
+        appMsToday = perApp.filterKeys { it != own }
     }
 
     /** Time used in gated apps today: real usage if allowed, otherwise the minutes the user booked. */

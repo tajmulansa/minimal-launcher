@@ -53,6 +53,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.TextUnit
 import com.example.productivitylauncher.data.AppEntry
@@ -157,11 +158,11 @@ fun HomeScreen(
             Column(Modifier.padding(start = 28.dp, end = 28.dp, top = 22.dp).enterStagger(1, once = true)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val hs = shownHour.toString().padStart(2, '0')
-                    Odometer(hs[0].digitToInt(), 0, 92.sp)
-                    Odometer(hs[1].digitToInt(), 90, 92.sp)
-                    Colon(92.sp)
-                    Odometer(minute / 10, 180, 92.sp)
-                    Odometer(minute % 10, 270, 92.sp)
+                    Odometer(hs[0].digitToInt(), 0, 112.sp)
+                    Odometer(hs[1].digitToInt(), 90, 112.sp)
+                    Colon(112.sp)
+                    Odometer(minute / 10, 180, 112.sp)
+                    Odometer(minute % 10, 270, 112.sp)
                 }
                 AppText(greeting, Modifier.padding(top = 8.dp), size = 22.sp, weight = FontWeight.Normal, color = AppColors.muted)
             }
@@ -209,7 +210,7 @@ fun HomeScreen(
             }
             shown.forEachIndexed { i, app ->
                 Box(Modifier.enterStagger(3 + i, once = true)) {
-                    AppRow(app, gated = state.isGated(app.packageName), onClick = { onOpenApp(app) })
+                    AppRow(app, gated = state.isGated(app.packageName), meta = state.appMsToday[app.packageName]?.takeIf { it >= 60_000L }?.let { formatMillis(it) } ?: "", onClick = { onOpenApp(app) })
                 }
             }
             LaunchedEffect(Unit) { delay(900); Intro.played = true }
@@ -239,7 +240,7 @@ fun HomeScreen(
 @Composable
 private fun Odometer(digit: Int, delayMs: Int, size: TextUnit) {
     val density = LocalDensity.current
-    val cell = with(density) { size.toDp() } * 1.05f
+    val cell = with(density) { size.toDp() }
     var target by remember { mutableStateOf(if (Intro.played) digit else 0) }
     LaunchedEffect(digit) { target = digit }
     val y by animateFloatAsState(
@@ -247,7 +248,7 @@ private fun Odometer(digit: Int, delayMs: Int, size: TextUnit) {
         if (Motion.enabled) tween<Float>(900, delayMillis = if (Intro.played) 0 else delayMs, easing = Motion.Soft) else snap(),
         label = "digit",
     )
-    Box(Modifier.width(with(density) { size.toDp() } * 0.6f).height(cell).clipToBounds()) {
+    Box(Modifier.width(with(density) { size.toDp() } * 0.56f).height(cell).clipToBounds()) {
         Column(
             Modifier
                 .wrapContentSize(Alignment.TopCenter, unbounded = true)
@@ -255,7 +256,7 @@ private fun Odometer(digit: Int, delayMs: Int, size: TextUnit) {
         ) {
             for (d in 0..9) {
                 Box(Modifier.height(cell), contentAlignment = Alignment.Center) {
-                    AppText(d.toString(), size = size, weight = FontWeight.Light, letterSpacing = (-4).sp)
+                    AppText(d.toString(), size = size, weight = FontWeight.Light, letterSpacing = (-0.06).em, lineHeight = size)
                 }
             }
         }
@@ -298,7 +299,7 @@ fun Hair(index: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AppRow(app: AppEntry, gated: Boolean, onClick: () -> Unit) {
+private fun AppRow(app: AppEntry, gated: Boolean, meta: String, onClick: () -> Unit) {
     val source = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val shift by animateFloatAsState(if (pressed) 8f else 0f, Motion.press(), label = "shift")
@@ -312,10 +313,11 @@ private fun AppRow(app: AppEntry, gated: Boolean, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AppText(
-            app.label, Modifier.weight(1f, fill = false), size = 32.sp, weight = FontWeight.Medium, letterSpacing = (-1.3).sp,
+            app.label, Modifier.weight(1f), size = 32.sp, weight = FontWeight.Medium, letterSpacing = (-1.3).sp,
             color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
         )
         if (gated) GatedTag()
+        if (meta.isNotEmpty()) AppText(meta, size = 11.sp, color = AppColors.muted, mono = true)
     }
 }
 

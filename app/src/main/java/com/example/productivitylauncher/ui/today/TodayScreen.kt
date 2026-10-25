@@ -294,7 +294,7 @@ internal fun TaskRow(
 
 /** The Today page, as in the prototype: Focus ring, quick actions, week dots, screen time and tasks. */
 @Composable
-fun TodayScreen(state: LauncherState, nav: Nav, page: Int, onOpenHome: () -> Unit) {
+fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onOpenHome: () -> Unit) {
     val context = LocalContext.current
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val active = state.focusActive
@@ -371,6 +371,20 @@ fun TodayScreen(state: LauncherState, nav: Nav, page: Int, onOpenHome: () -> Uni
 
             Hair(2, Modifier.padding(vertical = 22.dp))
             TodoWidget(state)
+
+            Hair(3, Modifier.padding(vertical = 22.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Caption("Widgets")
+                Caption("+ Add", Modifier.clickableRole({ nav.go(Route.AddWidget) }).padding(vertical = 8.dp), color = AppColors.text)
+            }
+            val ext = state.widgets.filter { it.startsWith("ext:") }
+            if (ext.isEmpty()) {
+                AppText("Add a widget from another app, like a calendar or weather.", Modifier.padding(top = 4.dp), size = 15.sp, color = AppColors.muted, display = false)
+            }
+            ext.forEach { id ->
+                Column(Modifier.padding(top = 16.dp)) { ExternalWidget(id.removePrefix("ext:").toIntOrNull(), state, host) }
+            }
+            Spacer(Modifier.height(24.dp))
         }
         Dots(page, onSelect = { if (it == 0) onOpenHome() })
     }
@@ -387,7 +401,10 @@ private fun StepCircle(text: String, onClick: () -> Unit) {
 @Composable
 private fun WeekDots(state: LauncherState) {
     val now = System.currentTimeMillis()
+    var streak = 0
+    while (streak < 400 && dayKey(now - streak * DAY_MS) in state.eatenDays) streak++
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+        Caption("$streak day\nstreak", Modifier.align(Alignment.CenterVertically))
         for (i in 6 downTo 0) {
             val t = now - i * DAY_MS
             val on = dayKey(t) in state.eatenDays
@@ -402,30 +419,82 @@ private fun WeekDots(state: LauncherState) {
     }
 }
 
-/** One thin bar per day of the last week. */
+/** One thin bar for each of today's most used apps, like the prototype. */
 @Composable
 private fun ScreenBars(state: LauncherState, context: android.content.Context) {
-    val week = state.weekMs
-    if (week.size != 7) {
+    if (!state.usageAccess) {
         Column(Modifier.padding(top = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             AppText("Allow usage access to see your screen time.", size = 15.sp, color = AppColors.muted, display = false)
             TextLink("Allow usage access", { openUsageAccessSettings(context) }, Modifier.align(Alignment.Start))
         }
         return
     }
-    val now = System.currentTimeMillis()
-    val max = maxOf(state.screenGoalMin * 60_000L, week.max()).coerceAtLeast(1L)
+    val top = state.appMsToday.entries
+        .sortedByDescending { it.value }
+        .mapNotNull { e -> state.appByPackage(e.key)?.let { it.label to e.value } }
+        .filter { it.second >= 60_000L }
+        .take(5)
+    if (top.isEmpty()) {
+        AppText("Nothing used yet today.", Modifier.padding(top = 14.dp), size = 15.sp, color = AppColors.muted, display = false)
+        return
+    }
+    val max = top.maxOf { it.second }.coerceAtLeast(1L)
     Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(15.dp)) {
-        week.forEachIndexed { i, ms ->
+        top.forEachIndexed { i, (name, ms) ->
             var shown by remember { mutableStateOf(!Motion.enabled) }
             LaunchedEffect(Unit) { delay(500L + 90L * i); shown = true }
             val p by animateFloatAsState(if (shown) (ms.toFloat() / max).coerceIn(0f, 1f) else 0f, Motion.slow(1200), label = "bar")
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                AppText(java.text.SimpleDateFormat("EEE", java.util.Locale.getDefault()).format(java.util.Date(now - (6 - i) * DAY_MS)), Modifier.width(56.dp), size = 15.sp, display = false, color = if (i == 6) AppColors.text else AppColors.muted)
+                AppText(name, Modifier.width(86.dp), size = 15.sp, maxLines = 1, display = false)
                 Box(Modifier.weight(1f).height(3.dp).background(AppColors.line, RoundedCornerShape(2.dp))) {
                     Box(Modifier.fillMaxWidth(p).height(3.dp).background(AppColors.text, RoundedCornerShape(2.dp)))
                 }
-                AppText(formatMillis(ms), Modifier.width(52.dp), size = 11.sp, mono = true, color = AppColors.muted, align = TextAlign.End)
+                AppText(formatMillis(ms), Modifier.width(44.dp), size = 11.sp, mono = true, color = AppColors.muted, align = TextAlign.End)
+            }
+        }
+    }
+}
+
+/** A widget from another app, shown flat on the Today page. Resize it or remove it from here. */
+@Composable
+internal fun ExternalWidget(appWidgetId: Int?, state: LauncherState, host: WidgetHost) {
+    val context = LocalContext.current
+    if (appWidgetId == null) return
+    val info = remember(appWidgetId) { host.manager.getAppWidgetInfo(appWidgetId) }
+    if (info == null) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Caption("Widget unavailable")
+                Caption("Remove", Modifier.clickableRole({ host.delete(appWidgetId); state.removeWidgetId("ext:$appWidgetId") }), color = AppColors.gate)
+            }
+            AppText("This widget's app is no longer installed.", size = 15.sp, color = AppColors.muted, display = false)
+        }
+        return
+    }
+    val density = context.resources.displayMetrics.density
+    val defaultHeight = (info.minHeight / density).toInt().coerceIn(80, 400)
+    val heightDp = state.widgetHeight("ext:$appWidgetId", defaultHeight)
+    val widthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp - 80
+    var resizing by remember { mutableStateOf(false) }
+    val label = remember(appWidgetId) { info.loadLabel(context.packageManager) }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Caption(label)
+            Caption(if (resizing) "Done" else "Resize", Modifier.clickableRole({ resizing = !resizing }).padding(vertical = 4.dp), color = AppColors.text)
+        }
+        AndroidView(
+            modifier = Modifier.fillMaxWidth().height(heightDp.dp),
+            factory = { ctx ->
+                host.host.createView(ctx, appWidgetId, info).also { view: AppWidgetHostView ->
+                    view.setAppWidget(appWidgetId, info)
+                }
+            },
+            update = { view -> view.updateAppWidgetSize(null, widthDp, heightDp, widthDp, heightDp) },
+        )
+        if (resizing) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Stepper("${heightDp}dp", { state.updateWidgetHeight("ext:$appWidgetId", heightDp - 40) }, { state.updateWidgetHeight("ext:$appWidgetId", heightDp + 40) }, valueWidth = 64.dp)
+                Caption("Remove", Modifier.clickableRole({ host.delete(appWidgetId); state.removeWidgetId("ext:$appWidgetId") }).padding(vertical = 8.dp), color = AppColors.gate)
             }
         }
     }

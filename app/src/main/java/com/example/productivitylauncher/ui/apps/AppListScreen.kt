@@ -140,9 +140,9 @@ fun AppListScreen(state: LauncherState, nav: Nav, onOpenApp: (AppEntry) -> Unit)
                         AppText(
                             app.label, Modifier.weight(1f), size = 24.sp, maxLines = 1, letterSpacing = (-0.7).sp,
                             weight = FontWeight.Medium,
-                            color = if (gated) AppColors.gate else AppColors.text,
+                            color = AppColors.text,
                         )
-                        if (gated) GatedTag()
+                        if (gated) Caption("Gated")
                     }
                     Rule()
                 }

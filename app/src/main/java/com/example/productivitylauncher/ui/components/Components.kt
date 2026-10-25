@@ -205,7 +205,7 @@ fun CButton(
             AppIcon(leading, fg, size = 20.dp)
             Spacer(Modifier.width(8.dp))
         }
-        AppText(text, size = if (small) 14.sp else 16.sp, weight = FontWeight.SemiBold, color = fg, align = TextAlign.Center)
+        AppText(text, size = if (small) 14.sp else 16.sp, weight = FontWeight.Medium, color = fg, align = TextAlign.Center, display = false)
     }
 }
 
@@ -286,7 +286,7 @@ fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, mod
         val segment = maxWidth / options.size
         val x by animateDpAsState(segment * selected, Motion.press(), label = "segment")
         Box(Modifier.matchParentSize()) {
-            Box(Modifier.offset(x = x).width(segment).fillMaxHeight().background(AppColors.phone, RadiusPill))
+            Box(Modifier.offset(x = x).width(segment).fillMaxHeight().shadow(1.dp, RadiusPill, ambientColor = Color(0x26000000), spotColor = Color(0x26000000)).background(AppColors.phone, RadiusPill))
         }
         Row(Modifier.fillMaxWidth()) {
             options.forEachIndexed { i, label ->

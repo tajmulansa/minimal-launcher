@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.data.AppEntry
 import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.PipAction
@@ -179,11 +180,23 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
         }
     }
 
+    var launching by remember { mutableStateOf<AppEntry?>(null) }
+    LaunchedEffect(launching) {
+        val a = launching ?: return@LaunchedEffect
+        delay(520)
+        launchApp(context, a)
+        delay(900)
+        launching = null
+    }
+    fun launchWithFlourish(app: AppEntry) {
+        if (Motion.enabled) launching = app else launchApp(context, app)
+    }
+
     fun openApp(app: AppEntry) {
         val pkg = app.packageName
         when {
-            !state.isGated(pkg) -> launchApp(context, app)
-            state.sessionActive && state.sessionPkg == pkg -> launchApp(context, app)
+            !state.isGated(pkg) -> launchWithFlourish(app)
+            state.sessionActive && state.sessionPkg == pkg -> launchWithFlourish(app)
             state.focusActive && state.focusLockGated -> nav.go(Route.Locked(LockReason.Focus, pkg))
             state.limitReached -> nav.go(Route.Locked(LockReason.DailyLimit, pkg))
             else -> nav.go(Route.Gate(pkg))
@@ -233,7 +246,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                         },
                     ) {
                         if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0, onOpenWidgets = { scope.launch { pager.animateScrollToPage(1) } }, onOpenQuick = { quickOpen = true })
-                        else TodayScreen(state, nav, page = 1, onOpenHome = { scope.launch { pager.animateScrollToPage(0) } })
+                        else TodayScreen(state, nav, widgetHost, page = 1, onOpenHome = { scope.launch { pager.animateScrollToPage(0) } })
                     }
                 }
                 QuickPanel(state, quickOpen, { quickOpen = false })
@@ -306,6 +319,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                 if (app == null) nav.back() else GateScreen(state, app, nav)
             }
             Route.BrainDump -> BrainDumpScreen(state, nav)
+            Route.AddWidget -> com.example.productivitylauncher.ui.widgets.AddWidgetScreen(state, nav, widgetHost)
             Route.Focus -> FocusScreen(state, nav)
             Route.Evening -> EveningScreen(state, nav)
             Route.Week -> WeekScreen(state, nav)
@@ -316,6 +330,30 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             is Route.TimesUp -> TimesUpScreen(state, state.appByPackage(r.pkg), nav)
             Route.Onboarding -> OnboardingScreen(state, nav)
         }
+        }
+        launching?.let { LaunchOverlay(it.label) }
+    }
+}
+
+/** The circle that grows from the middle and names the app being opened, like the prototype. */
+@Composable
+private fun LaunchOverlay(name: String) {
+    var go by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { go = true }
+    val p by androidx.compose.animation.core.animateFloatAsState(if (go) 1f else 0f, Motion.morph(750), label = "launch")
+    val ink = AppColors.text
+    val paper = AppColors.phone
+    Box(Modifier.fillMaxSize()) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            val r = kotlin.math.hypot(size.width, size.height) * 0.62f * p
+            drawCircle(ink, radius = r, center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2))
+        }
+        val a = ((p - 0.35f) / 0.4f).coerceIn(0f, 1f)
+        Box(Modifier.fillMaxSize().graphicsLayer { alpha = a; translationY = (1f - a) * 14.dp.toPx() }, contentAlignment = Alignment.Center) {
+            androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
+                com.example.productivitylauncher.ui.components.AppText(name, size = 48.sp, weight = androidx.compose.ui.text.font.FontWeight.Medium, color = paper, align = androidx.compose.ui.text.style.TextAlign.Center)
+                com.example.productivitylauncher.ui.components.Caption("Opening", color = paper.copy(alpha = 0.6f))
+            }
         }
     }
 }
