@@ -45,10 +45,11 @@ shot 05_drawer_search 2
 adb shell input tap 300 810; sleep 1
 shot 06_gate 2
 shot 07_gate_later 8
+shot 09_phrase 14
 adb shell input keyevent 4
 sleep 1
 adb shell input keyevent 3
 sleep 2
-sleep 3; tap_text "Quick actions"
+sleep 3; adb shell uiautomator dump /sdcard/h.xml >/dev/null; adb pull /sdcard/h.xml shots/ui_home.xml >/dev/null; tap_text "Quick actions" | tee shots/tap.txt
 shot 08_quick 3
 adb logcat -d -s AndroidRuntime:E > shots/crash.txt

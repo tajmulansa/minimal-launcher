@@ -32,6 +32,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -184,17 +185,22 @@ private fun ColumnScope.BreatheStep(state: LauncherState, app: AppEntry, onConti
             scale.animateTo(0.55f, orbSpec())
         }
         phase = 2
-        scale.animateTo(0.8f, Motion.slow(1500))
         while (waitLeft > 0) {
             delay(1000)
             waitLeft -= 1
         }
+        // Like the prototype, the breath leads straight on to the next step.
+        delay(500)
+        onContinue()
     }
+    // The soft disc trails the ring a little, as in the prototype.
+    val disc = remember { Animatable(0.55f) }
+    LaunchedEffect(Unit) { snapshotFlow { scale.targetValue }.collect { t -> delay(120); disc.animateTo(t, orbSpec()) } }
 
     AppText((app.label + " \u00B7 pause first").uppercase(), Modifier.fillMaxWidth(), size = 11.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.sp, mono = true, maxLines = 1)
     AppText("One slow breath\nbefore you decide.", Modifier.padding(top = 10.dp), size = 34.sp, weight = FontWeight.Medium)
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Box(Modifier.size(250.dp).scale(scale.value).background(AppColors.text.copy(alpha = 0.07f), CircleShape))
+        Box(Modifier.size(250.dp).scale(disc.value).background(AppColors.text.copy(alpha = 0.07f), CircleShape))
         Box(Modifier.size(250.dp).scale(scale.value).border(1.5.dp, AppColors.text, CircleShape))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             AppText(
@@ -209,15 +215,6 @@ private fun ColumnScope.BreatheStep(state: LauncherState, app: AppEntry, onConti
             size = 14.sp, color = AppColors.gate, align = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
     }
-    val ready = phase == 2 && waitLeft == 0
-    Cta(
-        when {
-            phase < 2 -> "Continue after $total breaths"
-            waitLeft > 0 -> "Continue in ${waitLeft}s"
-            else -> "Continue"
-        },
-        ready, onContinue,
-    )
     Ghost("Not now", onCancel)
 }
 

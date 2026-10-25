@@ -49,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -243,7 +244,15 @@ private fun Odometer(digit: Int, delayMs: Int, size: TextUnit) {
         if (Motion.enabled) tween<Float>(900, delayMillis = if (Intro.played) 0 else delayMs, easing = Motion.Soft) else snap(),
         label = "digit",
     )
-    Box(Modifier.height(cell).clipToBounds()) {
+    Box(
+        Modifier
+            .clipToBounds()
+            .layout { m, c ->
+                val cellPx = cell.roundToPx()
+                val p = m.measure(c.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
+                layout(p.width, cellPx) { p.place(0, 0) }
+            },
+    ) {
         Column(
             Modifier.graphicsLayer { translationY = -y * cell.toPx() },
             horizontalAlignment = Alignment.CenterHorizontally,
