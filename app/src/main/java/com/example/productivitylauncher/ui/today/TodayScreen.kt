@@ -111,7 +111,6 @@ import com.example.productivitylauncher.ui.components.Rule
 import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.ui.components.TextLink
 import com.example.productivitylauncher.ui.components.clickableRole
-import com.example.productivitylauncher.ui.home.Dots
 import com.example.productivitylauncher.ui.theme.AppColors
 import kotlinx.coroutines.delay
 import sh.calvin.reorderable.ReorderableItem
@@ -128,7 +127,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.input.pointer.pointerInput
