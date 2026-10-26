@@ -24,7 +24,7 @@ enum class NoiseKind(val label: String) { White("White noise"), Pink("Pink noise
 object Noise {
     var playing by mutableStateOf(false)
         internal set
-    @Volatile var kind by mutableStateOf(NoiseKind.White)
+    var kind by mutableStateOf(NoiseKind.White)
 
     fun toggle(context: Context) {
         val i = Intent(context, NoiseService::class.java)
