@@ -127,6 +127,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.input.pointer.pointerInput
@@ -332,6 +333,11 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
             }
             TodoList(state)
 
+            if (state.hasWidget("habits")) {
+                Hair(3, Modifier.padding(vertical = 22.dp))
+                HabitStack(state)
+            }
+
             val ext = state.widgets.filter { it.startsWith("ext:") }
             ext.forEach { id ->
                 Hair(3, Modifier.padding(vertical = 22.dp))
@@ -488,6 +494,79 @@ private fun HeightSlider(heightDp: Int, onCommit: (Int) -> Unit) {
                     .size(thumb)
                     .background(AppColors.text, CircleShape),
             )
+        }
+    }
+}
+
+// ------------------------------------------------------------------ habit stack
+
+/** "After I <anchor>, I <action>": a chain of small habits. Check each one off once a day; the streak counts days in a row. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun HabitStack(state: LauncherState) {
+    val haptic = LocalHapticFeedback.current
+    val today = dayKey()
+    var adding by remember { mutableStateOf(false) }
+    var anchor by remember { mutableStateOf("") }
+    var action by remember { mutableStateOf("") }
+    val done = state.habits.count { today in it.doneDays }
+    Column(Modifier.fillMaxWidth().animateContentSize(Motion.lift())) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Caption("Habit stack")
+            if (state.habits.isNotEmpty()) Caption("$done of ${state.habits.size}")
+        }
+        if (state.habits.isEmpty() && !adding) {
+            AppText("Stack small habits on things you already do. After I wake up, I drink water.", Modifier.padding(top = 10.dp), size = 15.sp, color = AppColors.muted, display = false)
+        }
+        Column(Modifier.padding(top = 8.dp)) {
+            state.habits.forEachIndexed { i, h ->
+                key(h.id) {
+                    val on = today in h.doneDays
+                    var streak = 0
+                    val now = System.currentTimeMillis()
+                    val startBack = if (on) 0 else 1
+                    while (streak < 400 && dayKey(now - (streak + startBack) * DAY_MS) in h.doneDays) streak++
+                    val last = i == state.habits.lastIndex
+                    val line = AppColors.line
+                    val alpha by animateFloatAsState(if (on) 0.4f else 1f, Motion.state(400), label = "habitAlpha")
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .enterStagger(i, rise = 14.dp)
+                            .drawBehind {
+                                if (!last) drawLine(line, Offset(15.dp.toPx(), 44.dp.toPx()), Offset(15.dp.toPx(), size.height + 14.dp.toPx()), 1.5.dp.toPx())
+                            }
+                            .padding(vertical = 14.dp),
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        Box(Modifier.semantics { contentDescription = "Toggle habit" }.clickableRole({ haptic.performHapticFeedback(HapticFeedbackType.LongPress); state.toggleHabit(h.id) }, Role.Checkbox)) { CheckCircle(on, size = 30.dp) }
+                        Column(
+                            Modifier.weight(1f).graphicsLayer { this.alpha = alpha }.combinedClickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = { state.toggleHabit(h.id) }, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); state.removeHabit(h.id) }),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Caption("After " + h.anchor)
+                            AppText(h.action, size = 17.sp, letterSpacing = (-0.17).sp, display = false)
+                        }
+                        if (streak > 0) AppText("${streak}d", Modifier.padding(top = 4.dp), size = 11.sp, mono = true, color = AppColors.muted)
+                    }
+                }
+            }
+        }
+        if (adding) {
+            AppField(anchor, { anchor = it }, "After I… (wake up)")
+            AppField(action, { action = it }, "I will… (drink water)", onDone = {
+                state.addHabit(anchor, action); anchor = ""; action = ""; adding = false
+            })
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                TextLink("Add habit", { state.addHabit(anchor, action); anchor = ""; action = ""; adding = false })
+                TextLink("Cancel", { adding = false })
+            }
+        } else {
+            Row(Modifier.fillMaxWidth().clickableRole({ adding = true }).padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                AppText("+", size = 16.sp, mono = true, color = AppColors.muted)
+                AppText("Add a habit", size = 17.sp, color = AppColors.muted, display = false)
+            }
         }
     }
 }

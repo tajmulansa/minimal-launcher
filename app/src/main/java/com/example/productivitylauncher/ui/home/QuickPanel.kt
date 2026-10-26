@@ -50,6 +50,7 @@ import com.example.productivitylauncher.data.isDndOn
 import com.example.productivitylauncher.data.openDndSettings
 import com.example.productivitylauncher.data.openOverlaySettings
 import com.example.productivitylauncher.data.setDnd
+import com.example.productivitylauncher.service.Noise
 import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.Caption
@@ -109,6 +110,7 @@ fun QuickPanel(state: LauncherState, visible: Boolean, onDismiss: () -> Unit, mo
                 }
                 QuickRow(state)
                 Rule()
+                NoisePlayer()
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Caption("Theme")
                     Segmented(ThemeMode.entries.map { it.label }, state.themeMode.ordinal, { state.setTheme(ThemeMode.entries[it]) })
@@ -174,4 +176,35 @@ private fun QuickToggle(ic: Ic, label: String, on: Boolean, onClick: () -> Unit)
         ) { AppIcon(ic, tint, size = 22.dp) }
         AppText(label.uppercase(), size = 10.sp, weight = FontWeight.Medium, color = if (on) AppColors.text else AppColors.muted, letterSpacing = 0.8.sp, mono = true, maxLines = 1)
     }
+}
+
+/** Previous, play/pause and next. It plays white, pink or brown noise made in code, even with the screen off. */
+@Composable
+private fun NoisePlayer() {
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Caption("Noise")
+            AppText(Noise.kind.label, size = 17.sp, weight = FontWeight.Medium, display = false)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            PlayerButton(Ic.SkipPrev, "Previous noise", 44, false) { haptic.performHapticFeedback(HapticFeedbackType.ToggleOn); Noise.step(-1) }
+            PlayerButton(if (Noise.playing) Ic.Pause else Ic.Play, if (Noise.playing) "Pause noise" else "Play noise", 56, true) { haptic.performHapticFeedback(HapticFeedbackType.ToggleOn); Noise.toggle(context) }
+            PlayerButton(Ic.SkipNext, "Next noise", 44, false) { haptic.performHapticFeedback(HapticFeedbackType.ToggleOn); Noise.step(1) }
+        }
+    }
+}
+
+@Composable
+private fun PlayerButton(ic: Ic, description: String, size: Int, filled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(size.dp)
+            .background(if (filled) AppColors.text else Color.Transparent, CircleShape)
+            .border(1.dp, if (filled) Color.Transparent else AppColors.line, CircleShape)
+            .semantics { contentDescription = description }
+            .clickableRole(onClick),
+        contentAlignment = Alignment.Center,
+    ) { AppIcon(ic, if (filled) AppColors.phone else AppColors.text, size = if (filled) 22.dp else 18.dp) }
 }

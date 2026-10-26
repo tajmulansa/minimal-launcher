@@ -30,6 +30,8 @@ enum class Ic(val path: String, val filled: Boolean = false) {
     Timer("M12 5.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15z M12 9v4l2.5 1.5 M9.5 2.5h5"),
     Drop("M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z", filled = true),
     Play("M6 4l14 8-14 8z", filled = true),
+    SkipPrev("M19 5v14L9 12z M5 5h2v14H5z", filled = true),
+    SkipNext("M5 5v14l10-7z M17 5h2v14h-2z", filled = true),
     Pause("M6 4h4v16H6z M14 4h4v16h-4z", filled = true),
     Lock("M5 11h14v10H5z M7 11V7a5 5 0 0 1 10 0v4"),
     Trash("M3 6h18 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6 M10 11v6 M14 11v6 M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"),

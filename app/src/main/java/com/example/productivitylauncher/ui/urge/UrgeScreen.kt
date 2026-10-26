@@ -55,35 +55,28 @@ fun UrgeScreen(remainingMillis: Long) {
     )
     val phase = if (Motion.enabled) animatedPhase else 0.5f
     val ringColor = AppColors.gate
-    Box(Modifier.fillMaxSize().padding(bottom = 190.dp), contentAlignment = Alignment.Center) {
-        Box(
-            Modifier
-                .size(250.dp)
-                .graphicsLayer { scaleX = 0.7f + 0.3f * phase; scaleY = 0.7f + 0.3f * phase }
-                .background(AppColors.text.copy(alpha = 0.05f), CircleShape),
-        )
-        Box(
-            Modifier
-                .size(250.dp)
-                .graphicsLayer { scaleX = 0.7f + 0.3f * phase; scaleY = 0.7f + 0.3f * phase }
-                .border(1.5.dp, AppColors.text.copy(alpha = 0.5f), CircleShape),
-        )
-    }
     Column(
         Modifier.fillMaxSize().padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Caption("Take a break", Modifier.enterStagger(0), color = AppColors.gate)
-        Spacer(Modifier.height(12.dp))
-        AppText(clock, Modifier.enterStagger(1), size = 88.sp, weight = FontWeight.Light, letterSpacing = (-4).sp)
-        Spacer(Modifier.height(12.dp))
+        // The ring breathes around the timer only, so it never touches the text below.
+        Box(Modifier.size(280.dp).enterStagger(0), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().graphicsLayer { scaleX = 0.8f + 0.2f * phase; scaleY = 0.8f + 0.2f * phase }.background(AppColors.text.copy(alpha = 0.05f), CircleShape))
+            Box(Modifier.fillMaxSize().graphicsLayer { scaleX = 0.8f + 0.2f * phase; scaleY = 0.8f + 0.2f * phase }.border(1.5.dp, AppColors.text.copy(alpha = 0.5f), CircleShape))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Caption("Take a break", color = AppColors.gate)
+                Spacer(Modifier.height(8.dp))
+                AppText(clock, size = 64.sp, weight = FontWeight.Light, letterSpacing = (-3).sp, tnum = true, maxLines = 1)
+            }
+        }
+        Spacer(Modifier.height(36.dp))
         AppText(
             modifier = Modifier.enterStagger(2),
             text = "This feeling passes. Put the phone down, breathe, or talk to someone.",
             size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, display = false,
         )
-        Spacer(Modifier.height(44.dp))
+        Spacer(Modifier.height(40.dp))
         Row(Modifier.enterStagger(3), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
             UrgeButton(Ic.Phone, "Call") { openPhone(context) }
             UrgeButton(Ic.Message, "Message") { openMessages(context) }

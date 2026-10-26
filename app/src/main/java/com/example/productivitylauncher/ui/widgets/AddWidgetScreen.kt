@@ -144,6 +144,13 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
             }
             val density = context.resources.displayMetrics.density
             LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                item(key = "builtin-habits") {
+                    val added = state.hasWidget("habits")
+                    AddRow(letter = "H", title = "Habit stack", subtitle = "After I do X, I do Y. Check off once a day.", added = added, onClick = {
+                        state.toggleWidget("habits")
+                        message = if (state.hasWidget("habits")) "Added. Find it on your Today page." else "Removed."
+                    })
+                }
                 items(groups, key = { it.pkg }) { g ->
                     val open = openPkg == g.pkg
                     Column(Modifier.fillMaxWidth().hairlineBelow()) {
