@@ -13,6 +13,8 @@ cat > /tmp/launcher.xml <<'X'
 <string name="user_name">Tajmul</string>
 <string name="tasks">[{"id":"1","text":"Read chapter 3","done":true},{"id":"2","text":"Email Prof. Rao","done":true},{"id":"3","text":"Finish chemistry chapter 4","done":false},{"id":"4","text":"Physics problem sheet","done":false},{"id":"5","text":"Plan revision","done":false}]</string>
 <string name="home_apps">["com.android.settings","com.android.chrome","com.android.contacts","com.android.camera2","com.google.android.calendar","com.google.android.deskclock","com.android.calculator2"]</string>
+<string name="widgets">["habits"]</string>
+<string name="habits">[{"id":"h1","anchor":"I wake up","action":"Drink a glass of water","done":["2026-10-25","2026-10-24"]},{"id":"h2","anchor":"I drink water","action":"Read 10 pages","done":[]}]</string>
 <set name="gated"><string>com.android.chrome</string></set>
 </map>
 X
@@ -35,6 +37,7 @@ else: print('not found',sys.argv[1])
 PY
 }
 tap_text TODAY; shot 02_today 3
+adb shell input swipe 540 1900 540 700 400
 adb shell input swipe 540 1900 540 700 400
 shot 03_today_scrolled 2
 tap_text HOME; sleep 2
