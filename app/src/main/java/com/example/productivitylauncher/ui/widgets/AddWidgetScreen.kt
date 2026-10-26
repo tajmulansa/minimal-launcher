@@ -65,7 +65,7 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
     fun finishAdd(id: Int) {
         state.addWidgetId("ext:$id")
         pendingInfo = null
-        message = "Added. Find it at the bottom of your Today page."
+        message = "Added. Find it at the bottom of your Study page."
     }
 
     fun cancelAdd(id: Int) {
@@ -117,7 +117,7 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
 
     Column(Modifier.fillMaxSize()) {
         PageHeader("Add widget", onBack = nav.back, label = "From your apps")
-        message?.let { AppText(it, size = 14.sp, color = AppColors.focus, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) }
+        message?.let { AppText(it, size = 15.sp, color = AppColors.focus, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) }
 
         if (tab == 0) {
             LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -148,7 +148,7 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
                     val added = state.hasWidget("habits")
                     AddRow(letter = "H", title = "Habit stack", subtitle = "After I do X, I do Y. Check off once a day.", added = added, onClick = {
                         state.toggleWidget("habits")
-                        message = if (state.hasWidget("habits")) "Added. Find it on your Today page." else "Removed."
+                        message = if (state.hasWidget("habits")) "Added. Find it on your Study page." else "Removed."
                     })
                 }
                 items(groups, key = { it.pkg }) { g ->

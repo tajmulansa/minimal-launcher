@@ -102,6 +102,14 @@ class LauncherState(context: Context) {
 
     // ------------------------------------------------------------ frog
 
+    /** Minutes after midnight. Used for the greeting and the evening shutdown. */
+    var wakeMin by mutableStateOf(int("wake_min", 7 * 60))
+        private set
+    var bedMin by mutableStateOf(int("bed_min", 23 * 60))
+        private set
+    fun updateWake(m: Int) { wakeMin = ((m % 1440) + 1440) % 1440; save { putInt("wake_min", wakeMin) } }
+    fun updateBed(m: Int) { bedMin = ((m % 1440) + 1440) % 1440; save { putInt("bed_min", bedMin) } }
+
     var userName by mutableStateOf(str("user_name"))
         private set
     fun updateUserName(n: String) { userName = n.trim(); save { putString("user_name", userName) } }

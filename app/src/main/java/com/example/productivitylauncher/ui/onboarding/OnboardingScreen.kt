@@ -48,6 +48,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.data.LauncherState
+import com.example.productivitylauncher.data.formatTimeOfDay
+import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.data.isDefaultLauncher
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
 import com.example.productivitylauncher.ui.Nav
@@ -70,7 +72,9 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
     val context = LocalContext.current
     var step by remember { mutableIntStateOf(0) }
     var name by remember { mutableStateOf(state.userName) }
-    val last = 5
+    var wake by remember { mutableIntStateOf(state.wakeMin) }
+    var bed by remember { mutableIntStateOf(state.bedMin) }
+    val last = 6
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp), horizontalArrangement = Arrangement.Center) {
@@ -94,33 +98,36 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
         ) { shownStep ->
             when (shownStep) {
                 0 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    AppText("Made for students.", size = 32.sp, weight = FontWeight.SemiBold, letterSpacing = (-1).sp)
-                    AppText(
-                        "Your phone is full of things that pull you away from studying. This launcher puts you back in charge.",
-                        size = 16.sp, color = AppColors.muted, lineHeight = 24.sp, modifier = Modifier.padding(top = 12.dp, bottom = 20.dp),
-                    )
-                    WelcomePoint("Do the one thing that matters", "Pick your most important task each day and do it first.")
-                    WelcomePoint("Distractions wait", "Social and game apps sit behind a short pause, so you open them on purpose, not by habit.")
-                    WelcomePoint("Focus when you need it", "Focus sessions, Lock In and a red button for the hard moments.")
+                    Title("A quieter phone for studying.")
+                    Body("Still keeps what you need close and puts a short pause in front of what pulls you away.", Modifier.padding(top = 12.dp, bottom = 24.dp))
+                    WelcomePoint("One list, in order", "Write your tasks once. Home always shows the next one.")
+                    WelcomePoint("Distractions wait", "Social and game apps get a short pause, so you open them on purpose.")
+                    WelcomePoint("Focus when you need it", "A focus timer, Lock In, calming noise and a red button for hard moments.")
                     WelcomePoint("Private by design", "No account, no ads, no internet. Everything stays on this phone.")
                 }
                 1 -> Column(Modifier.fillMaxSize()) {
-                    AppText("Gate your distractions", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
+                    Title("Pause your distractions.", Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
                     GatedPickerBody(state, Modifier.weight(1f))
                 }
                 2 -> Column(Modifier.fillMaxSize()) {
-                    AppText("Pick your six", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
+                    Title("Pick your Home apps.", Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
                     HomePickerBody(state, Modifier.weight(1f))
                 }
                 3 -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    AppText("What should we call you?", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
-                    AppText("Your name shows in the greeting on Home. It stays on this phone.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
+                    Title("What should we call you?")
+                    Body("Home greets you by name. It stays on this phone.", Modifier.padding(top = 8.dp, bottom = 24.dp))
                     AppField(name, { name = it }, "Your name", fill = AppColors.card)
                 }
-                5 -> PermissionsStep(state, Modifier.fillMaxSize())
+                4 -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
+                    Title("Your day.")
+                    Body("When do you wake up and go to bed? Home greets you to match, and your evening shutdown is set for an hour before bed.", Modifier.padding(top = 8.dp, bottom = 28.dp))
+                    SleepRow("Wake up", formatTimeOfDay(wake), { wake = (wake - 15 + 1440) % 1440 }, { wake = (wake + 15) % 1440 })
+                    SleepRow("Bedtime", formatTimeOfDay(bed), { bed = (bed - 15 + 1440) % 1440 }, { bed = (bed + 15) % 1440 })
+                }
+                6 -> PermissionsStep(state, Modifier.fillMaxSize())
                 else -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    AppText("Make it yours", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
-                    AppText("Choose a look. You can change it any time in Settings.", size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
+                    Title("Make it yours.")
+                    Body("Pick a theme and a look. You can change both any time in Quick actions.", Modifier.padding(top = 8.dp, bottom = 24.dp))
                     Segmented(ThemeMode.entries.map { it.label }, state.themeMode.ordinal, { state.setTheme(ThemeMode.entries[it]) })
                     Spacer(Modifier.height(12.dp))
                     Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.updateLook(Look.entries[it]) })
@@ -132,6 +139,7 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                 if (step == last) "Start" else "Next",
                 {
                     if (step == 3) state.updateUserName(name)
+                    if (step == 4) { state.updateWake(wake); state.updateBed(bed); state.updateEveningHour(bed / 60 - 1) }
                     if (step == last) {
                         state.finishOnboarding()
                         nav.go(Route.Main)
@@ -146,10 +154,28 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
 }
 
 @Composable
+private fun Title(text: String, modifier: Modifier = Modifier) {
+    AppText(text, modifier, size = 34.sp, weight = FontWeight.Medium)
+}
+
+@Composable
+private fun Body(text: String, modifier: Modifier = Modifier) {
+    AppText(text, modifier, size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, display = false)
+}
+
+@Composable
+private fun SleepRow(label: String, value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        AppText(label, size = 17.sp, display = false)
+        Stepper(value, onMinus, onPlus, valueWidth = 84.dp)
+    }
+}
+
+@Composable
 private fun WelcomePoint(title: String, body: String) {
     Column(Modifier.padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        AppText(title, size = 16.sp, weight = FontWeight.SemiBold)
-        AppText(body, size = 14.sp, color = AppColors.muted, lineHeight = 20.sp)
+        AppText(title, size = 17.sp, weight = FontWeight.Medium, display = false)
+        AppText(body, size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, display = false)
     }
 }
 
@@ -164,7 +190,7 @@ private fun PermRow(title: String, why: String, granted: Boolean, onAllow: () ->
             AppText(title, size = 16.sp, weight = FontWeight.SemiBold)
             AppText(why, size = 13.sp, color = AppColors.muted, lineHeight = 18.sp)
         }
-        if (granted) AppText("Allowed", size = 14.sp, weight = FontWeight.SemiBold, color = AppColors.focus)
+        if (granted) AppText("Allowed", size = 15.sp, weight = FontWeight.SemiBold, color = AppColors.focus)
         else CButton("Allow", onAllow, kind = BtnKind.Accent, small = true)
     }
 }
@@ -183,9 +209,9 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
     var showPolicy by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp)) {
-        AppText("Your privacy first", size = 26.sp, weight = FontWeight.SemiBold, letterSpacing = (-0.8).sp)
+        Title("Your privacy first.")
         AppText(
-            "Everything stays on this phone. This app has no internet permission, no accounts, no ads and no tracking. Each permission below is optional and you can take it back any time in Android settings.",
+            "Everything stays on this phone. There is no internet permission, no account, no ads and no tracking. Every permission below is optional, and you can take it back any time in Android settings.",
             size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
         )
         PermRow("Usage access", "Reads how long apps were used, on this phone only, to show screen time and your gated time.", usage) { openUsageAccessSettings(context) }
@@ -196,7 +222,7 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
         if (showPolicy) {
             PRIVACY_SECTIONS.forEach { (title, body) ->
                 AppText(title, size = 15.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
-                AppText(body, size = 14.sp, color = AppColors.muted, lineHeight = 20.sp, modifier = Modifier.padding(top = 4.dp))
+                AppText(body, size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 4.dp))
             }
         }
         androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))

@@ -44,7 +44,7 @@ fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier) {
     Column(modifier) {
         AppText(
             "Pick the apps that steal your time. They get a calm gate before they open. Removing a gate takes 24 hours.",
-            size = 14.sp, color = AppColors.muted, lineHeight = 20.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
+            size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
         )
         LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             items(state.apps, key = { it.packageName + "/" + it.activityName }) { app ->
@@ -65,7 +65,7 @@ fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     Column(Modifier.weight(1f)) {
-                        AppText(app.label, size = 22.sp, weight = FontWeight.Medium, letterSpacing = (-0.5).sp, maxLines = 1, color = if (gated) AppColors.gate else AppColors.text)
+                        AppText(app.label, size = 24.sp, weight = FontWeight.Medium, letterSpacing = (-0.72).sp, maxLines = 1, color = if (gated) AppColors.gate else AppColors.text)
                         if (pending) AppText("Removal in 24 hours. Tap to keep.", size = 12.sp, color = AppColors.muted)
                     }
                     CheckCircle(gated && !pending, size = 28.dp)
@@ -93,7 +93,7 @@ fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
     Column(modifier) {
         AppText(
             "Choose up to six apps for your Home page. Keep only what helps you work. (${state.homeApps.size} of 6)",
-            size = 14.sp, color = AppColors.muted, lineHeight = 20.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
+            size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
         )
         LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             // Gated apps are listed last, greyed out, so it is clear why they cannot be picked.
@@ -117,7 +117,7 @@ fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     Column(Modifier.weight(1f)) {
-                        AppText(app.label, size = 22.sp, weight = FontWeight.Medium, letterSpacing = (-0.5).sp, maxLines = 1)
+                        AppText(app.label, size = 24.sp, weight = FontWeight.Medium, letterSpacing = (-0.72).sp, maxLines = 1)
                         if (gated) AppText("Gated apps can't go on Home", size = 12.sp, color = AppColors.muted)
                     }
                     if (gated) GatedTag() else CheckCircle(on, size = 28.dp)

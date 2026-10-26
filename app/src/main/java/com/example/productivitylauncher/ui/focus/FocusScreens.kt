@@ -153,7 +153,7 @@ fun FocusScreen(state: LauncherState, nav: Nav) {
                     }
                 }
             } else {
-                AppText("[-_-] shh. Just this one thing.", size = 14.sp, color = AppColors.muted, mono = true)
+                AppText("[-_-] shh. Just this one thing.", size = 15.sp, color = AppColors.muted, mono = true)
                 Box(
                     Modifier.height(56.dp).widthIn(min = 132.dp).border(1.dp, AppColors.line, RadiusPill).clickableRole({ stopEarly() }),
                     contentAlignment = Alignment.Center,
@@ -174,7 +174,7 @@ private fun StepCircle(text: String, onClick: () -> Unit) {
 private fun CompleteBlock(state: LauncherState, nav: Nav, onAgain: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Caption("Focus complete")
-        AppText("Did you finish it?", size = 40.sp, weight = FontWeight.Medium)
+        AppText("Did you finish it?", size = 34.sp, weight = FontWeight.Medium)
         AppText("\"${state.frog}\"", size = 16.sp, color = AppColors.muted, lineHeight = 24.sp, display = false)
         Spacer(Modifier.height(16.dp))
         CButton("Yes, done", { state.setFrogDone(true); nav.back() }, Modifier.fillMaxWidth(), BtnKind.Primary, leading = Ic.Check)

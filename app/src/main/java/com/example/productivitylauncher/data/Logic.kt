@@ -243,3 +243,11 @@ fun pipMessage(f: PipFacts, variant: Int = 0): PipMessage {
 
 /** Whole days from [today] to the exam day (both as epoch days). Negative once the exam has passed. */
 fun daysUntil(examEpochDay: Long, today: Long = java.time.LocalDate.now().toEpochDay()): Long = examEpochDay - today
+
+/** 7:00 AM style text for minutes after midnight. */
+fun formatTimeOfDay(min: Int): String {
+    val h = (min / 60) % 24
+    val m = min % 60
+    val h12 = if (h % 12 == 0) 12 else h % 12
+    return "%d:%02d %s".format(h12, m, if (h < 12) "AM" else "PM")
+}

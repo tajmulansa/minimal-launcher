@@ -276,7 +276,7 @@ fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifie
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {
-        AppText(text, size = 14.sp, weight = FontWeight.SemiBold, color = chipFg)
+        AppText(text, size = 15.sp, weight = FontWeight.SemiBold, color = chipFg)
     }
 }
 

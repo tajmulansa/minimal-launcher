@@ -25,6 +25,7 @@ import com.example.productivitylauncher.data.GateSetting
 import com.example.productivitylauncher.data.LauncherState
 import com.example.productivitylauncher.data.canDrawOverlays
 import com.example.productivitylauncher.data.formatMinutes
+import com.example.productivitylauncher.data.formatTimeOfDay
 import com.example.productivitylauncher.data.hasDndAccess
 import com.example.productivitylauncher.data.isDefaultLauncher
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
@@ -121,6 +122,12 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Screen time goal", subtitle = "Shown in your weekly review") {
                     Stepper(formatMinutes(state.screenGoalMin.toLong()), { state.setScreenGoal(state.screenGoalMin - 30) }, { state.setScreenGoal(state.screenGoalMin + 30) }, valueWidth = 70.dp)
                 }
+                SettingRow("Wake up", subtitle = "Used for your greeting") {
+                    Stepper(formatTimeOfDay(state.wakeMin), { state.updateWake(state.wakeMin - 15) }, { state.updateWake(state.wakeMin + 15) }, valueWidth = 84.dp)
+                }
+                SettingRow("Bedtime", subtitle = "Home says Rest well after this") {
+                    Stepper(formatTimeOfDay(state.bedMin), { state.updateBed(state.bedMin - 15) }, { state.updateBed(state.bedMin + 15) }, valueWidth = 84.dp)
+                }
                 SettingRow("Evening shutdown", subtitle = "When the day should wrap up") {
                     Stepper("${state.eveningHour}:00", { state.updateEveningHour(state.eveningHour - 1) }, { state.updateEveningHour(state.eveningHour + 1) }, valueWidth = 64.dp)
                 }
@@ -189,7 +196,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     PRIVACY_SECTIONS.forEach { (title, body) ->
                         AppText(title, size = 15.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
-                        AppText(body, size = 14.sp, color = AppColors.muted, lineHeight = 20.sp, modifier = Modifier.padding(top = 4.dp))
+                        AppText(body, size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 4.dp))
                     }
                 }
             },

@@ -79,9 +79,9 @@ fun EveningScreen(state: LauncherState, nav: Nav) {
         ) {
             if (done) {
                 Spacer(Modifier.height(40.dp))
-                AppText("Day closed", size = 40.sp, weight = FontWeight.Medium, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                AppText("Day closed", size = 34.sp, weight = FontWeight.Medium, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 AppText("Your mind is clear and tomorrow's most important task is ready.", size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, modifier = Modifier.fillMaxWidth())
-                AppText("[-_-] phone down. sleep well.", size = 14.sp, color = AppColors.muted, mono = true, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                AppText("[-_-] phone down. sleep well.", size = 15.sp, color = AppColors.muted, mono = true, align = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 CButton("Back to Home", { nav.back() }, Modifier.fillMaxWidth().padding(top = 16.dp), BtnKind.Primary)
                 return@Column
             }
@@ -93,7 +93,7 @@ fun EveningScreen(state: LauncherState, nav: Nav) {
                         CheckCircle(state.frogDone)
                         AppText(state.frog, Modifier.weight(1f), size = 18.sp, weight = FontWeight.SemiBold, strike = state.frogDone, color = if (state.frogDone) AppColors.muted else AppColors.text)
                     }
-                    AppText(if (state.frogDone) "Done. Well done." else "Not finished? Leave tomorrow's most important task empty and it carries over.", size = 14.sp, color = AppColors.muted)
+                    AppText(if (state.frogDone) "Done. Well done." else "Not finished? Leave tomorrow's most important task empty and it carries over.", size = 15.sp, color = AppColors.muted)
                 }
             }
             StepCard(2, "Empty your head") {
@@ -149,7 +149,7 @@ fun WeekScreen(state: LauncherState, nav: Nav) {
                     }
                     AppText("Goal: ${formatMillis(goalMs)} a day or less", size = 12.sp, color = AppColors.muted)
                     val avg = week.sum() / 7
-                    AppText("Average ${formatMillis(avg)} a day", size = 14.sp, weight = FontWeight.SemiBold)
+                    AppText("Average ${formatMillis(avg)} a day", size = 15.sp, weight = FontWeight.SemiBold)
                 } else {
                     AppText("Allow usage access to see how your week went.", size = 15.sp, color = AppColors.muted)
                     CButton("Allow usage access", { openUsageAccessSettings(context) }, kind = BtnKind.Soft, small = true)
@@ -161,7 +161,7 @@ fun WeekScreen(state: LauncherState, nav: Nav) {
             }
             AppText(
                 if (backed > 0) "[^o^] every time you backed out, you won a little time back." else "[^_^] small steps add up. See you tomorrow.",
-                size = 14.sp, color = AppColors.muted, mono = true, align = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                size = 15.sp, color = AppColors.muted, mono = true, align = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             )
         }
     }

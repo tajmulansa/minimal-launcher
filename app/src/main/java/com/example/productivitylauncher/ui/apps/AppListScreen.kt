@@ -211,7 +211,7 @@ fun AppDrawer(state: LauncherState, open: Boolean, onClose: () -> Unit, onOpenAp
                     if (gated) {
                         AppText(
                             if (pending) "Gate removal is waiting for its 24 hour delay." else "Removing a gate takes 24 hours, so a weak moment can't undo it.",
-                            size = 14.sp, color = AppColors.muted, modifier = Modifier.padding(bottom = 8.dp),
+                            size = 15.sp, color = AppColors.muted, modifier = Modifier.padding(bottom = 8.dp),
                         )
                     }
                     OptionRow(if (gated) (if (pending) "Keep the gate" else "Remove gate (in 24 hours)") else "Gate this app") {

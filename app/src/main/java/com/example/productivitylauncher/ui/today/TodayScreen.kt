@@ -281,7 +281,7 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 28.dp, end = 28.dp, top = 12.dp, bottom = 150.dp)) {
             Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Caption("Today")
+                Caption("Study")
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (total > 0) Caption("$done/$total done")
                     IconButtonLarge(Ic.Plus, "Add widget", { nav.go(Route.AddWidget) })

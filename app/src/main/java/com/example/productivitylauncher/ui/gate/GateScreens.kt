@@ -212,7 +212,7 @@ private fun ColumnScope.BreatheStep(state: LauncherState, app: AppEntry, onConti
     if (extraWait > 0) {
         AppText(
             "Opened ${state.opensToday(app.packageName)} time${if (state.opensToday(app.packageName) == 1) "" else "s"} today, so the wait is a little longer.",
-            size = 14.sp, color = AppColors.gate, align = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            size = 15.sp, color = AppColors.gate, align = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
     }
     Ghost("Not now", onCancel)
@@ -336,9 +336,9 @@ private fun ColumnScope.TimeStep(state: LauncherState, app: AppEntry, nav: Nav, 
 private fun Message(label: String, labelColor: Color, title: String, body: String, mono: String, primary: String, onPrimary: () -> Unit, secondary: String? = null, onSecondary: () -> Unit = {}) {
     Column(Modifier.fillMaxSize().padding(start = 28.dp, end = 28.dp, top = 56.dp, bottom = 24.dp)) {
         Caption(label, color = labelColor)
-        AppText(title, Modifier.padding(top = 10.dp), size = 40.sp, weight = FontWeight.Medium)
+        AppText(title, Modifier.padding(top = 10.dp), size = 34.sp, weight = FontWeight.Medium)
         AppText(body, Modifier.padding(top = 16.dp), size = 16.sp, color = AppColors.muted, lineHeight = 24.sp, display = false)
-        AppText(mono, Modifier.padding(top = 24.dp), size = 14.sp, color = AppColors.muted, mono = true)
+        AppText(mono, Modifier.padding(top = 24.dp), size = 15.sp, color = AppColors.muted, mono = true)
         Spacer(Modifier.weight(1f))
         Cta(primary, true, onPrimary)
         if (secondary != null) Ghost(secondary, onSecondary)

@@ -115,15 +115,17 @@ fun HomeScreen(
     val use24 = DateFormat.is24HourFormat(context)
     val shownHour = if (use24) hour24 else (hour24 % 12).let { if (it == 0) 12 else it }
     val minute = cal.get(Calendar.MINUTE)
-    val greeting = when (hour24) {
-        in 5..11 -> "Good morning."
-        in 12..16 -> "Good afternoon."
-        in 17..21 -> "Good evening."
-        else -> "Rest well."
+    val minuteOfDay = hour24 * 60 + cal.get(Calendar.MINUTE)
+    val asleep = if (state.bedMin > state.wakeMin) minuteOfDay >= state.bedMin || minuteOfDay < state.wakeMin
+        else minuteOfDay >= state.bedMin && minuteOfDay < state.wakeMin
+    val greeting = when {
+        asleep -> "Rest well."
+        minuteOfDay < 12 * 60 -> "Good morning."
+        minuteOfDay < 17 * 60 -> "Good afternoon."
+        else -> "Good evening."
     }
 
-    val listScroll = rememberScrollState()
-    Column(Modifier.fillMaxSize().verticalSwipes(onUp = { if (!listScroll.canScrollForward) onOpenDrawer() }, onDown = onOpenQuick)) {
+    Column(Modifier.fillMaxSize().verticalSwipes(onUp = onOpenDrawer, onDown = onOpenQuick)) {
         // Top row. Tap the date to open Quick actions. Swipe up anywhere to open All apps, swipe down from the top for Quick actions.
         Column {
             Row(
@@ -131,14 +133,7 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Row(
-                    Modifier.semantics { contentDescription = "Quick actions" }.clickableRole(onOpenQuick).padding(vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Caption(dateLine)
-                    AppIcon(Ic.Chevron, AppColors.muted, size = 12.dp, modifier = Modifier.graphicsLayer { rotationZ = 90f })
-                }
+                AppText(dateLine.uppercase(), Modifier.padding(vertical = 10.dp), size = 13.sp, weight = FontWeight.Medium, color = AppColors.muted, letterSpacing = 1.2.sp, mono = true)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(
                         Modifier
@@ -179,12 +174,12 @@ fun HomeScreen(
         Hair(0, Modifier.padding(horizontal = 28.dp, vertical = 20.dp))
 
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(listScroll).padding(start = 28.dp, end = 28.dp, bottom = 150.dp),
+            Modifier.weight(1f).fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 150.dp),
         ) {
             // Next task: tap to complete it, like the prototype.
             val next = state.nextTask
             var checking by remember { mutableStateOf(false) }
-            val nextText = next?.text ?: if (state.allTasks.isEmpty()) "Add a task on Today" else "All done for today"
+            val nextText = next?.text ?: if (state.allTasks.isEmpty()) "Add a task on Study" else "All done for today"
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -389,7 +384,7 @@ fun BottomBar(pager: PagerState, onApps: () -> Unit, onPhone: () -> Unit, onMess
 
 @Composable
 private fun Tabs(pager: PagerState, onSelect: (Int) -> Unit) {
-    val labels = listOf("Home", "Today")
+    val labels = listOf("Home", "Study")
     val widths = remember { androidx.compose.runtime.mutableStateListOf(0f, 0f) }
     val offsets = remember { androidx.compose.runtime.mutableStateListOf(0f, 0f) }
     val p = (pager.currentPage + pager.currentPageOffsetFraction).coerceIn(0f, 1f)

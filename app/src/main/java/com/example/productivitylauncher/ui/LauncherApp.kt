@@ -196,7 +196,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
         launching = null
     }
     fun launchWithFlourish(app: AppEntry) {
-        if (Motion.enabled) launching = app else launchApp(context, app)
+        launchApp(context, app)
     }
 
     fun openApp(app: AppEntry) {
