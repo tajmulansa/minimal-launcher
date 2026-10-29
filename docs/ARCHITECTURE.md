@@ -1,6 +1,6 @@
 # Architecture
 
-A small single-module Android app. The goal is to stay simple until a feature needs more.
+A small single-module Android app. Keep it simple until a feature needs more. The detailed, always-current guide is [../AGENTS.md](../AGENTS.md); this page explains the structure.
 
 ## How a launcher works
 
@@ -14,53 +14,29 @@ Android treats any app with an activity that declares these categories as a poss
 </intent-filter>
 ```
 
-Our `MainActivity` declares it (plus `LAUNCHER`, so it also appears in other launchers). The user then picks it under **Settings, Apps, Default apps, Home app**.
-
-`launchMode="singleTask"` means pressing Home while we are open sends a new intent to the same activity. `MainActivity.onNewIntent` increments a counter that the UI observes to return to the home screen.
+`MainActivity` declares it (plus `LAUNCHER`). The user picks it under **Settings, Apps, Default apps, Home app**. `launchMode="singleTask"` means pressing Home while open sends `onNewIntent`, which bumps a counter the UI watches to return to the first page.
 
 ## Listing apps
 
-`data/AppRepository.kt` asks `PackageManager` for every activity that handles `MAIN` + `LAUNCHER`. On Android 11 and newer, apps are hidden from queries unless declared, so the manifest has a narrow `<queries>` block. This avoids the broad `QUERY_ALL_PACKAGES` permission, which Google Play restricts.
+`data/AppRepository.kt` asks `PackageManager` for every activity handling `MAIN` + `LAUNCHER`. A narrow `<queries>` block in the manifest makes this work on Android 11+ without the restricted `QUERY_ALL_PACKAGES` permission.
 
-## Code layout
+## Layers
 
 ```
-com.example.productivitylauncher
-├── MainActivity.kt            single activity, edge-to-edge, Home handling
-├── data/
-│   ├── AppEntry.kt            one launchable app
-│   ├── AppFilter.kt           pure search logic (unit tested)
-│   ├── AppRepository.kt       PackageManager query
-│   └── FrogStore.kt           local storage for the frog text
-└── ui/
-    ├── LauncherApp.kt         screen switching and Back/Home handling
-    ├── theme/Theme.kt         AppColors and the Material theme
-    ├── components/            AppText, Rule (shared building blocks)
-    ├── home/HomeScreen.kt
-    └── apps/AppListScreen.kt
+MainActivity            scales density so the screen is 390 design units wide, hosts WidgetHost
+  LauncherApp           routing, pager, overlays, Back/Home handling, app launching
+    ui/<screen>         composables that take LauncherState + Nav
+      ui/components     design-system pieces      ui/theme  colours, fonts, Motion
+    data/LauncherState  the single state holder (Compose state + SharedPreferences)
+    data/Logic.kt       pure Kotlin rules (unit tested)
+    service/*           overlay timer, red button, noise player
 ```
 
-## Conventions
-
-- **Screens** are composables in `ui/<feature>/`. They receive plain callbacks and state, not an Activity.
-- **Navigation** is a tiny enum in `LauncherApp`. Introduce a navigation library only when screens need arguments or a back stack.
-- **State** uses `remember` and `rememberSaveable`. Introduce `ViewModel` when logic outgrows a composable, for example the gate flow.
-- **Logic without Android** (filtering, friction rules, pet decisions, scheduling) goes in plain Kotlin classes so it can be tested on the JVM.
-- **Storage** is local only. SharedPreferences for single values. Move to DataStore or Room if the data grows.
-- **Theme** values come only from `AppColors`. Text uses `AppText`.
-
-## Planned building blocks
-
-These are not built yet. They show where new code should go.
-
-| Feature | Likely home |
-| --- | --- |
-| Gate rules (reason length, phrase, doubling wait, daily limit) | `domain/gate/` pure Kotlin + `ui/gate/` |
-| Gated and pinned app settings | `data/` store + `ui/settings/` |
-| Pet engine (triggers, caps, cooldowns, line selection) | `domain/pet/` pure Kotlin, so every rule is unit tested |
-| Reminders and notifications | `notifications/` with `WorkManager` or `AlarmManager` |
-| Phone usage (total time) | `data/usage/` with `UsageStatsManager`, behind the optional Usage Access permission |
-| Tools widgets | `ui/tools/<widget>/` |
+- **Navigation:** `Route` (sealed interface in `ui/Nav.kt`) plus a tiny stack in `LauncherApp`. `Route.Main` is a two-page `HorizontalPager` (Home, Study). All apps, Quick actions and the bottom bar are overlays on Main.
+- **State:** one `LauncherState` instance, created in `MainActivity`, passed down. Fields are `mutableStateOf` and persisted in the SharedPreferences file `launcher`.
+- **Logic without Android** goes in `data/Logic.kt` (or similar plain Kotlin) so it can be tested on the JVM.
+- **Services:** `SessionOverlayService` (floating gated-app timer), `UrgeButtonService` (red dot), `NoiseService` (foreground media service that synthesises noise with `AudioTrack`).
+- **Widgets from other apps:** `WidgetHost` wraps `AppWidgetHost`; ids are stored as `ext:<id>` in `widgets`.
 
 ## Permissions policy
 
@@ -68,13 +44,15 @@ These are not built yet. They show where new code should go.
 | --- | --- |
 | `INTERNET` | Never requested |
 | `QUERY_ALL_PACKAGES` | Not used. Use `<queries>` |
-| Usage Access | Planned, optional, explained in-app |
-| `POST_NOTIFICATIONS` | Planned, optional, explained in-app |
+| Usage access (`PACKAGE_USAGE_STATS`) | Optional, explained in-app |
+| `SYSTEM_ALERT_WINDOW` | Optional (floating timer, red button) |
+| Do Not Disturb access | Optional, granted in system settings |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS` | Noise player only |
+| `READ_CALENDAR` | Unused leftover; can be removed |
 
 Any new permission needs an issue and a clear user benefit.
 
-## Build
+## Build and CI
 
-- Gradle Kotlin DSL, versions in `gradle/libs.versions.toml`.
-- `compileSdk` and `targetSdk` are 36 because Google Play requires new apps and updates to target Android 16 since 31 August 2026. Check the Play requirement again before each release.
-- CI: `.github/workflows/build.yml` builds the debug APK, runs unit tests and lint on every push and pull request. `.github/workflows/release.yml` builds the release APK and AAB.
+- Gradle Kotlin DSL, versions in `gradle/libs.versions.toml`. `compileSdk` and `targetSdk` are 36 (Google Play requirement since 31 August 2026; check before each release).
+- `build.yml`: debug APK, unit tests and lint on every push and PR. `release.yml`: signed release build. `screenshots.yml`: emulator screenshots pushed to the `shots-out` branch (see AGENTS.md section 9).

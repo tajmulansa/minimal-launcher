@@ -20,11 +20,15 @@ Used only to show the small countdown timer over a gated app, and the red button
 
 ## Do Not Disturb access (optional)
 
-Used only to turn Do Not Disturb on or off from the moon button and during focus sessions.
+Used only to turn Do Not Disturb on or off from the Silent button and during focus sessions.
 
-## Calendar, read only (optional)
+## Notifications and background audio (optional)
 
-Used only to list today's events in the Agenda widget. Events are read when the widget is shown and are not copied or stored.
+Used only by the noise player in Quick actions. While white, pink or brown noise plays, Android requires a "Noise is playing" notification. The sound is generated on the phone. Nothing is recorded, uploaded or shared.
+
+## Your name and sleep times
+
+The name you enter in setup and your wake and bed times stay on this phone. They are used only for the greeting and the evening shutdown time.
 
 ## Installed apps
 

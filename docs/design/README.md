@@ -1,21 +1,13 @@
 # Design prototype
 
-`ceramic-prototype.html` is the chosen visual direction, called **Ceramic**. It is one self-contained HTML file (no build step, no network), so you can open it in any phone or desktop browser.
+`still-prototype.html` is the visual and motion spec for the app, called **Still**. It is one self-contained HTML file (no build step, no network). Open it in a phone or desktop browser at about 390 px wide.
 
-It has 19 tap-through screens: Home, All apps, Widgets, Add widget, Brain dump, the three gate steps, the app session timer, Time's up, Daily limit reached, Focus session, Evening shutdown, Weekly review, Welcome, Settings, the two app pickers, and a Pip message. Use the **Light / Dark / Auto** switch in the top bar to see both themes.
+It shows Home, the Today/Study page with the focus ring, week dots, screen time and the to-do list, the All apps drawer, Quick actions, Settings and the three gate steps.
 
 ## How to use it
 
-- Treat it as the visual spec for the Android app. Match spacing, radii, colors, and copy.
-- Colors, radii, and shadows are CSS variables at the top of the file. Use the same names in `ui/theme/Theme.kt`.
-- The page only imitates behavior (breathing guide, phrase check, timers) so the screens can be judged. The real rules live in [../DESIGN.md](../DESIGN.md).
-- The Inter font is embedded in the file as a Latin subset. Inter is under the SIL Open Font License, the same license the app will bundle.
-
-## Changing it
-
-Edit the HTML directly and open a pull request. Please keep:
-
-- one typeface (Inter),
-- red only for gated apps, always with a text tag,
-- both themes working (every color is a variable, no hard-coded colors in components),
-- touch targets of at least 44px.
+- It is the source of truth. When the Android app and the prototype disagree, the prototype wins (spacing, type sizes, motion timing, copy).
+- Every colour and font is a CSS variable at the top of the file. The Android equivalents are in `ui/theme/Theme.kt`.
+- The Android app is a 1:1 port: the whole UI is scaled so the screen is 390 units wide (see `MainActivity.kt`), which makes every proportion match this file on any phone.
+- The prototype hard-codes the name "Tajmul"; the app asks for a name in setup.
+- Where the app intentionally differs: the Quick actions toggles, the Study page name, the habit stack and noise player, the sleep-time setup, and the gate phrase being "I choose to open <app>" (same as the prototype).

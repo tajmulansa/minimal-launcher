@@ -76,3 +76,11 @@ Small, well-defined tasks for new contributors:
 - Pip's lines and exact behavior
 - App icon
 - Whether the pet should ever use AI, or stay fully rule-based and offline (current answer: offline)
+
+---
+
+## Where things stand (updated)
+
+Most of M1 to M3 is built: gate, Home/Study pages, All apps drawer, focus, evening and weekly review, habit stack, noise player, Still design. See [AGENTS.md](../AGENTS.md) for the exact current behaviour. The checklists above are historical and not all ticked.
+
+Next ideas: remove the unused calendar code and permission, an app icon and name, TalkBack and font-scaling pass, tests for gate rules, Study Together.
