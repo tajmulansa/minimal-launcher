@@ -28,8 +28,6 @@ import com.example.productivitylauncher.data.formatMinutes
 import com.example.productivitylauncher.data.formatTimeOfDay
 import com.example.productivitylauncher.data.hasDndAccess
 import com.example.productivitylauncher.data.isDefaultLauncher
-import com.example.productivitylauncher.data.isStillWallpaperActive
-import com.example.productivitylauncher.data.openStillWallpaper
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
 import com.example.productivitylauncher.data.openDndSettings
 import com.example.productivitylauncher.data.openOverlaySettings
@@ -63,7 +61,6 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
     val overlay = remember(tick) { canDrawOverlays(context) }
     val dnd = remember(tick) { hasDndAccess(context) }
     val isHome = remember(tick) { isDefaultLauncher(context) }
-    val wallpaper = remember(tick) { isStillWallpaperActive(context) }
 
     Column(Modifier.fillMaxSize()) {
         PageHeader("Preferences", onBack = nav.back, label = "Settings")
@@ -88,17 +85,6 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                     SettingRow("Pip", subtitle = "The little [^_^] helper on your Home and Widgets pages") {
                         Toggle(state.pipOn, { state.updatePipOn(it) }, "Show Pip")
                     }
-                }
-            }
-
-            SettingsGroup("Wallpaper") {
-                SettingRow(
-                    "Still live wallpaper",
-                    subtitle = "The Still clock, your name and your next task on your Lock screen or Home screen. Your PIN and fingerprint keep working.",
-                    onClick = { openStillWallpaper(context) },
-                ) { ValueChevron(if (wallpaper) "On" else "Set", if (wallpaper) AppColors.focus else AppColors.muted) }
-                SettingRow("Clock on wallpaper", subtitle = "Turn off if your Lock screen already shows its own clock") {
-                    Toggle(state.wallpaperClock, { state.updateWallpaperClock(it) }, "Clock on wallpaper")
                 }
             }
 

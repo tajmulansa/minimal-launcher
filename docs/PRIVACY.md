@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 2026-10-31
+Last updated: 2026-10-08
 
 ## Short version
 
@@ -21,10 +21,6 @@ Used only to show the small countdown timer over a gated app, and the red button
 ## Do Not Disturb access (optional)
 
 Used only to turn Do Not Disturb on or off from the Silent button and during focus sessions.
-
-## Still live wallpaper (optional)
-
-If you choose it, the Still live wallpaper draws the date, clock, greeting with your name, and your next task on your Lock screen or Home screen. It reads those few values from this app's private storage on your phone and needs no permission and no internet. It does not replace or see your PIN, pattern or fingerprint, which keep working as usual. Choose a different wallpaper any time in Android settings.
 
 ## Notifications and background audio (optional)
 

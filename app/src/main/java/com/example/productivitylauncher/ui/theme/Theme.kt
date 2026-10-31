@@ -137,26 +137,31 @@ enum class Look(val label: String) {
     Contrast("Contrast"),
 }
 
-/** The 4x5 colour matrix for a look, or null for Standard (which costs nothing). Shared by the launcher and the wallpaper. */
-fun lookMatrix(look: Look): FloatArray? = when (look) {
+/** The colour filter for a look, or null for Standard (which costs nothing). */
+fun lookFilter(look: Look): ColorFilter? = when (look) {
     Look.Standard -> null
-    Look.Gray -> ColorMatrix().apply { setToSaturation(0f) }.values
-    Look.Warm -> floatArrayOf(
-        1.05f, 0.05f, 0f, 0f, 6f,
-        0.02f, 0.98f, 0f, 0f, 0f,
-        0f, 0.05f, 0.80f, 0f, -4f,
-        0f, 0f, 0f, 1f, 0f,
+    Look.Gray -> ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
+    Look.Warm -> ColorFilter.colorMatrix(
+        ColorMatrix(
+            floatArrayOf(
+                1.05f, 0.05f, 0f, 0f, 6f,
+                0.02f, 0.98f, 0f, 0f, 0f,
+                0f, 0.05f, 0.80f, 0f, -4f,
+                0f, 0f, 0f, 1f, 0f,
+            ),
+        ),
     )
-    Look.Contrast -> floatArrayOf(
-        1.2f, 0f, 0f, 0f, -25f,
-        0f, 1.2f, 0f, 0f, -25f,
-        0f, 0f, 1.2f, 0f, -25f,
-        0f, 0f, 0f, 1f, 0f,
+    Look.Contrast -> ColorFilter.colorMatrix(
+        ColorMatrix(
+            floatArrayOf(
+                1.2f, 0f, 0f, 0f, -25f,
+                0f, 1.2f, 0f, 0f, -25f,
+                0f, 0f, 1.2f, 0f, -25f,
+                0f, 0f, 0f, 1f, 0f,
+            ),
+        ),
     )
 }
-
-/** The colour filter for a look, or null for Standard (which costs nothing). */
-fun lookFilter(look: Look): ColorFilter? = lookMatrix(look)?.let { ColorFilter.colorMatrix(ColorMatrix(it)) }
 
 /** The palette for a theme, or null for Auto (which depends on the phone). */
 fun paletteOf(mode: ThemeMode): Palette? = when (mode) {

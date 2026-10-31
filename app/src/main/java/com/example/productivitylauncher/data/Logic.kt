@@ -251,30 +251,3 @@ fun formatTimeOfDay(min: Int): String {
     val h12 = if (h % 12 == 0) 12 else h % 12
     return "%d:%02d %s".format(h12, m, if (h < 12) "AM" else "PM")
 }
-
-// ---------------------------------------------------------------- Home greeting and wallpaper text
-
-/** True between bedtime and wake time, also when bedtime is after midnight (for example 01:00 to 07:00). */
-fun isAsleep(minuteOfDay: Int, wakeMin: Int, bedMin: Int): Boolean =
-    if (bedMin > wakeMin) minuteOfDay >= bedMin || minuteOfDay < wakeMin
-    else minuteOfDay >= bedMin && minuteOfDay < wakeMin
-
-/** The Home greeting with its full stop: "Good morning.", or "Rest well." while asleep. */
-fun homeGreeting(minuteOfDay: Int, wakeMin: Int, bedMin: Int): String = when {
-    isAsleep(minuteOfDay, wakeMin, bedMin) -> "Rest well."
-    minuteOfDay < 12 * 60 -> "Good morning."
-    minuteOfDay < 17 * 60 -> "Good afternoon."
-    else -> "Good evening."
-}
-
-/** The text under "Up next" on Home and on the Still wallpaper. */
-fun upNextText(nextTask: String?, hasAnyTask: Boolean): String =
-    nextTask ?: if (hasAnyTask) "All done for today" else "Add a task on Study"
-
-/** Hour as shown on the clock: 12 hour (1 to 12) or 24 hour (0 to 23), as in the Home clock. */
-fun clockHour(hour24: Int, use24: Boolean): Int =
-    if (use24) hour24 else (hour24 % 12).let { if (it == 0) 12 else it }
-
-/** "07:05" style text used by the wallpaper clock (the Home clock draws the same digits one by one). */
-fun clockText(hour24: Int, minute: Int, use24: Boolean): String =
-    "%02d:%02d".format(Locale.US, clockHour(hour24, use24), minute)

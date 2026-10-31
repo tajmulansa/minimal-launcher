@@ -2,8 +2,6 @@ package com.example.productivitylauncher.data
 
 import android.app.Activity
 import android.app.NotificationManager
-import android.app.WallpaperInfo
-import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -67,29 +65,6 @@ fun openUsageAccessSettings(context: Context) = openSettingsAction(context, Sett
 fun openOverlaySettings(context: Context) = openSettingsAction(context, Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri = true)
 fun openDndSettings(context: Context) = openSettingsAction(context, Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
 fun openDefaultLauncherSettings(context: Context) = openSettingsAction(context, Settings.ACTION_HOME_SETTINGS)
-
-/**
- * Opens Android's own preview for the Still live wallpaper, where the user picks Home screen, Lock screen or both.
- * Needs no permission. Falls back to the live wallpaper list on phones that do not have the direct screen.
- */
-fun openStillWallpaper(context: Context) {
-    val component = ComponentName(context, com.example.productivitylauncher.service.StillWallpaperService::class.java)
-    val direct = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
-        .putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    val opened = runCatching { context.startActivity(direct) }.isSuccess
-    if (!opened) openSettingsAction(context, WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)
-}
-
-/** True when the Still live wallpaper is the Home screen wallpaper, or (Android 14+) the Lock screen wallpaper. */
-fun isStillWallpaperActive(context: Context): Boolean = runCatching {
-    val manager = WallpaperManager.getInstance(context)
-    val mine = context.packageName
-    val cls = com.example.productivitylauncher.service.StillWallpaperService::class.java.name
-    fun WallpaperInfo?.isMine() = this != null && serviceInfo.packageName == mine && serviceInfo.name == cls
-    manager.wallpaperInfo.isMine() ||
-        (android.os.Build.VERSION.SDK_INT >= 34 && manager.getWallpaperInfo(WallpaperManager.FLAG_LOCK).isMine())
-}.getOrDefault(false)
 
 fun canDrawOverlays(context: Context): Boolean = Settings.canDrawOverlays(context)
 

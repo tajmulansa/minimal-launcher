@@ -113,10 +113,17 @@ fun HomeScreen(
     val cal = Calendar.getInstance().apply { time = now }
     val hour24 = cal.get(Calendar.HOUR_OF_DAY)
     val use24 = DateFormat.is24HourFormat(context)
-    val shownHour = com.example.productivitylauncher.data.clockHour(hour24, use24)
+    val shownHour = if (use24) hour24 else (hour24 % 12).let { if (it == 0) 12 else it }
     val minute = cal.get(Calendar.MINUTE)
     val minuteOfDay = hour24 * 60 + cal.get(Calendar.MINUTE)
-    val greeting = com.example.productivitylauncher.data.homeGreeting(minuteOfDay, state.wakeMin, state.bedMin)
+    val asleep = if (state.bedMin > state.wakeMin) minuteOfDay >= state.bedMin || minuteOfDay < state.wakeMin
+        else minuteOfDay >= state.bedMin && minuteOfDay < state.wakeMin
+    val greeting = when {
+        asleep -> "Rest well."
+        minuteOfDay < 12 * 60 -> "Good morning."
+        minuteOfDay < 17 * 60 -> "Good afternoon."
+        else -> "Good evening."
+    }
 
     Column(Modifier.fillMaxSize().verticalSwipes(onUp = onOpenDrawer, onDown = onOpenQuick)) {
         // Top row. Tap the date to open Quick actions. Swipe up anywhere to open All apps, swipe down from the top for Quick actions.
@@ -172,7 +179,7 @@ fun HomeScreen(
             // Next task: tap to complete it, like the prototype.
             val next = state.nextTask
             var checking by remember { mutableStateOf(false) }
-            val nextText = com.example.productivitylauncher.data.upNextText(next?.text, state.allTasks.isNotEmpty())
+            val nextText = next?.text ?: if (state.allTasks.isEmpty()) "Add a task on Study" else "All done for today"
             Row(
                 Modifier
                     .fillMaxWidth()

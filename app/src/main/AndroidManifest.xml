@@ -20,9 +20,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- The Still live wallpaper is optional, so phones without live wallpaper support can still install the app. -->
-    <uses-feature android:name="android.software.live_wallpaper" android:required="false" />
-
     <!-- Lets us list launchable apps on Android 11+ without the broad QUERY_ALL_PACKAGES permission. -->
     <queries>
         <intent>
@@ -68,19 +65,5 @@
         <service
             android:name=".service.UrgeButtonService"
             android:exported="false" />
-
-        <!-- Still live wallpaper for the Home and Lock screen. No permission needed to offer it; Android asks the user to apply it. -->
-        <service
-            android:name=".service.StillWallpaperService"
-            android:exported="true"
-            android:label="@string/wallpaper_name"
-            android:permission="android.permission.BIND_WALLPAPER">
-            <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.service.wallpaper"
-                android:resource="@xml/still_wallpaper" />
-        </service>
     </application>
 </manifest>
