@@ -52,6 +52,8 @@ import com.example.productivitylauncher.data.formatTimeOfDay
 import com.example.productivitylauncher.ui.components.Stepper
 import com.example.productivitylauncher.data.isDefaultLauncher
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
+import com.example.productivitylauncher.data.isStillWallpaperActive
+import com.example.productivitylauncher.data.openStillWallpaper
 import com.example.productivitylauncher.ui.Nav
 import com.example.productivitylauncher.ui.Route
 import com.example.productivitylauncher.ui.apps.GatedPickerBody
@@ -180,7 +182,7 @@ private fun WelcomePoint(title: String, body: String) {
 }
 
 @Composable
-private fun PermRow(title: String, why: String, granted: Boolean, onAllow: () -> Unit) {
+private fun PermRow(title: String, why: String, granted: Boolean, doneLabel: String = "Allowed", actionLabel: String = "Allow", onAllow: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -190,8 +192,8 @@ private fun PermRow(title: String, why: String, granted: Boolean, onAllow: () ->
             AppText(title, size = 16.sp, weight = FontWeight.SemiBold)
             AppText(why, size = 13.sp, color = AppColors.muted, lineHeight = 18.sp)
         }
-        if (granted) AppText("Allowed", size = 15.sp, weight = FontWeight.SemiBold, color = AppColors.focus)
-        else CButton("Allow", onAllow, kind = BtnKind.Accent, small = true)
+        if (granted) AppText(doneLabel, size = 15.sp, weight = FontWeight.SemiBold, color = AppColors.focus)
+        else CButton(actionLabel, onAllow, kind = BtnKind.Accent, small = true)
     }
 }
 
@@ -206,6 +208,7 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
     val overlay = remember(tick) { canDrawOverlays(context) }
     val dnd = remember(tick) { hasDndAccess(context) }
     val home = remember(tick) { isDefaultLauncher(context) }
+    val wallpaper = remember(tick) { isStillWallpaperActive(context) }
     var showPolicy by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp)) {
@@ -218,6 +221,7 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
         PermRow("Display over other apps", "Lets the small timer show over a gated app, and the optional red button show over every app.", overlay) { openOverlaySettings(context) }
         PermRow("Do Not Disturb", "Lets the moon button and focus sessions silence notifications.", dnd) { openDndSettings(context) }
         PermRow("Home app", "Make this your launcher so it opens when you press Home.", home) { openDefaultLauncherSettings(context) }
+        PermRow("Lock screen wallpaper", "Optional. Show the Still clock, your name and your next task on your Lock screen. It needs no permission, and your PIN and fingerprint keep working.", wallpaper, doneLabel = "On", actionLabel = "Set") { openStillWallpaper(context) }
         TextLink(if (showPolicy) "Hide privacy policy" else "Read the full privacy policy", { showPolicy = !showPolicy })
         if (showPolicy) {
             PRIVACY_SECTIONS.forEach { (title, body) ->

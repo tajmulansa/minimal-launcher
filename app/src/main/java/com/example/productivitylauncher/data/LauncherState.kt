@@ -100,6 +100,12 @@ class LauncherState(context: Context) {
 
     fun updatePipOn(v: Boolean) { pipOn = v; save { putBoolean("pip_on", v) } }
 
+    /** Whether the Still live wallpaper draws its big clock. Some lock screens already draw their own clock on top. */
+    var wallpaperClock by mutableStateOf(bool("wallpaper_clock", true))
+        private set
+
+    fun updateWallpaperClock(v: Boolean) { wallpaperClock = v; save { putBoolean("wallpaper_clock", v) } }
+
     // ------------------------------------------------------------ frog
 
     /** Minutes after midnight. Used for the greeting and the evening shutdown. */
@@ -753,6 +759,6 @@ class LauncherState(context: Context) {
         focusEnd = 0L; focusDnd = true; focusLockGated = true
         eveningHour = 21; eveningDoneDay = ""; screenGoalMin = 180
         widgets = DEFAULT_WIDGETS; widgetHeights = emptyMap()
-        themeMode = ThemeMode.Auto; look = Look.Standard; animations = true; Motion.enabled = true; pipOn = true; onboarded = false
+        themeMode = ThemeMode.Auto; look = Look.Standard; animations = true; Motion.enabled = true; pipOn = true; wallpaperClock = true; onboarded = false
     }
 }
