@@ -50,7 +50,7 @@ app/src/main/
   java/com/example/productivitylauncher/
     MainActivity.kt            single activity; scales density so the screen is 390 units wide
     data/                      state, rules, app list, system helpers (no UI)
-    service/                   SessionOverlayService, UrgeButtonService, NoiseService
+    service/                   SessionOverlayService, UrgeButtonService, NoiseService, StillWallpaperService
     ui/                        theme, components, one folder per screen
 app/src/test/                  JVM unit tests (AppFilterTest, LogicTest)
 docs/                          ARCHITECTURE, DESIGN, PRIVACY, RELEASING, ROADMAP, font licences, design/still-prototype.html
@@ -73,6 +73,7 @@ docs/                          ARCHITECTURE, DESIGN, PRIVACY, RELEASING, ROADMAP
 | `data/Calendar.kt` | Leftover from the removed Agenda widget (unused; `READ_CALENDAR` is still in the manifest and can be removed). |
 | `service/SessionOverlayService.kt` | Floating timer over a gated app during a session (needs "Display over other apps"). |
 | `service/UrgeButtonService.kt` | Optional red dot over every app; two taps start the 5 minute lock. |
+| `service/StillWallpaperService.kt` | The **Still live wallpaper** (`WallpaperService`). Draws date, clock, greeting + name and "Up next" with `Canvas` in the Still palette (theme from pref `theme`, Auto follows the phone). Reads the `launcher` SharedPreferences directly (no `LauncherState`), redraws on the minute tick, on pref changes and when visible. Greeting and next-task text come from `Logic.kt` (`homeGreeting`, `upNextText`, `clockText`) so Home and wallpaper stay identical. |
 | `service/NoiseService.kt` | Foreground media service; generates white/pink/brown noise from random numbers with `AudioTrack`; `Noise` object holds UI state (`playing`, `kind`). |
 | `ui/LauncherApp.kt` | Root composable: routing (`AnimatedContent` over `Route`), the two-page `HorizontalPager`, bottom bar, Quick panel, All apps drawer, Pip, Look colour filter, Back handling, app launching, urge override. |
 | `ui/Nav.kt` | `Route` sealed interface and `Nav(go, back)`. |
@@ -104,6 +105,7 @@ Navigation: `Route.Main` is two horizontal pages in a `HorizontalPager`: **Home*
 - **Gate** (for gated apps): 1) breathe (`breaths` setting, default 3, orb 250dp, 3 s cubic-bezier(.45,0,.3,1); optional growing wait of 5 s per open that day) then auto-advance; 2) type the fixed phrase **"I choose to open <App>"** (case-insensitive, no paste, keyboard type Password to disable suggestions); 3) choose minutes (5/10/15/30 limited by the daily limit, or custom). A floating timer then runs; when time is up, **Time's up**. Daily gated limit default 60 min. Focus sessions can lock gated apps (**Locked** screen).
 - **Urge (red button) lock:** 5 minutes, full screen, only Call and Message; survives closing the app (`urge_end`).
 - **Focus, Evening shutdown, Weekly review:** see `FocusScreens.kt` / `ReviewScreens.kt`.
+- **Still live wallpaper:** Android cannot replace the system lock screen, so the launcher offers a live wallpaper instead (no permission, PIN/fingerprint untouched). Settings > Wallpaper opens `WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER` (fallback: the live wallpaper chooser) and the user picks Home, Lock or both in Android's own preview. Setup step 6 has the same optional row. "Clock on wallpaper" (`wallpaper_clock`, default on) hides the big clock and date and moves the greeting and Up next lower, for lock screens that already draw their own clock. Note: this launcher's own Home page paints an opaque background, so the wallpaper is visible on the Lock screen and behind other launchers, not behind this Home page. The look filter (Gray/Warm/Contrast) is not applied to the wallpaper.
 - **Setup (onboarding)** steps: 0 welcome, 1 pick gated apps, 2 pick Home apps, 3 name, 4 wake and bedtime (also sets evening shutdown to bed hour − 1), 5 theme and look, 6 privacy and permissions.
 
 ## 6. Design system (must be used, not re-invented)
@@ -121,7 +123,7 @@ Navigation: `Route.Main` is two horizontal pages in a `HorizontalPager`: **Home*
 
 Everything is in `LauncherState` (constructor reads SharedPreferences `launcher`; setters call `save { ... }`). Patterns: `var x by mutableStateOf(str("key"))` with `private set` plus `fun updateX(...)` (do not name a function `setX` for a property `x`: JVM signature clash).
 
-Keys: `onboarded, user_name, wake_min, bed_min, theme, look, animations, frog, frog_done_day, frog_done_at, tomorrow_frog, frog_minutes, eaten_days, tasks, habits, dumps, note, widgets, widgets_v3, widget heights, home_apps, gated, pending_changes, limit, breaths, phrase_words (no longer used by the gate), growing_wait, opens_day, session_pkg, session_end, session_notified, booked_day, booked_ms, focus_end, focus_total, focus_dnd, focus_lock, lock_in, urge_button, urge_end, pip_on, water, water_goal, exam_name, exam_day, screen_goal, evening_hour, evening_done, last_day`.
+Keys: `onboarded, user_name, wake_min, bed_min, theme, look, animations, wallpaper_clock, frog, frog_done_day, frog_done_at, tomorrow_frog, frog_minutes, eaten_days, tasks, habits, dumps, note, widgets, widgets_v3, widget heights, home_apps, gated, pending_changes, limit, breaths, phrase_words (no longer used by the gate), growing_wait, opens_day, session_pkg, session_end, session_notified, booked_day, booked_ms, focus_end, focus_total, focus_dnd, focus_lock, lock_in, urge_button, urge_end, pip_on, water, water_goal, exam_name, exam_day, screen_goal, evening_hour, evening_done, last_day`.
 
 - **Tasks:** the UI shows one plain list `state.allTasks`. Historically one task was the "frog" (most important): it is stored in `frog` and shown first (`MAIN_ID`), the rest in `tasks`. Pip, Focus, Evening and the streak (`eatenDays`, set when the first task is done) still use the frog. Use `addAny/toggleAny/removeAny/nextTask`; `tasksLocked` is always false.
 - `rollover()` resets daily counters; `refreshUsage()` fills `screenTimeMs` and `appMsToday`; `applyPending()` applies due gate changes; `syncSession/consumeTimesUp` manage gated sessions.
@@ -144,7 +146,7 @@ There is no emulator on the owner's phone-only setup or in most AI sandboxes, so
 1. `screenshots.yml` (manual dispatch, any branch) builds the APK, boots an API 34 Pixel 5 emulator (KVM), runs `.github/scripts/shots.sh` and force-pushes the PNGs to the branch **`shots-out`** (artifacts are not downloadable from some sandboxes, a git branch is).
 2. `shots.sh` seeds SharedPreferences (name, tasks, home apps, a gated app, habits), then captures Home, Study, drawer, search, gate, quick actions. Edit the seed there to test other states.
 3. Render the prototype with Playwright (Chromium) at 390x844 with device scale ~2.77, take the same screens, and put the two images side by side.
-4. Known gotchas: the Study tab text changed (the script taps by text, update it if the label changes); the emulator has no usage data, so screen time shows empty.
+4. Known gotchas: the script taps tabs by text (it now taps `STUDY`; update it if the label changes); the emulator has no usage data, so screen time shows empty. The script also opens the Still wallpaper preview (`10_wallpaper_preview`), tries to apply it to the Lock screen and captures the lock screen (`11_lockscreen`); these two steps are best effort because the system wallpaper picker differs between emulator images.
 
 ## 10. Testing and quality
 

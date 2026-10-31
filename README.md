@@ -45,6 +45,9 @@ Phones are designed to pull attention away from what matters. Most "focus" apps 
 - **Noise player:** previous / play-pause / next for white, pink and brown noise made in code (plays with the screen off)
 - Theme (Auto, Light, Dark) and Look (Standard, Gray, Warm, Contrast)
 
+**Still live wallpaper** (optional, no permission)
+- Draws the Still date, clock, greeting with your name and "Up next" in the light or dark theme. Apply it from Settings or setup to your Lock screen, Home screen or both. Your PIN and fingerprint keep working. Turn the clock off in Settings if your Lock screen already shows one
+
 **Focus and review**
 - Focus screen, Evening shutdown (set from your bedtime), Weekly review
 - Red button: a 5 minute full-screen break with only Call and Message
@@ -130,6 +133,7 @@ More detail: [AGENTS.md](AGENTS.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE
   - **Do Not Disturb access:** the Silent tile and focus sessions
   - **Notifications and foreground service (media playback):** only for the noise player's "Noise is playing" notification
   - **Home app:** make it your launcher
+  - **Live wallpaper:** needs no permission. Android shows its own preview and asks where to apply it
 
 Full policy: [docs/PRIVACY.md](docs/PRIVACY.md).
 
