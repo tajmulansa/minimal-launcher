@@ -77,8 +77,8 @@ shot 11_lockscreen 3
 wall(){ sed "s|<string name=\"user_name\">|<string name=\"theme\">$2</string><string name=\"look\">$3</string><string name=\"user_name\">|" /tmp/launcher.xml > /tmp/l2.xml
   adb push /tmp/l2.xml /data/local/tmp/launcher.xml >/dev/null
   adb shell "run-as $P sh -c 'cp /data/local/tmp/launcher.xml shared_prefs/launcher.xml'"
-  adb shell am force-stop $P; adb shell input keyevent 3; sleep 1
-  adb shell am start -a android.service.wallpaper.CHANGE_LIVE_WALLPAPER --ecn android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT $P/$P.service.StillWallpaperService || true
+  adb shell am force-stop $P; adb shell input keyevent 4; adb shell input keyevent 4; adb shell input keyevent 3; sleep 2
+  adb shell am start -f 0x10008000 -a android.service.wallpaper.CHANGE_LIVE_WALLPAPER --ecn android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT $P/$P.service.StillWallpaperService || true
   shot "$1" 9; }
 wall 14_wall_dark Dark Standard
 wall 15_wall_gray Light Gray
