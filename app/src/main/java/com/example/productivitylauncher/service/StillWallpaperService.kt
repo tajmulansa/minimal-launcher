@@ -176,7 +176,7 @@ class StillWallpaperService : WallpaperService() {
                 val dateLine = SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(now).uppercase()
                 text(canvas, dateLine, gutter, 85.5f * u, 13f * u, monoMedium, muted, em = 0.092f)
                 // The clock: Bricolage Light 112, each digit centred in a fixed cell like the Home odometer.
-                drawClock(canvas, clockText(hour24, minute, use24), gutter, 238f * u, u, ink, p.dot.toArgb())
+                drawClock(canvas, clockText(hour24, minute, use24), gutter, 238f * u, u, ink, muted)
                 y = 287f * u
             } else {
                 // Without the clock the block sits in the lower part of the screen, clear of the system lock screen clock.
