@@ -59,9 +59,9 @@ shot 08_quick 3
 # Still live wallpaper: open Android's preview, apply to the Lock screen, then lock and wake to capture it. Best effort.
 adb shell input keyevent 3; sleep 1
 adb shell am start -a android.service.wallpaper.CHANGE_LIVE_WALLPAPER --ecn android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT $P/$P.service.StillWallpaperService || true
-shot 10_wallpaper_preview 5
+shot 10_wallpaper_preview 9
 tap_text "Set wallpaper" || true; sleep 2
-tap_text "Lock screen" || tap_text "Both" || true; sleep 3
+tap_text "Home screen and lock" || true; sleep 4
 adb shell input keyevent 26; sleep 2
 adb shell input keyevent 224; sleep 2
 shot 11_lockscreen 3
