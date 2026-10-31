@@ -36,7 +36,7 @@ for m in re.finditer(r'(?:text|content-desc)="([^"]*)"[^>]*bounds="\[(\d+),(\d+)
 else: print('not found',sys.argv[1])
 PY
 }
-tap_text TODAY; shot 02_today 3
+tap_text STUDY; shot 02_today 3
 adb shell input swipe 540 1900 540 700 400
 adb shell input swipe 540 1900 540 700 400
 shot 03_today_scrolled 2
@@ -56,4 +56,13 @@ adb shell input keyevent 3
 sleep 2
 sleep 3; adb shell input tap 276 225
 shot 08_quick 3
+# Still live wallpaper: open Android's preview, apply to the Lock screen, then lock and wake to capture it. Best effort.
+adb shell input keyevent 3; sleep 1
+adb shell am start -a android.service.wallpaper.CHANGE_LIVE_WALLPAPER --ecn android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT $P/$P.service.StillWallpaperService || true
+shot 10_wallpaper_preview 5
+tap_text "Set wallpaper" || true; sleep 2
+tap_text "Lock screen" || tap_text "Both" || true; sleep 3
+adb shell input keyevent 26; sleep 2
+adb shell input keyevent 224; sleep 2
+shot 11_lockscreen 3
 adb logcat -d -s AndroidRuntime:E > shots/crash.txt
