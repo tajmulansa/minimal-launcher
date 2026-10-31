@@ -29,10 +29,13 @@ tap_text(){ adb shell uiautomator dump /sdcard/u.xml >/dev/null; adb pull /sdcar
   python3 - "$1" <<'PY'
 import re,sys,subprocess
 x=open('/tmp/u.xml',encoding='utf8').read()
-for m in re.finditer(r'(?:text|content-desc)="([^"]*)"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',x):
-    if m.group(1).lower().startswith(sys.argv[1].lower()):
-        cx=(int(m.group(2))+int(m.group(4)))//2;cy=(int(m.group(3))+int(m.group(5)))//2
-        subprocess.call(['adb','shell','input','tap',str(cx),str(cy)]);print('tapped',m.group(1),cx,cy);break
+want=sys.argv[1].lower()
+for node in re.finditer(r'<node [^>]*>',x):
+    a=dict(re.findall(r'([\w-]+)="([^"]*)"',node.group(0)))
+    b=re.match(r'\[(\d+),(\d+)\]\[(\d+),(\d+)\]',a.get('bounds',''))
+    if b and any(a.get(k,'').lower().startswith(want) for k in ('text','content-desc')):
+        cx=(int(b.group(1))+int(b.group(3)))//2;cy=(int(b.group(2))+int(b.group(4)))//2
+        subprocess.call(['adb','shell','input','tap',str(cx),str(cy)]);print('tapped',a.get('text') or a.get('content-desc'),cx,cy);break
 else: print('not found',sys.argv[1])
 PY
 }

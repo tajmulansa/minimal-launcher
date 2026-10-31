@@ -146,15 +146,7 @@ class StillWallpaperService : WallpaperService() {
             val holder = surfaceHolder
             val canvas = runCatching { holder.lockCanvas() }.getOrNull() ?: return
             try {
-                // The Look (Gray, Warm, Contrast) is a colour filter over everything, as in the launcher.
-                val look = runCatching { Look.valueOf(prefs.getString("look", "Standard") ?: "Standard") }.getOrDefault(Look.Standard)
-                val matrix = lookMatrix(look)
-                if (matrix == null) paintStill(canvas) else {
-                    val layer = Paint().apply { colorFilter = ColorMatrixColorFilter(ColorMatrix(matrix)) }
-                    val saved = canvas.saveLayer(null, layer)
-                    paintStill(canvas)
-                    canvas.restoreToCount(saved)
-                }
+                paintStill(canvas)
             } finally {
                 runCatching { holder.unlockCanvasAndPost(canvas) }
             }
@@ -169,7 +161,12 @@ class StillWallpaperService : WallpaperService() {
             val ink = p.text.toArgb()
             val muted = p.muted.toArgb()
             val line = p.line.toArgb()
-            canvas.drawColor(p.phone.toArgb())
+            // The Look (Gray, Warm, Contrast) is a colour filter on every paint, as the launcher filters its whole screen.
+            val look = runCatching { Look.valueOf(prefs.getString("look", "Standard") ?: "Standard") }.getOrDefault(Look.Standard)
+            val filter = lookMatrix(look)?.let { ColorMatrixColorFilter(ColorMatrix(it)) }
+            paint.colorFilter = filter
+            shape.colorFilter = filter
+            canvas.drawRect(0f, 0f, w, h, Paint().apply { color = p.phone.toArgb(); colorFilter = filter })
 
             val now = Date()
             val cal = Calendar.getInstance().apply { time = now }
