@@ -31,6 +31,16 @@ A minimal Android **launcher for students** (working title "Launcher", visual id
 7. Do not hard-code the final app name, icon or applicationId. They are open decisions.
 8. Keep the UI flat and typographic: no filled cards, no shadows except the drawer sheet, hairline separators.
 
+## 3a. UI rule: everything new must look like the app
+
+Every new screen, widget, dialog, button, row, setting, text or animation must match the existing Still design exactly. Before building UI:
+1. Open a similar existing screen and copy its structure (e.g. a new settings row copies `SettingRow`; a new page copies `PageHeader` + 28dp gutters).
+2. Use only `AppColors`, the fonts (`Display`/`Sans`/`Mono`), the type scale and the components in section 6. Never raw colours, new font sizes, Material widgets, filled cards, shadows or rounded boxes.
+3. Same role = same size everywhere (titles 34sp or 44sp, body 17sp, secondary 15sp, captions 11sp mono). Match alignment, spacing and hairlines of neighbouring elements.
+4. Animate only with `Motion.*` so the Animations switch works.
+5. Support light and dark and all four Looks. Check it with the screenshot workflow against the prototype and neighbouring screens before merging.
+If a needed component does not exist, build it in `ui/components/Components.kt` in the same flat style and document it in section 6.
+
 ## 4. Repository map
 
 ```
