@@ -37,6 +37,11 @@ else: print('not found',sys.argv[1])
 PY
 }
 tap_text STUDY; shot 02_today 3
+# Settings (new Wallpaper group), then back to Study
+tap_text Settings; shot 12_settings 3
+adb shell input swipe 540 1700 540 900 300
+shot 13_settings_wallpaper 2
+adb shell input keyevent 4; sleep 2
 adb shell input swipe 540 1900 540 700 400
 adb shell input swipe 540 1900 540 700 400
 shot 03_today_scrolled 2
@@ -65,4 +70,15 @@ tap_text "Home screen and lock" || true; sleep 4
 adb shell input keyevent 26; sleep 2
 adb shell input keyevent 224; sleep 2
 shot 11_lockscreen 3
+# Wallpaper in dark and in each Look (preview screen), best effort.
+wall(){ sed "s|<string name=\"user_name\">|<string name=\"theme\">$2</string><string name=\"look\">$3</string><string name=\"user_name\">|" /tmp/launcher.xml > /tmp/l2.xml
+  adb push /tmp/l2.xml /data/local/tmp/launcher.xml >/dev/null
+  adb shell "run-as $P sh -c 'cp /data/local/tmp/launcher.xml shared_prefs/launcher.xml'"
+  adb shell am force-stop $P; adb shell input keyevent 3; sleep 1
+  adb shell am start -a android.service.wallpaper.CHANGE_LIVE_WALLPAPER --ecn android.service.wallpaper.extra.LIVE_WALLPAPER_COMPONENT $P/$P.service.StillWallpaperService || true
+  shot "$1" 9; }
+wall 14_wall_dark Dark Standard
+wall 15_wall_gray Light Gray
+wall 16_wall_warm Light Warm
+wall 17_wall_contrast Light Contrast
 adb logcat -d -s AndroidRuntime:E > shots/crash.txt

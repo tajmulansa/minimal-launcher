@@ -7,6 +7,8 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.os.Build
@@ -22,9 +24,11 @@ import com.example.productivitylauncher.data.dayKey
 import com.example.productivitylauncher.data.homeGreeting
 import com.example.productivitylauncher.data.upNextText
 import com.example.productivitylauncher.ui.theme.DarkPalette
+import com.example.productivitylauncher.ui.theme.Look
 import com.example.productivitylauncher.ui.theme.LightPalette
 import com.example.productivitylauncher.ui.theme.Palette
 import com.example.productivitylauncher.ui.theme.ThemeMode
+import com.example.productivitylauncher.ui.theme.lookMatrix
 import com.example.productivitylauncher.ui.theme.paletteOf
 import org.json.JSONArray
 import java.text.SimpleDateFormat
@@ -36,6 +40,8 @@ import java.util.Locale
  * The Still live wallpaper: the Home page's date, clock, greeting and "Up next" drawn on a plain Still background,
  * in the light or dark Still palette. It reads the launcher's own SharedPreferences file on this phone and needs no
  * permission, so the PIN, pattern and fingerprint of the lock screen keep working as usual.
+ *
+ * The launcher's Look (Gray, Warm, Contrast) is applied to the whole wallpaper.
  *
  * Android draws its own lock screen clock over any wallpaper. If that looks doubled, turn off "Clock on wallpaper"
  * in Settings and the wallpaper keeps only the greeting and the next task.
@@ -140,7 +146,15 @@ class StillWallpaperService : WallpaperService() {
             val holder = surfaceHolder
             val canvas = runCatching { holder.lockCanvas() }.getOrNull() ?: return
             try {
-                paintStill(canvas)
+                // The Look (Gray, Warm, Contrast) is a colour filter over everything, as in the launcher.
+                val look = runCatching { Look.valueOf(prefs.getString("look", "Standard") ?: "Standard") }.getOrDefault(Look.Standard)
+                val matrix = lookMatrix(look)
+                if (matrix == null) paintStill(canvas) else {
+                    val layer = Paint().apply { colorFilter = ColorMatrixColorFilter(ColorMatrix(matrix)) }
+                    val saved = canvas.saveLayer(null, layer)
+                    paintStill(canvas)
+                    canvas.restoreToCount(saved)
+                }
             } finally {
                 runCatching { holder.unlockCanvasAndPost(canvas) }
             }
