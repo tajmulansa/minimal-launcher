@@ -174,10 +174,10 @@ class StillWallpaperService : WallpaperService() {
             if (showClock) {
                 // Date (mono, 13, uppercase), as on Home.
                 val dateLine = SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(now).uppercase()
-                text(canvas, dateLine, gutter, 69f * u, 13f * u, monoMedium, muted, em = 0.092f)
-                // The clock: Bricolage Light 112, tracking -0.05em.
-                text(canvas, clockText(hour24, minute, use24), gutter - 4f * u, 206f * u, 112f * u, clockFace, ink, em = -0.05f)
-                y = 246f * u
+                text(canvas, dateLine, gutter, 85.5f * u, 13f * u, monoMedium, muted, em = 0.092f)
+                // The clock: Bricolage Light 112, each digit centred in a fixed cell like the Home odometer.
+                drawClock(canvas, clockText(hour24, minute, use24), gutter, 238f * u, u, ink, p.dot.toArgb())
+                y = 287f * u
             } else {
                 // Without the clock the block sits in the lower part of the screen, clear of the system lock screen clock.
                 y = h * 0.62f
@@ -199,17 +199,38 @@ class StillWallpaperService : WallpaperService() {
             }
 
             // Hairline, then "Up next" with an empty check circle, as on Home.
-            y += 34f * u
+            y += 25.5f * u
             shape.color = line; shape.style = Paint.Style.STROKE; shape.strokeWidth = 1f * u
             canvas.drawLine(gutter, y, w - gutter, y, shape)
-            y += 20f * u
+            y += 25f * u
             val circle = 30f * u
             shape.color = ink; shape.strokeWidth = 1.5f * u
             canvas.drawCircle(gutter + circle / 2f, y + circle / 2f, circle / 2f - 0.75f * u, shape)
             val textX = gutter + circle + 16f * u
-            text(canvas, "UP NEXT", textX, y + 11f * u, 11f * u, monoMedium, muted, em = 1f / 11f)
+            text(canvas, "UP NEXT", textX, y + 6.5f * u, 11f * u, monoMedium, muted, em = 1f / 11f)
             val upNext = ellipsize(upNextText(next, hasTasks), displayMedium, 19f * u, -0.02f, w - gutter - textX)
-            text(canvas, upNext, textX, y + 32f * u, 19f * u, displayMedium, if (next == null) muted else ink, em = -0.02f)
+            text(canvas, upNext, textX, y + 30f * u, 19f * u, displayMedium, if (next == null) muted else ink, em = -0.02f)
+        }
+
+        /** "HH:MM" as four digit cells (57.9 units) and a colon cell (36 units), the proportions of the Home clock. */
+        private fun drawClock(canvas: Canvas, hhmm: String, x0: Float, baseline: Float, u: Float, ink: Int, dot: Int) {
+            val cell = 57.9f * u
+            val colon = 36f * u
+            val size = 112f * u
+            var x = x0
+            for (ch in hhmm) {
+                if (ch == ':') {
+                    shape.style = Paint.Style.FILL; shape.color = dot
+                    canvas.drawCircle(x + colon / 2f, baseline - 57f * u, 6.3f * u, shape)
+                    canvas.drawCircle(x + colon / 2f, baseline - 21f * u, 6.3f * u, shape)
+                    x += colon
+                } else {
+                    paint.typeface = clockFace; paint.textSize = size; paint.letterSpacing = 0f
+                    val s = ch.toString()
+                    text(canvas, s, x + (cell - paint.measureText(s)) / 2f, baseline, size, clockFace, ink)
+                    x += cell
+                }
+            }
         }
 
         /** Draws one run of text at a baseline and returns its width. [em] is letter spacing in em. */
