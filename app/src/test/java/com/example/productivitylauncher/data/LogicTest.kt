@@ -134,4 +134,39 @@ class LogicTest {
         assertEquals(0L, daysUntil(100L, 100L))
         assertEquals(-3L, daysUntil(97L, 100L))
     }
+
+    @Test fun asleepHandlesBedtimeBeforeAndAfterMidnight() {
+        // 23:00 to 07:00
+        assertTrue(isAsleep(23 * 60 + 30, 7 * 60, 23 * 60))
+        assertTrue(isAsleep(3 * 60, 7 * 60, 23 * 60))
+        assertFalse(isAsleep(7 * 60, 7 * 60, 23 * 60))
+        assertFalse(isAsleep(12 * 60, 7 * 60, 23 * 60))
+        // 01:00 to 07:00
+        assertTrue(isAsleep(2 * 60, 7 * 60, 60))
+        assertFalse(isAsleep(0, 7 * 60, 60))
+        assertFalse(isAsleep(22 * 60, 7 * 60, 60))
+    }
+
+    @Test fun homeGreetingFollowsTheTimeOfDay() {
+        assertEquals("Good morning.", homeGreeting(9 * 60, 7 * 60, 23 * 60))
+        assertEquals("Good afternoon.", homeGreeting(12 * 60, 7 * 60, 23 * 60))
+        assertEquals("Good afternoon.", homeGreeting(16 * 60 + 59, 7 * 60, 23 * 60))
+        assertEquals("Good evening.", homeGreeting(17 * 60, 7 * 60, 23 * 60))
+        assertEquals("Rest well.", homeGreeting(23 * 60, 7 * 60, 23 * 60))
+        assertEquals("Rest well.", homeGreeting(5 * 60, 7 * 60, 23 * 60))
+    }
+
+    @Test fun upNextTextCoversEveryState() {
+        assertEquals("Read chapter 3", upNextText("Read chapter 3", true))
+        assertEquals("All done for today", upNextText(null, true))
+        assertEquals("Add a task on Study", upNextText(null, false))
+    }
+
+    @Test fun clockTextUsesTwelveOrTwentyFourHours() {
+        assertEquals("07:05", clockText(7, 5, false))
+        assertEquals("12:00", clockText(0, 0, false))
+        assertEquals("01:30", clockText(13, 30, false))
+        assertEquals("00:00", clockText(0, 0, true))
+        assertEquals("13:30", clockText(13, 30, true))
+    }
 }
