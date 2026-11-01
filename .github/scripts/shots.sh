@@ -40,6 +40,8 @@ else: print('not found',sys.argv[1])
 PY
 }
 tap_text STUDY; shot 02_today 3
+tap_text "Add widget"; shot 10_add_widget 3
+adb shell input keyevent 4; sleep 2
 adb shell input swipe 540 1900 540 700 400
 adb shell input swipe 540 1900 540 700 400
 shot 03_today_scrolled 2

@@ -47,6 +47,7 @@ import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.ui.Nav
 import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
+import com.example.productivitylauncher.ui.components.Caption
 import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.PageHeader
 import com.example.productivitylauncher.ui.components.RadiusMd
@@ -116,7 +117,7 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
     }
 
     Column(Modifier.fillMaxSize()) {
-        PageHeader("Add widget", onBack = nav.back, label = "From your apps")
+        PageHeader("Add widget", onBack = nav.back, label = "Widgets")
         message?.let { AppText(it, size = 15.sp, color = AppColors.focus, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) }
 
         if (tab == 0) {
@@ -139,17 +140,19 @@ fun AddWidgetScreen(state: LauncherState, nav: Nav, host: WidgetHost) {
                     .sortedBy { it.label.lowercase() }
             }
             var openPkg by remember { mutableStateOf<String?>(null) }
-            if (groups.isEmpty()) {
-                AppText("No widgets from other apps were found.", color = AppColors.muted, modifier = Modifier.padding(28.dp))
-            }
             val density = context.resources.displayMetrics.density
             LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                item(key = "head-launcher") { Caption("Launcher widgets", Modifier.padding(top = 4.dp)) }
                 item(key = "builtin-habits") {
                     val added = state.hasWidget("habits")
                     AddRow(letter = "H", title = "Habit stack", subtitle = "After I do X, I do Y. Check off once a day.", added = added, onClick = {
                         state.toggleWidget("habits")
                         message = if (state.hasWidget("habits")) "Added. Find it on your Study page." else "Removed."
                     })
+                }
+                item(key = "head-apps") { Caption("Widgets from your apps", Modifier.padding(top = 20.dp)) }
+                if (groups.isEmpty()) {
+                    item(key = "no-app-widgets") { AppText("No widgets from other apps were found.", size = 15.sp, color = AppColors.muted, modifier = Modifier.padding(vertical = 8.dp)) }
                 }
                 items(groups, key = { it.pkg }) { g ->
                     val open = openPkg == g.pkg

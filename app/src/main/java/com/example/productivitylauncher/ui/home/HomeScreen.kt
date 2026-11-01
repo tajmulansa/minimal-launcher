@@ -21,6 +21,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -147,7 +149,7 @@ fun HomeScreen(
             }
 
             // The clock.
-            Column(Modifier.padding(start = 28.dp, end = 28.dp, top = 22.dp).enterStagger(1, once = true)) {
+            Column(Modifier.padding(start = 28.dp, end = 28.dp, top = 14.dp).enterStagger(1, once = true)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val hs = shownHour.toString().padStart(2, '0')
                     Odometer(hs[0].digitToInt(), 0, 112.sp)
@@ -156,7 +158,7 @@ fun HomeScreen(
                     Odometer(minute / 10, 180, 112.sp)
                     Odometer(minute % 10, 270, 112.sp)
                 }
-                Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.Bottom) {
+                Row(Modifier.padding(top = 18.dp), verticalAlignment = Alignment.Bottom) {
                     AppText(if (state.userName.isBlank()) greeting else greeting.removeSuffix(".") + ", ", size = 22.sp, weight = FontWeight.Normal, color = AppColors.muted)
                     if (state.userName.isNotBlank()) {
                         val underline by animateFloatAsState(1f, if (Motion.enabled) tween<Float>(1100, delayMillis = if (Intro.played) 0 else 900, easing = Motion.Soft) else snap(), label = "nameLine")
@@ -258,12 +260,29 @@ private fun Odometer(digit: Int, delayMs: Int, size: TextUnit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             for (d in 0..9) {
-                Box(Modifier.height(cell), contentAlignment = Alignment.Center) {
-                    AppText(d.toString(), size = size, weight = FontWeight.Light, letterSpacing = (-0.06).em, lineHeight = size, tnum = true)
-                }
+                Box(Modifier.height(cell)) { ClockGlyph(d.toString(), size, AppColors.text, (-0.06).em) }
             }
         }
     }
+}
+
+/**
+ * One clock glyph with its baseline pinned at 0.83 em from the top of a 1 em tall cell. That is where the prototype's
+ * `line-height: 1` puts Bricolage Grotesque (ascent 0.93, descent 0.27), so the digits sit exactly where they do there
+ * and the gap between the date and the clock matches. Every glyph, colon included, reports the same cell height.
+ */
+@Composable
+private fun ClockGlyph(text: String, size: TextUnit, color: androidx.compose.ui.graphics.Color, tracking: TextUnit) {
+    AppText(
+        text,
+        Modifier.layout { m, c ->
+            val p = m.measure(c.copy(minWidth = 0, minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
+            val cellPx = size.roundToPx()
+            val y = (0.83f * cellPx).roundToInt() - p[FirstBaseline]
+            layout(p.width, cellPx) { p.place(0, y) }
+        },
+        size = size, weight = FontWeight.Light, color = color, letterSpacing = tracking, lineHeight = size, tnum = true,
+    )
 }
 
 @Composable
@@ -277,8 +296,9 @@ private fun Colon(size: TextUnit) {
         )
         a
     } else 1f
-    Box(Modifier.width(with(LocalDensity.current) { size.toDp() } * 0.3f).graphicsLayer { this.alpha = alpha }, contentAlignment = Alignment.Center) {
-        AppText(":", size = size, weight = FontWeight.Light, color = AppColors.muted)
+    val cell = with(LocalDensity.current) { size.toDp() }
+    Box(Modifier.width(cell * 0.3f).height(cell).graphicsLayer { this.alpha = alpha }, contentAlignment = Alignment.TopCenter) {
+        ClockGlyph(":", size, AppColors.muted, (-0.05).em)
     }
 }
 

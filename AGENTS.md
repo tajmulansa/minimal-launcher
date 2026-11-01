@@ -88,7 +88,7 @@ docs/                          ARCHITECTURE, DESIGN, PRIVACY, RELEASING, ROADMAP
 | `ui/focus/FocusScreens.kt`, `ReviewScreens.kt` | Focus session, Evening shutdown, Weekly review. |
 | `ui/settings/SettingsScreen.kt`, `Privacy.kt` | Settings and policy text. |
 | `ui/onboarding/OnboardingScreen.kt` | 7-step setup. |
-| `ui/widgets/AddWidgetScreen.kt`, `BrainDumpScreen.kt` | Add widget (Habit stack + other apps' widgets); brain dump (only reachable from Pip, which is off). |
+| `ui/widgets/AddWidgetScreen.kt`, `BrainDumpScreen.kt` | Add widget (two sections: "Launcher widgets" = Habit stack, "Widgets from your apps" = other apps' widgets); brain dump (only reachable from Pip, which is off). |
 | `ui/pip/Pip.kt` | Text-face companion. `PIP_ENABLED = false`; code and tests kept. |
 
 ## 5. Screens and behaviour
@@ -144,7 +144,7 @@ There is no emulator on the owner's phone-only setup or in most AI sandboxes, so
 1. `screenshots.yml` (manual dispatch, any branch) builds the APK, boots an API 34 Pixel 5 emulator (KVM), runs `.github/scripts/shots.sh` and force-pushes the PNGs to the branch **`shots-out`** (artifacts are not downloadable from some sandboxes, a git branch is).
 2. `shots.sh` seeds SharedPreferences (name, tasks, home apps, a gated app, habits), then captures Home, Study, drawer, search, gate, quick actions. Edit the seed there to test other states.
 3. Render the prototype with Playwright (Chromium) at 390x844 with device scale ~2.77, take the same screens, and put the two images side by side.
-4. Known gotchas: the script taps tabs by text (it now taps `STUDY`; update it if the label changes); the emulator has no usage data, so screen time shows empty.
+4. Known gotchas: the script taps tabs by text (it now taps `STUDY`; update it if the label changes); the emulator has no usage data, so screen time shows empty. Shot `10_add_widget` is the Add widget page (`tap_text` also matches content descriptions).
 
 ## 10. Testing and quality
 
