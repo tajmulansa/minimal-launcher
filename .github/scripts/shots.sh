@@ -24,7 +24,7 @@ adb shell "run-as $P sh -c 'mkdir -p shared_prefs && cp /data/local/tmp/launcher
 adb shell cmd package set-home-activity $P/.MainActivity
 adb shell input keyevent 3; sleep 1
 adb shell am start -n $P/.MainActivity
-shot 01_home 7
+shot 01_home 14
 tap_text(){ adb shell uiautomator dump /sdcard/u.xml >/dev/null; adb pull /sdcard/u.xml /tmp/u.xml >/dev/null
   python3 - "$1" <<'PY'
 import re,sys,subprocess
@@ -61,4 +61,7 @@ adb shell input keyevent 3
 sleep 2
 sleep 3; adb shell input tap 276 225
 shot 08_quick 3
+# Home again after everything has settled (the intro animation can still be running in the first shot on a slow runner).
+adb shell input keyevent 3; sleep 12
+shot 11_home_settled 2
 adb logcat -d -s AndroidRuntime:E > shots/crash.txt
