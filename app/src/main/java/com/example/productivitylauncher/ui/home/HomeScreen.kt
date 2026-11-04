@@ -371,7 +371,7 @@ fun Modifier.verticalSwipes(onUp: () -> Unit, onDown: () -> Unit): Modifier = po
  * with a line that follows the pager while you swipe.
  */
 @Composable
-fun BottomBar(pager: PagerState, onApps: () -> Unit, onPhone: () -> Unit, onMessages: () -> Unit, onFocus: () -> Unit, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun BottomBar(pager: PagerState, onApps: () -> Unit, onPhone: () -> Unit, onMessages: () -> Unit, onSteady: () -> Unit, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
@@ -395,7 +395,7 @@ fun BottomBar(pager: PagerState, onApps: () -> Unit, onPhone: () -> Unit, onMess
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DockButton(Ic.Phone, "Phone", onPhone)
                 DockButton(Ic.Message, "Messages", onMessages)
-                DockButton(Ic.Timer, "Focus", onFocus)
+                DockButton(Ic.Steady, "Steady mode", onSteady)
             }
         }
         Tabs(pager, onSelect)

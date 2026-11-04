@@ -55,7 +55,8 @@ class MainActivity : ComponentActivity() {
             // Everything is drawn a little smaller than the Android default: sizes and text scale together.
             // Like the prototype, whatever the phone: the screen is always 390 design units wide, so every proportion matches.
             val density = LocalDensity.current
-            val widthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+            val cfg = androidx.compose.ui.platform.LocalConfiguration.current
+            val widthDp = minOf(cfg.screenWidthDp, cfg.screenHeightDp)
             val scale = (widthDp / DESIGN_WIDTH_DP).coerceIn(0.8f, 1.3f)
             CompositionLocalProvider(LocalDensity provides Density(density.density * scale, density.fontScale)) {
                 LauncherTheme(palette) {

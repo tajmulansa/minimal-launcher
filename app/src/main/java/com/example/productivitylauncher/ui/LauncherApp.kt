@@ -256,7 +256,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
                     onApps = { drawerOpen = true },
                     onPhone = { com.example.productivitylauncher.data.openPhone(context) },
                     onMessages = { com.example.productivitylauncher.data.openMessages(context) },
-                    onFocus = { scope.launch { pager.animateScrollToPage(1) } },
+                    onSteady = { nav.go(Route.Steady) },
                     onSelect = { scope.launch { pager.animateScrollToPage(it) } },
                 )
                 QuickPanel(state, quickOpen, { quickOpen = false })
@@ -330,6 +330,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             }
             Route.BrainDump -> BrainDumpScreen(state, nav)
             Route.AddWidget -> com.example.productivitylauncher.ui.widgets.AddWidgetScreen(state, nav, widgetHost)
+            Route.Steady -> com.example.productivitylauncher.ui.steady.SteadyScreen(state, nav)
             Route.Focus -> FocusScreen(state, nav)
             Route.Evening -> EveningScreen(state, nav)
             Route.Week -> WeekScreen(state, nav)

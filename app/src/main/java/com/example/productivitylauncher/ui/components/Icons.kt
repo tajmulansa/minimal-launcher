@@ -27,6 +27,7 @@ enum class Ic(val path: String, val filled: Boolean = false) {
     Chevron("M9 18l6-6-6-6"),
     Close("M18 6L6 18 M6 6l12 12"),
     Sliders("M4 7h9 M17 7h3 M4 17h3 M11 17h9 M15 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z M9 15a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"),
+    Steady("M6 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M4 12h16"),
     Timer("M12 5.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15z M12 9v4l2.5 1.5 M9.5 2.5h5"),
     Drop("M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z", filled = true),
     Play("M6 4l14 8-14 8z", filled = true),
