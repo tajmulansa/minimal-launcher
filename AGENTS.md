@@ -20,6 +20,13 @@ A minimal Android **launcher for students** (working title "Launcher", visual id
 - The owner reports feedback as numbered lists. Do every item, say plainly what you did, and flag anything you interpreted.
 - Never put the owner's personal data into the repo.
 
+## 2a. Small fixes vs big changes (how much checking to do)
+
+- **Small fix** (a few lines: a spacing, text, colour, size or one-setting tweak): make the change, push a branch, wait for the Build workflow to go green, merge. **Do not** run the screenshot workflow, re-measure against the prototype, edit the screenshot script, or touch unrelated files or docs unless the owner asks. If you can see the prototype value in its CSS, use it directly.
+- **Big change** (new screen, new widget, redesign, anything touching layout of several screens): do the full check in section 9 (screenshots against the prototype) before merging.
+- Either way, do only what was asked. If you notice something else worth fixing, mention it in one line and leave it.
+- Still update `AGENTS.md` when behaviour, rules or file layout change, but not for a small visual tweak.
+
 ## 3. Hard rules (do not break)
 
 1. No `INTERNET` permission, no network code, no tracking libraries. Optional permissions must degrade gracefully when denied.
