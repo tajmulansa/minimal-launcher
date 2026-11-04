@@ -75,6 +75,36 @@ fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier) {
     }
 }
 
+/** Pick which apps are hidden from All apps. Hiding is instant and can be undone any time. */
+@Composable
+fun HiddenPickerScreen(state: LauncherState, nav: Nav) {
+    Column(Modifier.fillMaxSize()) {
+        PageHeader("Hidden apps", onBack = nav.back)
+        AppText(
+            "Hidden apps are kept out of All apps. Type an app's full name in the search to open it.",
+            size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
+        )
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp)) {
+            items(state.apps, key = { it.packageName + "/" + it.activityName }) { app ->
+                val on = app.packageName in state.hidden
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 60.dp)
+                        .clickableRole({ state.setHidden(app.packageName, !on) })
+                        .hairlineBelow()
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    AppText(app.label, Modifier.weight(1f), size = 24.sp, weight = FontWeight.Medium, letterSpacing = (-0.72).sp, maxLines = 1, color = if (on) AppColors.muted else AppColors.text)
+                    CheckCircle(on, size = 28.dp)
+                }
+            }
+        }
+    }
+}
+
 /** Pick up to six apps for the Home page. */
 @Composable
 fun HomePickerScreen(state: LauncherState, nav: Nav) {
@@ -97,7 +127,7 @@ fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
         )
         LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             // Gated apps are listed last, greyed out, so it is clear why they cannot be picked.
-            items(state.apps.sortedBy { it.packageName in state.gated }, key = { it.packageName + "/" + it.activityName }) { app ->
+            items(state.apps.filter { it.packageName !in state.hidden }.sortedBy { it.packageName in state.gated }, key = { it.packageName + "/" + it.activityName }) { app ->
                 val on = app.packageName in state.homeApps
                 val gated = app.packageName in state.gated
                 Row(

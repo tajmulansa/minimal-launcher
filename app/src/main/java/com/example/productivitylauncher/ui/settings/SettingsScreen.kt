@@ -139,6 +139,9 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Gated apps", subtitle = "Apps that get a gate", onClick = { nav.go(Route.GatedPicker) }) {
                     ValueChevron("${state.gated.size}", AppColors.gate)
                 }
+                SettingRow("Hidden apps", subtitle = "Kept out of All apps. Type the full name to find one", onClick = { nav.go(Route.HiddenPicker) }) {
+                    ValueChevron("${state.hidden.size}")
+                }
                 SettingRow("Home apps", subtitle = "Up to six on your Home page", onClick = { nav.go(Route.HomePicker) }) {
                     ValueChevron("${state.homeApps.size} of 6")
                 }

@@ -285,7 +285,7 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (total > 0) Caption("$done/$total done")
                     IconButtonLarge(Ic.Plus, "Add widget", { nav.go(Route.AddWidget) })
-                    IconButtonLarge(Ic.Sliders, "Settings", { nav.go(Route.Settings) })
+                    IconButtonLarge(Ic.Gear, "Settings", { nav.go(Route.Settings) })
                 }
             }
             AppText("Focus", Modifier.padding(top = 12.dp).enterStagger(0), size = 44.sp, weight = FontWeight.Medium, letterSpacing = (-2).sp)

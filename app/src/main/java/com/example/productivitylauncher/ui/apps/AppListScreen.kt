@@ -148,7 +148,12 @@ fun AppDrawer(state: LauncherState, open: Boolean, onClose: () -> Unit, onOpenAp
                 }
 
                 // Lock In: nothing is listed until the full name of an app is typed.
-                val shown = if (state.lockIn) exactNameMatches(state.apps, query) else filterApps(state.apps, query)
+                val shown = when {
+                    state.lockIn -> exactNameMatches(state.apps, query)
+                    // Hidden apps stay out of the list; typing the full name brings one back.
+                    else -> (filterApps(state.apps.filter { it.packageName !in state.hidden }, query) + exactNameMatches(state.apps.filter { it.packageName in state.hidden }, query))
+                        .sortedBy { it.label.lowercase() }
+                }
                 if (shown.isEmpty()) {
                     AppText(
                         when {

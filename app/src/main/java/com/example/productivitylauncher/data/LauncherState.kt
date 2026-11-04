@@ -341,6 +341,16 @@ class LauncherState(context: Context) {
 
     var gated by mutableStateOf(prefs.getStringSet("gated", emptySet()) ?: emptySet())
         private set
+    /** Apps kept out of the All apps list and the Home picker. Typing an app's full name still finds it. */
+    var hidden by mutableStateOf(prefs.getStringSet("hidden", emptySet()) ?: emptySet())
+        private set
+
+    fun setHidden(pkg: String, on: Boolean) {
+        hidden = if (on) hidden + pkg else hidden - pkg
+        if (on && pkg in homeApps) updateHomeApps(homeApps - pkg)
+        save { putStringSet("hidden", hidden) }
+    }
+
     var pendingRemoval by mutableStateOf(readLongMap("pending_removal"))
         private set
     var homeApps by mutableStateOf(readStringList("home_apps"))
@@ -746,7 +756,7 @@ class LauncherState(context: Context) {
         frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
         habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L; urgeButtonOn = false; examName = ""; examDay = 0L
-        gated = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
+        gated = emptySet(); hidden = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
         limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L
         sessionPkg = ""; sessionEnd = 0L; sessionNotified = true

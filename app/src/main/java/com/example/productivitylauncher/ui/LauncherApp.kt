@@ -336,6 +336,7 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             Route.Week -> WeekScreen(state, nav)
             Route.Settings -> SettingsScreen(state, nav)
             Route.GatedPicker -> GatedPickerScreen(state, nav)
+            Route.HiddenPicker -> com.example.productivitylauncher.ui.apps.HiddenPickerScreen(state, nav)
             Route.HomePicker -> HomePickerScreen(state, nav)
             is Route.Locked -> LockedScreen(state, r.reason, state.appByPackage(r.pkg), nav)
             is Route.TimesUp -> TimesUpScreen(state, state.appByPackage(r.pkg), nav)
