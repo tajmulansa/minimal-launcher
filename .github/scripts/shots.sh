@@ -64,4 +64,10 @@ shot 08_quick 3
 # Home again after everything has settled (the intro animation can still be running in the first shot on a slow runner).
 adb shell input keyevent 3; sleep 12
 shot 11_home_settled 2
+# Steady mode: the Steady dock icon (third round button) opens the landscape flip clock.
+
+tap_text "Steady mode"; sleep 4
+shot 12_steady 3
+adb shell input keyevent 4; sleep 3
+shot 13_after_steady 2
 adb logcat -d -s AndroidRuntime:E > shots/crash.txt
