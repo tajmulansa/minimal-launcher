@@ -92,6 +92,7 @@ docs/                          ARCHITECTURE, DESIGN, PRIVACY, RELEASING, ROADMAP
 | `ui/apps/AppListScreen.kt` | `AppDrawer`: the All apps bottom sheet (search, A-Z, long-press options). `PickerScreens.kt`: gated-apps and home-apps pickers. |
 | `ui/gate/GateScreens.kt` | Gate (3 steps), Locked, Time's up. |
 | `ui/urge/UrgeScreen.kt` | Full-screen "Take a break" lock. |
+| `ui/steady/SteadyScreen.kt` | Steady mode: landscape flip clock (HH / MM flat outlined cards, hairline across the middle, paper-flap flip animation honouring `Motion.enabled`), mono date caption, round Phone / Messages / Exit buttons. Forces sensor-landscape, keeps the screen on and hides system bars while open; all restored on exit. |
 | `ui/focus/FocusScreens.kt`, `ReviewScreens.kt` | Focus session, Evening shutdown, Weekly review. |
 | `ui/settings/SettingsScreen.kt`, `Privacy.kt` | Settings and policy text. |
 | `ui/onboarding/OnboardingScreen.kt` | 7-step setup. |
@@ -103,13 +104,14 @@ docs/                          ARCHITECTURE, DESIGN, PRIVACY, RELEASING, ROADMAP
 Navigation: `Route.Main` is two horizontal pages in a `HorizontalPager`: **Home** (page 0) and **Study** (page 1, formerly "Today"). Other `Route`s are full screens that replace Main with a soft fade. Overlays on Main: bottom bar, Quick panel, All apps drawer.
 
 - **Home:** date (plain mono text, 13sp), settings-sliders icon at top right (opens **Quick actions**), 112sp odometer clock, greeting ("Good morning/afternoon/evening, <name>." or "Rest well." between bedtime and wake time), "Up next" (first undone task; tap checks it after 520 ms), up to six Home apps (28sp, no scrolling, usage minutes on the right, gated apps are excluded from this list). Swipe up anywhere opens All apps; swipe down from the top 320dp opens Quick actions (`verticalSwipes` observes at the Initial pass and never consumes, so the pager keeps working).
-- **Bottom bar** (both pages): "All apps" pill, Phone, Messages, Focus (scrolls to Study) and the Home/Study tabs whose underline follows the pager position and label widths.
+- **Bottom bar** (both pages): "All apps" pill, Phone, Messages, Steady mode (opens `Route.Steady`) and the Home/Study tabs whose underline follows the pager position and label widths.
 - **All apps drawer:** 88% height sheet, 30dp top corners, drag the handle down >110dp to close, veil 28%, 46dp search pill, sticky letters, 24sp rows, right-aligned "gated" caption. Lock In makes search exact-name only. Long-press: gate/ungate (24h delay), add/remove Home, app info. Tapping an app closes the drawer, waits 250 ms, then `openApp`.
 - **Study page:** header "Study" + "d/N done" + "+" (Add widget) + settings icon (Settings). H1 "Focus", 236dp ring, −5 / Start / +5, week dots + streak, screen-time bars (needs Usage access), **Tasks** (prototype list: 30dp check circle, animated strike line, 40% opacity when done, hairline per row, "+ Add a task"; long-press deletes), optional **Habit stack** widget, then widgets from other apps (each with a Resize slider and Remove).
 - **Habit stack widget:** added from Add widget (built-in row at the top). "After <anchor> → <action>", one check per day, streak in days, chain line between rows, long-press deletes. Data: `Habit` in `LauncherState.habits`.
 - **Quick actions:** Silent (DND), Lock in, Red button, Animations; **Noise player** (previous / play-pause / next cycles White, Pink, Brown); Theme (Auto/Light/Dark) and Look (Standard/Gray/Warm/Contrast).
 - **Gate** (for gated apps): 1) breathe (`breaths` setting, default 3, orb 250dp, 3 s cubic-bezier(.45,0,.3,1); optional growing wait of 5 s per open that day) then auto-advance; 2) type the fixed phrase **"I choose to open <App>"** (case-insensitive, no paste, keyboard type Password to disable suggestions); 3) choose minutes (5/10/15/30 limited by the daily limit, or custom). A floating timer then runs; when time is up, **Time's up**. Daily gated limit default 60 min. Focus sessions can lock gated apps (**Locked** screen).
 - **Urge (red button) lock:** 5 minutes, full screen, only Call and Message; survives closing the app (`urge_end`).
+- **Steady mode** (dock's third round button): full-screen landscape flip clock. Because the screen rotates, `MainActivity` handles `configChanges` itself and scales density by the *shorter* screen side / 390 so sizes stay the same in both orientations.
 - **Focus, Evening shutdown, Weekly review:** see `FocusScreens.kt` / `ReviewScreens.kt`.
 - **Setup (onboarding)** steps: 0 welcome, 1 pick gated apps, 2 pick Home apps, 3 name, 4 wake and bedtime (also sets evening shutdown to bed hour − 1), 5 theme and look, 6 privacy and permissions.
 
