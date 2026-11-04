@@ -67,6 +67,7 @@ shot 11_home_settled 2
 # Steady mode: the Steady dock icon (third round button) opens the landscape flip clock.
 
 tap_text "Steady mode"; sleep 4
+tap_text "Got it"; sleep 3
 shot 12_steady 3
 adb shell input keyevent 4; sleep 3
 shot 13_after_steady 2
