@@ -49,7 +49,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.example.productivitylauncher.data.LauncherState
+import com.example.productivitylauncher.data.isDndOn
+import com.example.productivitylauncher.data.openDndSettings
 import com.example.productivitylauncher.data.openMessages
+import com.example.productivitylauncher.data.setDnd
 import com.example.productivitylauncher.data.openPhone
 import com.example.productivitylauncher.ui.Nav
 import com.example.productivitylauncher.ui.components.AppIcon
@@ -126,6 +129,10 @@ fun SteadyScreen(state: LauncherState, nav: Nav) {
             Column(Modifier.padding(start = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 RoundButton(Ic.Phone, "Phone") { openPhone(context) }
                 RoundButton(Ic.Message, "Messages") { openMessages(context) }
+                var dnd by remember { mutableStateOf(isDndOn(context)) }
+                RoundButton(Ic.Moon, if (dnd) "Do Not Disturb on" else "Do Not Disturb off", on = dnd) {
+                    if (setDnd(context, !dnd)) dnd = !dnd else openDndSettings(context)
+                }
                 RoundButton(Ic.Close, "Exit Steady mode") { nav.back() }
             }
         }
@@ -133,16 +140,17 @@ fun SteadyScreen(state: LauncherState, nav: Nav) {
 }
 
 @Composable
-private fun RoundButton(ic: Ic, description: String, onClick: () -> Unit) {
+private fun RoundButton(ic: Ic, description: String, on: Boolean = false, onClick: () -> Unit) {
     Box(
         Modifier
             .size(48.dp)
-            .border(1.dp, AppColors.line, CircleShape)
+            .background(if (on) AppColors.text else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
+            .border(1.dp, if (on) AppColors.text else AppColors.line, CircleShape)
             .semantics { contentDescription = description }
             .clickableRole(onClick),
         contentAlignment = Alignment.Center,
     ) {
-        AppIcon(ic, AppColors.text, size = 20.dp)
+        AppIcon(ic, if (on) AppColors.phone else AppColors.text, size = 20.dp)
     }
 }
 

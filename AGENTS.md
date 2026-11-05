@@ -92,7 +92,7 @@ docs/                          ARCHITECTURE, DESIGN, PRIVACY, RELEASING, ROADMAP
 | `ui/apps/AppListScreen.kt` | `AppDrawer`: the All apps bottom sheet (search, A-Z, long-press options). `PickerScreens.kt`: gated-apps and home-apps pickers. |
 | `ui/gate/GateScreens.kt` | Gate (3 steps), Locked, Time's up. |
 | `ui/urge/UrgeScreen.kt` | Full-screen "Take a break" lock. |
-| `ui/steady/SteadyScreen.kt` | Steady mode: landscape flip clock (HH / MM flat outlined cards, hairline across the middle, paper-flap flip animation honouring `Motion.enabled`), mono date caption, round Phone / Messages / Exit buttons. Forces sensor-landscape, keeps the screen on and hides system bars while open; all restored on exit. |
+| `ui/steady/SteadyScreen.kt` | Steady mode: landscape flip clock (HH / MM flat outlined cards, hairline across the middle, paper-flap flip animation honouring `Motion.enabled`), mono date caption, round Phone / Messages / Do Not Disturb (moon, filled when on; opens the system permission screen if access is missing) / Exit buttons. Forces sensor-landscape, keeps the screen on and hides system bars while open; all restored on exit. |
 | `ui/focus/FocusScreens.kt`, `ReviewScreens.kt` | Focus session, Evening shutdown, Weekly review. |
 | `ui/settings/SettingsScreen.kt`, `Privacy.kt` | Settings and policy text. |
 | `ui/onboarding/OnboardingScreen.kt` | 7-step setup. |
