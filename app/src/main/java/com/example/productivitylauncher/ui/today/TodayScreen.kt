@@ -83,6 +83,7 @@ import com.example.productivitylauncher.data.daysUntil
 import com.example.productivitylauncher.data.formatClock
 import com.example.productivitylauncher.data.formatMillis
 import com.example.productivitylauncher.data.hasCalendarPermission
+import com.example.productivitylauncher.ui.components.Toggle
 import com.example.productivitylauncher.data.hasDndAccess
 import com.example.productivitylauncher.data.hasTorch
 import com.example.productivitylauncher.data.isDndOn
@@ -314,6 +315,22 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
                     contentAlignment = Alignment.Center,
                 ) { AppText(if (active) "End" else "Start", size = 16.sp, weight = FontWeight.Medium, color = AppColors.phone, display = false) }
                 if (!active) StepCircle("+5") { state.updateFrogMinutes(state.frogMinutes + 5) }
+            }
+
+            // Do Not Disturb for the focus session: on by default, silences notifications while the timer runs.
+            Row(Modifier.padding(top = 28.dp).fillMaxWidth().enterStagger(3), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    AppText("Do Not Disturb", size = 17.sp, display = false)
+                    AppText(
+                        if (hasDndAccess(context)) "Silence notifications while you focus" else "Needs permission, tap to allow",
+                        size = 13.sp, color = AppColors.muted, display = false,
+                    )
+                }
+                Toggle(state.focusDnd, { on ->
+                    if (on && !hasDndAccess(context)) { openDndSettings(context); return@Toggle }
+                    state.updateFocusDnd(on)
+                    if (active && hasDndAccess(context)) setDnd(context, on)
+                }, "Do Not Disturb during focus")
             }
 
             Hair(0, Modifier.padding(vertical = 22.dp))
