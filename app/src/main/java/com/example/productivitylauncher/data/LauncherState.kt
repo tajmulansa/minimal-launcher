@@ -59,12 +59,16 @@ class LauncherState(context: Context) {
 
     // ------------------------------------------------------------ apps
 
-    var apps by mutableStateOf<List<AppEntry>>(emptyList())
+    /** Every launchable app, including hidden ones. Only the Hidden apps screen should read this. */
+    var allApps by mutableStateOf<List<AppEntry>>(emptyList())
         private set
+
+    /** The apps the rest of the launcher sees: hidden apps are left out, as if they were not installed. */
+    val apps: List<AppEntry> get() = allApps.filter { it.packageName !in hidden }
 
     fun refreshApps(pm: PackageManager) {
         val loaded = loadLaunchableApps(pm, appContext.packageName)
-        apps = loaded
+        allApps = loaded
     }
 
     fun appByPackage(pkg: String): AppEntry? = apps.firstOrNull { it.packageName == pkg }
@@ -234,7 +238,7 @@ class LauncherState(context: Context) {
         private set
 
     /** Show the red button over every app. Needs "Display over other apps". */
-    var urgeButtonOn by mutableStateOf(bool("urge_button", false))
+    var urgeButtonOn by mutableStateOf(bool("urge_button", true))
         private set
 
     fun updateUrgeButton(on: Boolean) { urgeButtonOn = on; save { putBoolean("urge_button", on) } }
@@ -387,6 +391,14 @@ class LauncherState(context: Context) {
     fun requestRemoveGated(pkg: String) {
         if (pkg !in gated || pkg in pendingRemoval) return
         pendingRemoval = pendingRemoval + (pkg to System.currentTimeMillis() + WEAKEN_DELAY_MS)
+        writeLongMap("pending_removal", pendingRemoval)
+    }
+
+    /** Setup only: before the gate is in use there is nothing to protect, so removing is instant. */
+    fun removeGatedNow(pkg: String) {
+        gated = gated - pkg
+        pendingRemoval = pendingRemoval - pkg
+        save { putStringSet("gated", gated) }
         writeLongMap("pending_removal", pendingRemoval)
     }
 
@@ -755,7 +767,7 @@ class LauncherState(context: Context) {
         prefs.edit().clear().apply()
         frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
         water = 0; waterGoal = 8; note = ""
-        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L; urgeButtonOn = false; examName = ""; examDay = 0L
+        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L; urgeButtonOn = true; examName = ""; examDay = 0L
         gated = emptySet(); hidden = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
         limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
         opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L

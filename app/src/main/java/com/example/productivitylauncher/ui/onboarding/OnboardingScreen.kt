@@ -26,6 +26,8 @@ import com.example.productivitylauncher.data.UsageReader
 import com.example.productivitylauncher.data.canDrawOverlays
 import com.example.productivitylauncher.data.hasCalendarPermission
 import com.example.productivitylauncher.data.hasDndAccess
+import com.example.productivitylauncher.data.hasNotificationAccess
+import com.example.productivitylauncher.data.openNotificationAccessSettings
 import com.example.productivitylauncher.data.openDndSettings
 import com.example.productivitylauncher.data.openOverlaySettings
 import com.example.productivitylauncher.data.openUsageAccessSettings
@@ -107,7 +109,7 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                 }
                 1 -> Column(Modifier.fillMaxSize()) {
                     Title("Pause your distractions.", Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
-                    GatedPickerBody(state, Modifier.weight(1f))
+                    GatedPickerBody(state, Modifier.weight(1f), immediate = true)
                 }
                 2 -> Column(Modifier.fillMaxSize()) {
                     Title("Pick your Home apps.", Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
@@ -195,7 +197,7 @@ private fun PermRow(title: String, why: String, granted: Boolean, onAllow: () ->
     }
 }
 
-/** Last setup step: privacy promise first, then every permission the app can use, each optional. */
+/** Last setup step: privacy promise first, then every permission the app can use. */
 @Composable
 private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
     val context = LocalContext.current
@@ -205,18 +207,20 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
     val usage = remember(tick, state.usageAccess) { UsageReader(context).hasAccess() }
     val overlay = remember(tick) { canDrawOverlays(context) }
     val dnd = remember(tick) { hasDndAccess(context) }
+    val notif = remember(tick) { hasNotificationAccess(context) }
     val home = remember(tick) { isDefaultLauncher(context) }
     var showPolicy by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp)) {
         Title("Your privacy first.")
         AppText(
-            "Everything stays on this phone. There is no internet permission, no account, no ads and no tracking. Every permission below is optional, and you can take it back any time in Android settings.",
+            "Everything stays on this phone. There is no internet permission, no account, no ads and no tracking. You can take any permission back any time in Android settings.",
             size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
         )
         PermRow("Usage access", "Reads how long apps were used, on this phone only, to show screen time and your gated time.", usage) { openUsageAccessSettings(context) }
         PermRow("Display over other apps", "Lets the small timer show over a gated app, and the optional red button show over every app.", overlay) { openOverlaySettings(context) }
         PermRow("Do Not Disturb", "Lets the moon button and focus sessions silence notifications.", dnd) { openDndSettings(context) }
+        PermRow("Notification access", "Lets the launcher dismiss notifications from apps you hide. It never reads or keeps their content.", notif) { openNotificationAccessSettings(context) }
         PermRow("Home app", "Make this your launcher so it opens when you press Home.", home) { openDefaultLauncherSettings(context) }
         TextLink(if (showPolicy) "Hide privacy policy" else "Read the full privacy policy", { showPolicy = !showPolicy })
         if (showPolicy) {

@@ -47,7 +47,7 @@ Phones are designed to pull attention away from what matters. Most "focus" apps 
 
 **Focus and review**
 - Focus screen, Evening shutdown (set from your bedtime), Weekly review
-- Red button: a 5 minute full-screen break with only Call and Message
+- Red button (on by default): a 5 minute full-screen flip-clock countdown with only Call and Message; other apps and notifications cannot pull you out
 
 **Setup**
 - Seven short steps: welcome, apps to pause, Home apps, your name, wake and bedtime, theme and look, privacy and permissions
@@ -126,7 +126,8 @@ More detail: [AGENTS.md](AGENTS.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE
 - All data (tasks, habits, notes, settings, your name and sleep times) stays on your device. `allowBackup` is off.
 - Every permission is optional, explained in the app, and the app keeps working without it:
   - **Usage access:** screen time and gated time
-  - **Display over other apps:** the floating timer and the optional red button
+  - **Display over other apps:** the floating timer and the red button
+  - **Notification access:** dismisses notifications from hidden apps and during the red button lock
   - **Do Not Disturb access:** the Silent tile and focus sessions
   - **Notifications and foreground service (media playback):** only for the noise player's "Noise is playing" notification
   - **Home app:** make it your launcher

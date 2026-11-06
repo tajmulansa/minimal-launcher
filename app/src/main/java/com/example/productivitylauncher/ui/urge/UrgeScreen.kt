@@ -1,99 +1,58 @@
 package com.example.productivitylauncher.ui.urge
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.graphicsLayer
-import com.example.productivitylauncher.ui.theme.Motion
-import com.example.productivitylauncher.ui.theme.enterStagger
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.data.openMessages
 import com.example.productivitylauncher.data.openPhone
-import com.example.productivitylauncher.ui.components.AppIcon
-import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.Caption
 import com.example.productivitylauncher.ui.components.Ic
-import com.example.productivitylauncher.ui.components.clickableRole
+import com.example.productivitylauncher.ui.steady.FlipCard
+import com.example.productivitylauncher.ui.steady.LandscapeAwake
+import com.example.productivitylauncher.ui.steady.RoundButton
 import com.example.productivitylauncher.ui.theme.AppColors
 
-/** Shown full screen while the red button's timer runs. Only a call button and a message button work. */
+/**
+ * Shown full screen while the red button's timer runs, in the same style as Steady mode: a landscape flip clock, here
+ * counting down minutes and seconds, with only Phone and Messages. There is no exit; it ends when the timer does.
+ */
 @Composable
 fun UrgeScreen(remainingMillis: Long) {
     val context = LocalContext.current
+    LandscapeAwake()
     val totalSeconds = ((remainingMillis + 999L) / 1000L).coerceAtLeast(0L)
-    val clock = "%d:%02d".format(totalSeconds / 60L, totalSeconds % 60L)
-    // A slow ring that breathes in and out behind the timer, to give the eyes somewhere calm to rest.
-    val breathe = rememberInfiniteTransition(label = "breathe")
-    val animatedPhase by breathe.animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(4500, easing = Motion.EaseInOut), RepeatMode.Reverse),
-        label = "phase",
-    )
-    val phase = if (Motion.enabled) animatedPhase else 0.5f
-    val ringColor = AppColors.gate
-    Column(
-        Modifier.fillMaxSize().padding(horizontal = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        // The ring breathes around the timer only, so it never touches the text below.
-        Box(Modifier.size(280.dp).enterStagger(0), contentAlignment = Alignment.Center) {
-            Box(Modifier.fillMaxSize().graphicsLayer { scaleX = 0.8f + 0.2f * phase; scaleY = 0.8f + 0.2f * phase }.background(AppColors.text.copy(alpha = 0.05f), CircleShape))
-            Box(Modifier.fillMaxSize().graphicsLayer { scaleX = 0.8f + 0.2f * phase; scaleY = 0.8f + 0.2f * phase }.border(1.5.dp, AppColors.text.copy(alpha = 0.5f), CircleShape))
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Caption("Take a break", color = AppColors.gate)
-                Spacer(Modifier.height(8.dp))
-                AppText(clock, size = 64.sp, weight = FontWeight.Light, letterSpacing = (-3).sp, tnum = true, maxLines = 1)
+    val mm = "%02d".format(totalSeconds / 60L)
+    val ss = "%02d".format(totalSeconds % 60L)
+    Box(Modifier.fillMaxSize().background(AppColors.phone).padding(horizontal = 28.dp, vertical = 20.dp)) {
+        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+            BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+                val gap = 16.dp
+                val cardH = minOf(maxHeight * 0.66f, (maxWidth - gap) / 2 / 1.1f)
+                Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                        FlipCard(mm, cardH)
+                        FlipCard(ss, cardH)
+                    }
+                    Box(Modifier.height(18.dp))
+                    Caption("Take a break \u00B7 this feeling passes", color = AppColors.gate)
+                }
+            }
+            Column(Modifier.padding(start = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                RoundButton(Ic.Phone, "Call") { openPhone(context) }
+                RoundButton(Ic.Message, "Message") { openMessages(context) }
             }
         }
-        Spacer(Modifier.height(36.dp))
-        AppText(
-            modifier = Modifier.enterStagger(2),
-            text = "This feeling passes. Put the phone down, breathe, or talk to someone.",
-            size = 16.sp, color = AppColors.muted, align = TextAlign.Center, lineHeight = 24.sp, display = false,
-        )
-        Spacer(Modifier.height(40.dp))
-        Row(Modifier.enterStagger(3), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
-            UrgeButton(Ic.Phone, "Call") { openPhone(context) }
-            UrgeButton(Ic.Message, "Message") { openMessages(context) }
-        }
-    }
-}
-
-@Composable
-private fun UrgeButton(icon: Ic, label: String, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            Modifier
-                .size(72.dp)
-                .border(1.dp, AppColors.line, CircleShape)
-                .clickableRole(onClick, Role.Button),
-            contentAlignment = Alignment.Center,
-        ) { AppIcon(icon, AppColors.text, size = 26.dp) }
-        Caption(label, Modifier.padding(top = 10.dp))
     }
 }

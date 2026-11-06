@@ -106,12 +106,13 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
         while (true) {
             value = System.currentTimeMillis()
             if (value >= state.urgeEnd) break
-            delay(500L)
+            delay(200L)
         }
     }
     val urgeActive = state.urgeEnd > urgeNow
     LaunchedEffect(urgeActive) {
         if (urgeActive) {
+            com.example.productivitylauncher.service.UrgeButtonService.guard(context)
             stack.clear()
             if (route != Route.Onboarding) route = Route.Main
             pipOpen = false

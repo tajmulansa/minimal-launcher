@@ -66,7 +66,7 @@ import java.util.Calendar
 import java.util.Locale
 import kotlinx.coroutines.delay
 
-private fun Context.findActivity(): Activity? {
+internal fun Context.findActivity(): Activity? {
     var c: Context? = this
     while (c is ContextWrapper) { if (c is Activity) return c; c = c.baseContext }
     return null
@@ -79,6 +79,14 @@ private fun Context.findActivity(): Activity? {
  */
 @Composable
 fun SteadyScreen(state: LauncherState, nav: Nav) {
+    val context = LocalContext.current
+    LandscapeAwake()
+    SteadyBody(state, nav, context)
+}
+
+/** Turns the screen landscape, keeps it awake and hides the system bars while in composition; all of it is put back on exit. */
+@Composable
+internal fun LandscapeAwake() {
     val context = LocalContext.current
     DisposableEffect(Unit) {
         val activity = context.findActivity()
@@ -94,7 +102,10 @@ fun SteadyScreen(state: LauncherState, nav: Nav) {
             activity?.requestedOrientation = previous
         }
     }
+}
 
+@Composable
+private fun SteadyBody(state: LauncherState, nav: Nav, context: Context) {
     var now by remember { mutableStateOf(Calendar.getInstance()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -140,7 +151,7 @@ fun SteadyScreen(state: LauncherState, nav: Nav) {
 }
 
 @Composable
-private fun RoundButton(ic: Ic, description: String, on: Boolean = false, onClick: () -> Unit) {
+internal fun RoundButton(ic: Ic, description: String, on: Boolean = false, onClick: () -> Unit) {
     Box(
         Modifier
             .size(48.dp)
@@ -156,7 +167,7 @@ private fun RoundButton(ic: Ic, description: String, on: Boolean = false, onClic
 
 /** One flat outlined card with a hairline across the middle. When [text] changes the card flips like a paper flap. */
 @Composable
-private fun FlipCard(text: String, height: Dp) {
+internal fun FlipCard(text: String, height: Dp) {
     var shown by remember { mutableStateOf(text) }
     var previous by remember { mutableStateOf(text) }
     val progress = remember { Animatable(1f) }

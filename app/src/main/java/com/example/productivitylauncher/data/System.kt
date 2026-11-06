@@ -64,6 +64,11 @@ fun openSettingsAction(context: Context, action: String, pkgUri: Boolean = false
 fun openUsageAccessSettings(context: Context) = openSettingsAction(context, Settings.ACTION_USAGE_ACCESS_SETTINGS)
 fun openOverlaySettings(context: Context) = openSettingsAction(context, Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri = true)
 fun openDndSettings(context: Context) = openSettingsAction(context, Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+fun openNotificationAccessSettings(context: Context) = openSettingsAction(context, "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+
+fun hasNotificationAccess(context: Context): Boolean =
+    androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+
 fun openDefaultLauncherSettings(context: Context) = openSettingsAction(context, Settings.ACTION_HOME_SETTINGS)
 
 fun canDrawOverlays(context: Context): Boolean = Settings.canDrawOverlays(context)

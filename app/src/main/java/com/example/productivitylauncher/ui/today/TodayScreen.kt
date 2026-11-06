@@ -322,17 +322,17 @@ fun TodayScreen(state: LauncherState, nav: Nav, host: WidgetHost, page: Int, onO
 
             Hair(1, Modifier.padding(vertical = 22.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Caption("Screen time")
-                Caption(state.screenTimeMs?.let { formatMillis(it) } ?: "")
-            }
-            ScreenBars(state, context)
-
-            Hair(2, Modifier.padding(vertical = 22.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Caption("Tasks")
                 if (total > 0) Caption("$done of $total")
             }
             TodoList(state)
+
+            Hair(2, Modifier.padding(vertical = 22.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Caption("Screen time")
+                Caption(state.screenTimeMs?.let { formatMillis(it) } ?: "")
+            }
+            ScreenBars(state, context)
 
             if (state.hasWidget("habits")) {
                 Hair(3, Modifier.padding(vertical = 22.dp))

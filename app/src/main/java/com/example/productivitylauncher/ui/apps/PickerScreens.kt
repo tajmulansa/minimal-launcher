@@ -40,10 +40,10 @@ fun GatedPickerScreen(state: LauncherState, nav: Nav) {
 }
 
 @Composable
-fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier) {
+fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier, immediate: Boolean = false) {
     Column(modifier) {
         AppText(
-            "Pick the apps that steal your time. They get a calm gate before they open. Removing a gate takes 24 hours.",
+            if (immediate) "Pick the apps that steal your time. They get a calm gate before they open. Tap again to remove one." else "Pick the apps that steal your time. They get a calm gate before they open. Removing a gate takes 24 hours.",
             size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
         )
         LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
@@ -56,6 +56,7 @@ fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier) {
                         .heightIn(min = 60.dp)
                                                 .clickableRole({
                             if (!gated) state.addGated(app.packageName)
+                            else if (immediate) state.removeGatedNow(app.packageName)
                             else if (pending) state.cancelRemoveGated(app.packageName)
                             else state.requestRemoveGated(app.packageName)
                         })
@@ -75,17 +76,17 @@ fun GatedPickerBody(state: LauncherState, modifier: Modifier = Modifier) {
     }
 }
 
-/** Pick which apps are hidden from All apps. Hiding is instant and can be undone any time. */
+/** Pick which apps are hidden everywhere in the launcher. Hiding is instant and can be undone any time. */
 @Composable
 fun HiddenPickerScreen(state: LauncherState, nav: Nav) {
     Column(Modifier.fillMaxSize()) {
         PageHeader("Hidden apps", onBack = nav.back)
         AppText(
-            "Hidden apps are kept out of All apps. Type an app's full name in the search to open it.",
+            "A hidden app is gone from All apps, Home, search and screen time, and its notifications are dismissed (needs Notification access). It is only listed here, so you can bring it back.",
             size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp),
         )
         LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp)) {
-            items(state.apps, key = { it.packageName + "/" + it.activityName }) { app ->
+            items(state.allApps, key = { it.packageName + "/" + it.activityName }) { app ->
                 val on = app.packageName in state.hidden
                 Row(
                     Modifier
@@ -127,7 +128,7 @@ fun HomePickerBody(state: LauncherState, modifier: Modifier = Modifier) {
         )
         LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             // Gated apps are listed last, greyed out, so it is clear why they cannot be picked.
-            items(state.apps.filter { it.packageName !in state.hidden }.sortedBy { it.packageName in state.gated }, key = { it.packageName + "/" + it.activityName }) { app ->
+            items(state.apps.sortedBy { it.packageName in state.gated }, key = { it.packageName + "/" + it.activityName }) { app ->
                 val on = app.packageName in state.homeApps
                 val gated = app.packageName in state.gated
                 Row(

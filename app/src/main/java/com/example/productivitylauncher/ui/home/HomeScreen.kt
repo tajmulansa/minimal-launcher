@@ -211,26 +211,47 @@ fun HomeScreen(
 
             Hair(1, Modifier.padding(vertical = 20.dp))
 
-            val shown = state.homeApps.filter { !state.isGated(it) }.mapNotNull { state.appByPackage(it) }
-            if (state.lockIn) Caption("Locked in \u00B7 only your home apps", Modifier.padding(bottom = 6.dp))
-            shown.forEachIndexed { i, app ->
-                Box(Modifier.enterStagger(3 + i, once = true)) {
-                    AppRow(app, gated = state.isGated(app.packageName), meta = state.appMsToday[app.packageName]?.takeIf { it >= 60_000L }?.let { formatMillis(it) } ?: "", onClick = { onOpenApp(app) })
+            // Rows that would not fully fit are left out instead of being cut in half (Lock In adds a caption line).
+            FitColumn(Modifier.fillMaxWidth().weight(1f)) {
+                val shown = state.homeApps.filter { !state.isGated(it) }.mapNotNull { state.appByPackage(it) }
+                if (state.lockIn) Caption("Locked in \u00B7 only your home apps", Modifier.padding(bottom = 6.dp))
+                shown.forEachIndexed { i, app ->
+                    Box(Modifier.enterStagger(3 + i, once = true)) {
+                        AppRow(app, gated = state.isGated(app.packageName), meta = state.appMsToday[app.packageName]?.takeIf { it >= 60_000L }?.let { formatMillis(it) } ?: "", onClick = { onOpenApp(app) })
+                    }
                 }
-            }
-            LaunchedEffect(Unit) { delay(900); Intro.played = true }
-            if (shown.size < 6 && !state.lockIn) {
-                Row(
-                    Modifier.fillMaxWidth().clickableRole({ nav.go(Route.HomePicker) }).padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    AppIcon(Ic.Plus, AppColors.muted, size = 18.dp)
-                    AppText(if (shown.isEmpty()) "Choose your six apps" else "Add an app", size = 18.sp, weight = FontWeight.Medium, color = AppColors.muted)
+                LaunchedEffect(Unit) { delay(900); Intro.played = true }
+                if (shown.size < 6 && !state.lockIn) {
+                    Row(
+                        Modifier.fillMaxWidth().clickableRole({ nav.go(Route.HomePicker) }).padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        AppIcon(Ic.Plus, AppColors.muted, size = 18.dp)
+                        AppText(if (shown.isEmpty()) "Choose your six apps" else "Add an app", size = 18.sp, weight = FontWeight.Medium, color = AppColors.muted)
+                    }
                 }
             }
         }
 
+    }
+}
+
+/** Stacks children top to bottom and places only those that fit completely in the height given. */
+@Composable
+private fun FitColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.Layout(content, modifier) { measurables, constraints ->
+        val loose = constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity)
+        val limit = constraints.maxHeight
+        var y = 0
+        val placed = ArrayList<Pair<androidx.compose.ui.layout.Placeable, Int>>()
+        for (m in measurables) {
+            val p = m.measure(loose)
+            if (y + p.height > limit) break
+            placed += p to y
+            y += p.height
+        }
+        layout(constraints.maxWidth, if (constraints.hasBoundedHeight) limit else y) { placed.forEach { (p, py) -> p.place(0, py) } }
     }
 }
 
@@ -344,24 +365,41 @@ private fun AppRow(app: AppEntry, gated: Boolean, meta: String, onClick: () -> U
     }
 }
 
-/** One vertical swipe detector that never steals touches from children or the pager: up opens All apps, down from the top opens Quick actions. */
+/**
+ * One vertical swipe detector that never steals touches from children or the pager: up opens All apps, down from the
+ * upper half opens Quick actions. It fires the moment a mostly vertical drag is long enough, or on release after a
+ * short quick flick, so it feels immediate and works from anywhere on the page. Horizontal drags are left to the pager.
+ */
 fun Modifier.verticalSwipes(onUp: () -> Unit, onDown: () -> Unit): Modifier = pointerInput(Unit) {
-    val limit = 70.dp.toPx()
-    val side = 50.dp.toPx()
-    val topZone = 320.dp.toPx()
+    val dragDistance = 56.dp.toPx()
+    val flickDistance = 24.dp.toPx()
+    val flickSpeed = 700.dp.toPx()
+    val downZone = size.height * 0.55f
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val tracker = androidx.compose.ui.input.pointer.util.VelocityTracker()
+        tracker.addPosition(down.uptimeMillis, down.position)
         var last = down.position
+        var fired = false
+        fun fire(dy: Float) {
+            fired = true
+            if (dy < 0f) onUp() else if (down.position.y < downZone) onDown()
+        }
         while (true) {
             val e = awaitPointerEvent(PointerEventPass.Initial)
             val c = e.changes.firstOrNull { it.id == down.id } ?: break
             last = c.position
+            tracker.addPosition(c.uptimeMillis, c.position)
             if (!c.pressed) break
+            val dy = last.y - down.position.y
+            val dx = last.x - down.position.x
+            if (!fired && kotlin.math.abs(dy) > dragDistance && kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.4f) fire(dy)
         }
-        val dy = last.y - down.position.y
-        val dx = last.x - down.position.x
-        if (kotlin.math.abs(dx) < side) {
-            if (dy < -limit) onUp() else if (dy > limit && down.position.y < topZone) onDown()
+        if (!fired) {
+            val dy = last.y - down.position.y
+            val dx = last.x - down.position.x
+            val vy = tracker.calculateVelocity().y
+            if (kotlin.math.abs(dy) > flickDistance && kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.4f && kotlin.math.abs(vy) > flickSpeed && (vy < 0f) == (dy < 0f)) fire(dy)
         }
     }
 }

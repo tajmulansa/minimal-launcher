@@ -10,19 +10,23 @@ Everything this launcher does happens on your phone. It has no internet permissi
 
 Your tasks, notes, habits, brain dump, water count, settings and the apps you gate are saved in this app's private storage on your phone. Delete all my data in Settings erases them. Uninstalling the app erases them too.
 
-## Usage access (optional)
+## Usage access
 
 If you allow it, the launcher reads how long each app was used on this phone to show screen time and gated time. It is never uploaded or shared.
 
-## Display over other apps (optional)
+## Display over other apps
 
 Used only to show the small countdown timer over a gated app, and the red button over other apps if you turn it on.
 
-## Do Not Disturb access (optional)
+## Do Not Disturb access
 
 Used only to turn Do Not Disturb on or off from the Silent button and during focus sessions.
 
-## Notifications and background audio (optional)
+## Notification access
+
+Used only to dismiss notifications from apps you hid, so they behave as if not installed. The launcher checks which app posted a notification and nothing else. Notification content is never read, stored or shared.
+
+## Notifications and background audio
 
 Used only by the noise player in Quick actions. While white, pink or brown noise plays, Android requires a "Noise is playing" notification. The sound is generated on the phone. Nothing is recorded, uploaded or shared.
 

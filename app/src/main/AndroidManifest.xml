@@ -66,5 +66,16 @@
         <service
             android:name=".service.UrgeButtonService"
             android:exported="false" />
+
+        <!-- Dismisses notifications from hidden apps, and from every app during the red button lock. Active only if "Notification access" is allowed. -->
+        <service
+            android:name=".service.NotificationGuardService"
+            android:exported="true"
+            android:label="Still"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

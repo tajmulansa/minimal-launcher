@@ -27,6 +27,8 @@ import com.example.productivitylauncher.data.canDrawOverlays
 import com.example.productivitylauncher.data.formatMinutes
 import com.example.productivitylauncher.data.formatTimeOfDay
 import com.example.productivitylauncher.data.hasDndAccess
+import com.example.productivitylauncher.data.hasNotificationAccess
+import com.example.productivitylauncher.data.openNotificationAccessSettings
 import com.example.productivitylauncher.data.isDefaultLauncher
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
 import com.example.productivitylauncher.data.openDndSettings
@@ -60,6 +62,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
     val usage = remember(tick, state.usageAccess) { state.usageAccess }
     val overlay = remember(tick) { canDrawOverlays(context) }
     val dnd = remember(tick) { hasDndAccess(context) }
+    val notifAccess = remember(tick) { hasNotificationAccess(context) }
     val isHome = remember(tick) { isDefaultLauncher(context) }
 
     Column(Modifier.fillMaxSize()) {
@@ -139,7 +142,7 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 SettingRow("Gated apps", subtitle = "Apps that get a gate", onClick = { nav.go(Route.GatedPicker) }) {
                     ValueChevron("${state.gated.size}", AppColors.gate)
                 }
-                SettingRow("Hidden apps", subtitle = "Kept out of All apps. Type the full name to find one", onClick = { nav.go(Route.HiddenPicker) }) {
+                SettingRow("Hidden apps", subtitle = "Gone from the launcher, as if not installed", onClick = { nav.go(Route.HiddenPicker) }) {
                     ValueChevron("${state.hidden.size}")
                 }
                 SettingRow("Home apps", subtitle = "Up to six on your Home page", onClick = { nav.go(Route.HomePicker) }) {
@@ -169,6 +172,9 @@ fun SettingsScreen(state: LauncherState, nav: Nav) {
                 }
                 SettingRow("Do Not Disturb access", subtitle = "For the Moon button and focus", onClick = { openDndSettings(context) }) {
                     ValueChevron(if (dnd) "Allowed" else "Allow", if (dnd) AppColors.focus else AppColors.gate)
+                }
+                SettingRow("Notification access", subtitle = "Dismisses notifications from hidden apps", onClick = { openNotificationAccessSettings(context) }) {
+                    ValueChevron(if (notifAccess) "Allowed" else "Allow", if (notifAccess) AppColors.focus else AppColors.gate)
                 }
                 SettingRow("Default home app", subtitle = "Make this your launcher", onClick = { openDefaultLauncherSettings(context) }) {
                     ValueChevron(if (isHome) "This app" else "Change", if (isHome) AppColors.focus else AppColors.muted)
