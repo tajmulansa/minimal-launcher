@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Placeholder icon: a terminal prompt. Replace when the brand is decided. -->
+<!-- Still icon: a calm ring with one still dot at its centre. Swap this file and ic_launcher_background to rebrand. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -7,15 +7,10 @@
     android:viewportHeight="108">
     <path
         android:fillColor="#00000000"
-        android:pathData="M40,42 L56,54 L40,66"
-        android:strokeColor="#F2F0E9"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeWidth="5" />
+        android:pathData="M54,30 A24,24 0 1,1 53.99,30 Z"
+        android:strokeColor="#ECEDEA"
+        android:strokeWidth="2.6" />
     <path
-        android:fillColor="#00000000"
-        android:pathData="M60,68 L72,68"
-        android:strokeColor="#F2F0E9"
-        android:strokeLineCap="round"
-        android:strokeWidth="5" />
+        android:fillColor="#B5502C"
+        android:pathData="M54,47 A7,7 0 1,1 53.99,47 Z" />
 </vector>
