@@ -139,7 +139,7 @@ Full policy: [docs/PRIVACY.md](docs/PRIVACY.md).
 These are intentionally unset, so please do not hard-code guesses:
 
 - **App name.** "Launcher" is a working title.
-- **Application ID.** `com.example.productivitylauncher` is a placeholder that Google Play rejects. It can never change after the first Play upload.
+- **Application ID.** `com.launcher.onlyneeded`. It can never change after the first Play upload. The source package stays `com.example.productivitylauncher`.
 - **Final icon.** The look is chosen, but the app icon is not.
 - **Study Together.** Studying with friends over a nearby connection, with no internet, is an idea under discussion and is not built.
 

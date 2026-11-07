@@ -5,14 +5,13 @@ plugins {
 }
 
 android {
-    // TODO(release): "com.example" is a placeholder and Google Play rejects it.
-    // The applicationId can NEVER change after the first Play upload, so decide it
-    // together with the final app name. See docs/RELEASING.md.
+    // The applicationId (below) is the real, permanent Play ID and can NEVER change after the first Play upload.
+    // The namespace is only the Kotlin package of the source code, so it stays as is. See docs/RELEASING.md.
     namespace = "com.example.productivitylauncher"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.productivitylauncher"
+        applicationId = "com.launcher.onlyneeded"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

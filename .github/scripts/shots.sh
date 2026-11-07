@@ -1,7 +1,8 @@
 #!/bin/bash
 mkdir -p shots
 APK=$(ls app/build/outputs/apk/debug/*.apk | head -1)
-P=com.example.productivitylauncher
+P=com.launcher.onlyneeded
+M=com.example.productivitylauncher.MainActivity # activity class lives in the source namespace, not the app ID
 adb install -r "$APK"
 adb shell wm size
 shot(){ sleep "${2:-2}"; adb exec-out screencap -p > "shots/$1.png"; }
@@ -18,12 +19,12 @@ cat > /tmp/launcher.xml <<'X'
 <set name="gated"><string>com.android.chrome</string></set>
 </map>
 X
-adb shell am start -n $P/.MainActivity; sleep 3; adb shell am force-stop $P
+adb shell am start -n $P/$M; sleep 3; adb shell am force-stop $P
 adb push /tmp/launcher.xml /data/local/tmp/launcher.xml
 adb shell "run-as $P sh -c 'mkdir -p shared_prefs && cp /data/local/tmp/launcher.xml shared_prefs/launcher.xml'"
-adb shell cmd package set-home-activity $P/.MainActivity
+adb shell cmd package set-home-activity $P/$M
 adb shell input keyevent 3; sleep 1
-adb shell am start -n $P/.MainActivity
+adb shell am start -n $P/$M
 shot 01_home 14
 tap_text(){ adb shell uiautomator dump /sdcard/u.xml >/dev/null; adb pull /sdcard/u.xml /tmp/u.xml >/dev/null
   python3 - "$1" <<'PY'

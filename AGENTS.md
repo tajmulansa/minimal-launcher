@@ -7,7 +7,7 @@ Read this file first. It describes what the project is, how it is built, the rul
 A minimal Android **launcher for students** (name "Only Needed", shown as the app label from `@string/app_name`; visual identity "Still"; the application ID is still an open decision and cannot change after the first Play upload). It replaces the phone's home screen. Goals: do the next task first, put friction in front of distracting apps, keep everything private.
 
 - Kotlin + Jetpack Compose, single module `app`, single activity.
-- Package / applicationId `com.example.productivitylauncher` (a placeholder; Google Play rejects `com.example`; it cannot change after the first Play upload, so do not "fix" it without the owner).
+- applicationId `com.launcher.onlyneeded` (chosen by the owner for Play; it cannot change after the first Play upload). The Kotlin package and `namespace` stay `com.example.productivitylauncher`; activity components must be written `com.launcher.onlyneeded/com.example.productivitylauncher.MainActivity` in adb commands.
 - `minSdk 26`, `compileSdk/targetSdk 36`, Compose BOM 2025.10.00, Kotlin 2.2.21, AGP 8.13.2, JDK 17.
 - **No INTERNET permission, ever.** No analytics, accounts, ads, network libraries.
 - Repo: `github.com/tajmulansa/minimal-launcher`. License MIT.

@@ -5,7 +5,7 @@ How to turn this project into an app on Google Play. Maintainers only, but contr
 ## Before the first upload
 
 1. **Choose the final app name and application ID.**
-   - The ID is in `app/build.gradle.kts` (`namespace` and `applicationId`). The current `com.example.*` value is a placeholder that Google Play rejects.
+   - The ID is `applicationId` in `app/build.gradle.kts`: `com.launcher.onlyneeded`. Never change it after the first Play upload. `namespace` is only the source package and stays `com.example.productivitylauncher`.
    - After the first upload to Google Play the ID can never change. Decide once.
    - If you change `namespace`, also move the Kotlin package folders and update the `package` lines and imports.
 2. **Check the target API requirement.** Since 31 August 2026 new apps and updates must target Android 16 (API 36). Check the [official page](https://developer.android.com/google/play/requirements/target-sdk) before each release, the deadline moves yearly.
