@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Icon: the Home page in miniature (a checked "Up next" row, a hairline, then big app names). Swap this file and ic_launcher_background to rebrand. -->
+<!-- Icon: a flip card (the Steady mode clock) with a second card stacked behind it, "only what is needed". Swap this file and ic_launcher_background to rebrand. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#111312" android:pathData="M35,27 A9,9 0 1,1 34.99,27 Z" />
-    <path android:fillColor="#00000000" android:strokeColor="#ECEDEA" android:strokeWidth="2.2" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M31,36.3 L34,39.3 L39.5,33" />
-    <path android:fillColor="#7B7F79" android:pathData="M54,30 H76 A2,2 0 0 1 76,34 H54 A2,2 0 0 1 54,30 Z" />
-    <path android:fillColor="#C5C8C2" android:pathData="M53.5,38 H72.5 A1.5,1.5 0 0 1 72.5,41 H53.5 A1.5,1.5 0 0 1 53.5,38 Z" />
-    <path android:fillColor="#1F111312" android:pathData="M26,54.5 H82 V55.7 H26 Z" />
-    <path android:fillColor="#111312" android:pathData="M30,63 H66 A4,4 0 0 1 66,71 H30 A4,4 0 0 1 30,63 Z" />
-    <path android:fillColor="#59111312" android:pathData="M30,77 H52 A4,4 0 0 1 52,85 H30 A4,4 0 0 1 30,77 Z" />
+    <path android:fillColor="#4B4F4C" android:pathData="M43,29 H71 A9,9 0 0 1 80,38 V66 A9,9 0 0 1 71,75 H43 A9,9 0 0 1 34,66 V38 A9,9 0 0 1 43,29 Z" />
+    <path android:fillColor="#161817" android:pathData="M36,36 H64 A9,9 0 0 1 73,45 V73 A9,9 0 0 1 64,82 H36 A9,9 0 0 1 27,73 V45 A9,9 0 0 1 36,36 Z" />
+    <path android:pathData="M27,45 A9,9 0 0 1 36,36 H64 A9,9 0 0 1 73,45 V58.3 H27 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="36" android:endX="0" android:endY="58.3" android:startColor="#FBFBF9" android:endColor="#E4E6E1" />
+        </aapt:attr>
+    </path>
+    <path android:pathData="M27,59.7 H73 V73 A9,9 0 0 1 64,82 H36 A9,9 0 0 1 27,73 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="59.7" android:endX="0" android:endY="82" android:startColor="#DFE1DC" android:endColor="#C9CCC6" />
+        </aapt:attr>
+    </path>
 </vector>
