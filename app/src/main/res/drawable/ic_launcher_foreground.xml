@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Still icon: a calm ring with one still dot at its centre. Swap this file and ic_launcher_background to rebrand. -->
+<!-- Icon: the Home page in miniature (a checked "Up next" row, a hairline, then big app names). Swap this file and ic_launcher_background to rebrand. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M54,30 A24,24 0 1,1 53.99,30 Z"
-        android:strokeColor="#ECEDEA"
-        android:strokeWidth="2.6" />
-    <path
-        android:fillColor="#B5502C"
-        android:pathData="M54,47 A7,7 0 1,1 53.99,47 Z" />
+    <path android:fillColor="#111312" android:pathData="M35,27 A9,9 0 1,1 34.99,27 Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#ECEDEA" android:strokeWidth="2.2" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M31,36.3 L34,39.3 L39.5,33" />
+    <path android:fillColor="#7B7F79" android:pathData="M54,30 H76 A2,2 0 0 1 76,34 H54 A2,2 0 0 1 54,30 Z" />
+    <path android:fillColor="#C5C8C2" android:pathData="M53.5,38 H72.5 A1.5,1.5 0 0 1 72.5,41 H53.5 A1.5,1.5 0 0 1 53.5,38 Z" />
+    <path android:fillColor="#1F111312" android:pathData="M26,54.5 H82 V55.7 H26 Z" />
+    <path android:fillColor="#111312" android:pathData="M30,63 H66 A4,4 0 0 1 66,71 H30 A4,4 0 0 1 30,63 Z" />
+    <path android:fillColor="#59111312" android:pathData="M30,77 H52 A4,4 0 0 1 52,85 H30 A4,4 0 0 1 30,77 Z" />
 </vector>
