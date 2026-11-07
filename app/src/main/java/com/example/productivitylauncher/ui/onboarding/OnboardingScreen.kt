@@ -101,7 +101,7 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
             when (shownStep) {
                 0 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.Center) {
                     Title("A quieter phone for studying.")
-                    Body("Still keeps what you need close and puts a short pause in front of what pulls you away.", Modifier.padding(top = 12.dp, bottom = 24.dp))
+                    Body("Only Needed keeps what you need close and puts a short pause in front of what pulls you away.", Modifier.padding(top = 12.dp, bottom = 24.dp))
                     WelcomePoint("One list, in order", "Write your tasks once. Home always shows the next one.")
                     WelcomePoint("Distractions wait", "Social and game apps get a short pause, so you open them on purpose.")
                     WelcomePoint("Focus when you need it", "A focus timer, Lock In, calming noise and a red button for hard moments.")

@@ -4,7 +4,7 @@ Read this file first. It describes what the project is, how it is built, the rul
 
 ## 1. What this is
 
-A minimal Android **launcher for students** (working title "Launcher", visual identity "Still"). It replaces the phone's home screen. Goals: do the next task first, put friction in front of distracting apps, keep everything private.
+A minimal Android **launcher for students** (name "Only Needed", shown as the app label from `@string/app_name`; visual identity "Still"; the application ID is still an open decision and cannot change after the first Play upload). It replaces the phone's home screen. Goals: do the next task first, put friction in front of distracting apps, keep everything private.
 
 - Kotlin + Jetpack Compose, single module `app`, single activity.
 - Package / applicationId `com.example.productivitylauncher` (a placeholder; Google Play rejects `com.example`; it cannot change after the first Play upload, so do not "fix" it without the owner).

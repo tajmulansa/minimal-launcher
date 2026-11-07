@@ -1,6 +1,6 @@
 # Design
 
-> **The visual direction is the Still prototype**: [design/still-prototype.html](design/still-prototype.html). Open it in a browser at about 390 px wide and tap through. It is the source of truth: when the app and the prototype disagree, the prototype wins. The app name, icon and application ID are still open decisions.
+> **The visual direction is the Still prototype**: [design/still-prototype.html](design/still-prototype.html). Open it in a browser at about 390 px wide and tap through. It is the source of truth: when the app and the prototype disagree, the prototype wins. The app is named "Only Needed" and has an icon; the application ID is still an open decision.
 
 ## Principles
 
