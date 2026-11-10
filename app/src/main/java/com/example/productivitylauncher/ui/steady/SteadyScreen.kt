@@ -72,18 +72,6 @@ internal fun Context.findActivity(): Activity? {
     return null
 }
 
-/**
- * Steady mode: a quiet landscape flip clock for the desk. Two flat outlined cards (hours, minutes) with a hairline
- * across the middle, today's date in mono caps, and a column of round buttons: Phone, Messages, Exit.
- * The screen turns landscape and stays awake while it is open; both are put back on exit.
- */
-@Composable
-fun SteadyScreen(state: LauncherState, nav: Nav) {
-    val context = LocalContext.current
-    LandscapeAwake()
-    SteadyBody(state, nav, context)
-}
-
 /** Turns the screen landscape, keeps it awake and hides the system bars while in composition; all of it is put back on exit. */
 @Composable
 internal fun LandscapeAwake() {
@@ -100,52 +88,6 @@ internal fun LandscapeAwake() {
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             controller?.show(WindowInsetsCompat.Type.systemBars())
             activity?.requestedOrientation = previous
-        }
-    }
-}
-
-@Composable
-private fun SteadyBody(state: LauncherState, nav: Nav, context: Context) {
-    var now by remember { mutableStateOf(Calendar.getInstance()) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            now = Calendar.getInstance()
-            delay(60_000L - (System.currentTimeMillis() % 60_000L) + 20L)
-        }
-    }
-    val use24 = DateFormat.is24HourFormat(context)
-    val hour24 = now.get(Calendar.HOUR_OF_DAY)
-    val shownHour = if (use24) hour24 else (hour24 % 12).let { if (it == 0) 12 else it }
-    val hh = "%02d".format(shownHour)
-    val mm = "%02d".format(now.get(Calendar.MINUTE))
-    val date = remember(now.get(Calendar.DAY_OF_YEAR)) {
-        java.text.SimpleDateFormat("EEEE d MMMM", Locale.getDefault()).format(now.time)
-    }
-    val meridiem = if (use24) "" else if (hour24 < 12) " · AM" else " · PM"
-
-    Box(Modifier.fillMaxSize().background(AppColors.phone).padding(horizontal = 28.dp, vertical = 20.dp)) {
-        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-            BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
-                val gap = 16.dp
-                val cardH = minOf(maxHeight * 0.66f, (maxWidth - gap) / 2 / 1.1f)
-                Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
-                        FlipCard(hh, cardH)
-                        FlipCard(mm, cardH)
-                    }
-                    Box(Modifier.height(18.dp))
-                    Caption(date + meridiem)
-                }
-            }
-            Column(Modifier.padding(start = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                RoundButton(Ic.Phone, "Phone") { openPhone(context) }
-                RoundButton(Ic.Message, "Messages") { openMessages(context) }
-                var dnd by remember { mutableStateOf(isDndOn(context)) }
-                RoundButton(Ic.Moon, if (dnd) "Do Not Disturb on" else "Do Not Disturb off", on = dnd) {
-                    if (setDnd(context, !dnd)) dnd = !dnd else openDndSettings(context)
-                }
-                RoundButton(Ic.Close, "Exit Steady mode") { nav.back() }
-            }
         }
     }
 }

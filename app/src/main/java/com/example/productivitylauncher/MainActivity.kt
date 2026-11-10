@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import com.example.productivitylauncher.data.LauncherState
-import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.data.canDrawOverlays
 import com.example.productivitylauncher.service.UrgeButtonService
 import com.example.productivitylauncher.ui.LauncherApp
@@ -32,7 +31,6 @@ private const val DESIGN_WIDTH_DP = 390f
 class MainActivity : ComponentActivity() {
 
     private lateinit var state: LauncherState
-    private lateinit var widgetHost: WidgetHost
 
     /** Incremented every time the user presses Home while we are already open. */
     private var homeSignal by mutableIntStateOf(0)
@@ -40,7 +38,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         state = LauncherState(this)
-        widgetHost = WidgetHost(this)
         setContent {
             val palette = resolvePalette(state.themeMode)
             val dark = palette.dark
@@ -60,15 +57,10 @@ class MainActivity : ComponentActivity() {
             val scale = (widthDp / DESIGN_WIDTH_DP).coerceIn(0.8f, 1.3f)
             CompositionLocalProvider(LocalDensity provides Density(density.density * scale, density.fontScale)) {
                 LauncherTheme(palette) {
-                    LauncherApp(state = state, widgetHost = widgetHost, homeSignal = homeSignal)
+                    LauncherApp(state = state, homeSignal = homeSignal)
                 }
             }
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        widgetHost.start()
     }
 
     override fun onResume() {
@@ -82,11 +74,6 @@ class MainActivity : ComponentActivity() {
         // Leaving the launcher for another app: bring the red button back.
         if (state.urgeButtonOn && canDrawOverlays(this)) UrgeButtonService.show(this)
         super.onPause()
-    }
-
-    override fun onStop() {
-        widgetHost.stop()
-        super.onStop()
     }
 
     // launchMode="singleTask": pressing Home again arrives here instead of creating a new activity.

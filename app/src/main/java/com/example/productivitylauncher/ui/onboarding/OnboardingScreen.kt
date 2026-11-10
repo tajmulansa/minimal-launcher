@@ -24,7 +24,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.productivitylauncher.data.UsageReader
 import com.example.productivitylauncher.data.canDrawOverlays
-import com.example.productivitylauncher.data.hasCalendarPermission
 import com.example.productivitylauncher.data.hasDndAccess
 import com.example.productivitylauncher.data.hasNotificationAccess
 import com.example.productivitylauncher.data.openNotificationAccessSettings
@@ -56,7 +55,6 @@ import com.example.productivitylauncher.data.isDefaultLauncher
 import com.example.productivitylauncher.data.openDefaultLauncherSettings
 import com.example.productivitylauncher.ui.Nav
 import com.example.productivitylauncher.ui.Route
-import com.example.productivitylauncher.ui.apps.GatedPickerBody
 import com.example.productivitylauncher.ui.apps.HomePickerBody
 import com.example.productivitylauncher.ui.components.AppField
 import com.example.productivitylauncher.ui.components.AppText
@@ -68,15 +66,11 @@ import com.example.productivitylauncher.ui.components.Segmented
 import com.example.productivitylauncher.ui.theme.Look
 import com.example.productivitylauncher.ui.theme.ThemeMode
 
-/** First run: welcome, pick gated apps, pick six Home apps, ask your name, choose a theme. */
+/** First run: welcome, pick six Home apps, permissions, choose a theme. */
 @Composable
 fun OnboardingScreen(state: LauncherState, nav: Nav) {
-    val context = LocalContext.current
     var step by remember { mutableIntStateOf(0) }
-    var name by remember { mutableStateOf(state.userName) }
-    var wake by remember { mutableIntStateOf(state.wakeMin) }
-    var bed by remember { mutableIntStateOf(state.bedMin) }
-    val last = 6
+    val last = 3
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp), horizontalArrangement = Arrangement.Center) {
@@ -100,36 +94,21 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
         ) { shownStep ->
             when (shownStep) {
                 0 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    Title("A quieter phone for studying.")
-                    Body("Only Needed keeps what you need close and puts a short pause in front of what pulls you away.", Modifier.padding(top = 12.dp, bottom = 24.dp))
-                    WelcomePoint("One list, in order", "Write your tasks once. Home always shows the next one.")
-                    WelcomePoint("Distractions wait", "Social and game apps get a short pause, so you open them on purpose.")
-                    WelcomePoint("Focus when you need it", "A focus timer, Lock In, calming noise and a red button for hard moments.")
+                    Title("Use your phone with intention.")
+                    Body("Six apps on Home. Everything else is one deliberate step away.", Modifier.padding(top = 12.dp, bottom = 24.dp))
+                    WelcomePoint("Six apps, always at hand", "Your Home page shows only the apps you chose.")
+                    WelcomePoint("Everything else, on purpose", "Type an app's full name, then choose how long you need it.")
+                    WelcomePoint("A red button for hard moments", "Tap it twice for a calm five minute break.")
                     WelcomePoint("Private by design", "No account, no ads, no internet. Everything stays on this phone.")
                 }
                 1 -> Column(Modifier.fillMaxSize()) {
-                    Title("Pause your distractions.", Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
-                    GatedPickerBody(state, Modifier.weight(1f), immediate = true)
-                }
-                2 -> Column(Modifier.fillMaxSize()) {
                     Title("Pick your Home apps.", Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
                     HomePickerBody(state, Modifier.weight(1f))
                 }
-                3 -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    Title("What should we call you?")
-                    Body("Home greets you by name. It stays on this phone.", Modifier.padding(top = 8.dp, bottom = 24.dp))
-                    AppField(name, { name = it }, "Your name", fill = AppColors.card)
-                }
-                4 -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
-                    Title("Your day.")
-                    Body("When do you wake up and go to bed? Home greets you to match, and your evening shutdown is set for an hour before bed.", Modifier.padding(top = 8.dp, bottom = 28.dp))
-                    SleepRow("Wake up", formatTimeOfDay(wake), { wake = (wake - 15 + 1440) % 1440 }, { wake = (wake + 15) % 1440 })
-                    SleepRow("Bedtime", formatTimeOfDay(bed), { bed = (bed - 15 + 1440) % 1440 }, { bed = (bed + 15) % 1440 })
-                }
-                6 -> PermissionsStep(state, Modifier.fillMaxSize())
+                2 -> PermissionsStep(state, Modifier.fillMaxSize())
                 else -> Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center) {
                     Title("Make it yours.")
-                    Body("Pick a theme and a look. You can change both any time in Quick actions.", Modifier.padding(top = 8.dp, bottom = 24.dp))
+                    Body("Pick a theme and a look. You can change both any time in Settings.", Modifier.padding(top = 8.dp, bottom = 24.dp))
                     Segmented(ThemeMode.entries.map { it.label }, state.themeMode.ordinal, { state.setTheme(ThemeMode.entries[it]) })
                     Spacer(Modifier.height(12.dp))
                     Segmented(Look.entries.map { it.label }, state.look.ordinal, { state.updateLook(Look.entries[it]) })
@@ -140,8 +119,6 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
             CButton(
                 if (step == last) "Start" else "Next",
                 {
-                    if (step == 3) state.updateUserName(name)
-                    if (step == 4) { state.updateWake(wake); state.updateBed(bed); state.updateEveningHour(bed / 60 - 1) }
                     if (step == last) {
                         state.finishOnboarding()
                         nav.go(Route.Main)
@@ -150,7 +127,7 @@ fun OnboardingScreen(state: LauncherState, nav: Nav) {
                 Modifier.fillMaxWidth(), BtnKind.Primary,
             )
             if (step > 0) TextLink("Back", { step -= 1 })
-            else if (step == 0) TextLink("Skip setup", { state.finishOnboarding(); nav.go(Route.Main) })
+            else TextLink("Skip setup", { state.finishOnboarding(); nav.go(Route.Main) })
         }
     }
 }
@@ -163,14 +140,6 @@ private fun Title(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun Body(text: String, modifier: Modifier = Modifier) {
     AppText(text, modifier, size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, display = false)
-}
-
-@Composable
-private fun SleepRow(label: String, value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-        AppText(label, size = 17.sp, display = false)
-        Stepper(value, onMinus, onPlus, valueWidth = 84.dp)
-    }
 }
 
 @Composable
@@ -202,11 +171,8 @@ private fun PermRow(title: String, why: String, granted: Boolean, onAllow: () ->
 private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
     val context = LocalContext.current
     val tick = state.resumeTick
-    var calendar by remember(tick) { mutableStateOf(hasCalendarPermission(context)) }
-    val calLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { calendar = it }
     val usage = remember(tick, state.usageAccess) { UsageReader(context).hasAccess() }
     val overlay = remember(tick) { canDrawOverlays(context) }
-    val dnd = remember(tick) { hasDndAccess(context) }
     val notif = remember(tick) { hasNotificationAccess(context) }
     val home = remember(tick) { isDefaultLauncher(context) }
     var showPolicy by remember { mutableStateOf(false) }
@@ -217,10 +183,9 @@ private fun PermissionsStep(state: LauncherState, modifier: Modifier) {
             "Everything stays on this phone. There is no internet permission, no account, no ads and no tracking. You can take any permission back any time in Android settings.",
             size = 15.sp, color = AppColors.muted, lineHeight = 22.sp, modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
         )
-        PermRow("Usage access", "Reads how long apps were used, on this phone only, to show screen time and your gated time.", usage) { openUsageAccessSettings(context) }
-        PermRow("Display over other apps", "Lets the small timer show over a gated app, and the optional red button show over every app.", overlay) { openOverlaySettings(context) }
-        PermRow("Do Not Disturb", "Lets the moon button and focus sessions silence notifications.", dnd) { openDndSettings(context) }
-        PermRow("Notification access", "Lets the launcher dismiss notifications from apps you hide. It never reads or keeps their content.", notif) { openNotificationAccessSettings(context) }
+        PermRow("Usage access", "Reads how long apps were used, on this phone only, to show today's screen time on Home.", usage) { openUsageAccessSettings(context) }
+        PermRow("Display over other apps", "Lets the small timer show over an app, and the red button show over every app.", overlay) { openOverlaySettings(context) }
+        PermRow("Notification access", "Lets the launcher dismiss notifications during the red button lock. It never reads or keeps their content.", notif) { openNotificationAccessSettings(context) }
         PermRow("Home app", "Make this your launcher so it opens when you press Home.", home) { openDefaultLauncherSettings(context) }
         TextLink(if (showPolicy) "Hide privacy policy" else "Read the full privacy policy", { showPolicy = !showPolicy })
         if (showPolicy) {

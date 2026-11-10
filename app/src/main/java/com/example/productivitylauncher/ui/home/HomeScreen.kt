@@ -78,7 +78,6 @@ import com.example.productivitylauncher.ui.components.AppIcon
 import com.example.productivitylauncher.ui.components.AppText
 import com.example.productivitylauncher.ui.components.Caption
 import com.example.productivitylauncher.ui.components.CheckCircle
-import com.example.productivitylauncher.ui.components.GatedTag
 import com.example.productivitylauncher.ui.components.Ic
 import com.example.productivitylauncher.ui.components.RadiusPill
 import com.example.productivitylauncher.ui.components.clickableRole
@@ -98,9 +97,6 @@ fun HomeScreen(
     state: LauncherState,
     nav: Nav,
     onOpenApp: (AppEntry) -> Unit,
-    page: Int,
-    onOpenWidgets: () -> Unit,
-    onOpenQuick: () -> Unit,
     onOpenDrawer: () -> Unit,
 ) {
     val scope = androidx.compose.runtime.rememberCoroutineScope()
@@ -117,17 +113,8 @@ fun HomeScreen(
     val use24 = DateFormat.is24HourFormat(context)
     val shownHour = if (use24) hour24 else (hour24 % 12).let { if (it == 0) 12 else it }
     val minute = cal.get(Calendar.MINUTE)
-    val minuteOfDay = hour24 * 60 + cal.get(Calendar.MINUTE)
-    val asleep = if (state.bedMin > state.wakeMin) minuteOfDay >= state.bedMin || minuteOfDay < state.wakeMin
-        else minuteOfDay >= state.bedMin && minuteOfDay < state.wakeMin
-    val greeting = when {
-        asleep -> "Rest well."
-        minuteOfDay < 12 * 60 -> "Good morning."
-        minuteOfDay < 17 * 60 -> "Good afternoon."
-        else -> "Good evening."
-    }
 
-    Column(Modifier.fillMaxSize().verticalSwipes(onUp = onOpenDrawer, onDown = onOpenQuick)) {
+    Column(Modifier.fillMaxSize().verticalSwipes(onUp = onOpenDrawer, onDown = { nav.go(Route.Settings) })) {
         // Top row. Tap the date to open Quick actions. Swipe up anywhere to open All apps, swipe down from the top for Quick actions.
         Column {
             Row(
@@ -141,10 +128,10 @@ fun HomeScreen(
                         Modifier
                             .size(40.dp)
                             .border(1.dp, AppColors.line, CircleShape)
-                            .semantics { contentDescription = "Quick actions" }
-                            .clickableRole(onOpenQuick),
+                            .semantics { contentDescription = "Settings" }
+                            .clickableRole({ nav.go(Route.Settings) }),
                         contentAlignment = Alignment.Center,
-                    ) { AppIcon(Ic.Sliders, AppColors.text, size = 18.dp) }
+                    ) { AppIcon(Ic.Gear, AppColors.text, size = 18.dp) }
                 }
             }
 
@@ -158,18 +145,6 @@ fun HomeScreen(
                     Odometer(minute / 10, 180, 112.sp)
                     Odometer(minute % 10, 270, 112.sp)
                 }
-                Row(Modifier.padding(top = 18.dp), verticalAlignment = Alignment.Bottom) {
-                    AppText(if (state.userName.isBlank()) greeting else greeting.removeSuffix(".") + ", ", size = 22.sp, weight = FontWeight.Normal, color = AppColors.muted)
-                    if (state.userName.isNotBlank()) {
-                        val underline by animateFloatAsState(1f, if (Motion.enabled) tween<Float>(1100, delayMillis = if (Intro.played) 0 else 900, easing = Motion.Soft) else snap(), label = "nameLine")
-                        val ink = AppColors.text
-                        AppText(
-                            state.userName, Modifier.drawBehind { drawLine(ink, androidx.compose.ui.geometry.Offset(0f, size.height * 0.93f), androidx.compose.ui.geometry.Offset(size.width * underline, size.height * 0.93f), 1.5.dp.toPx()) },
-                            size = 22.sp, weight = FontWeight.Medium, color = AppColors.text, maxLines = 1,
-                        )
-                        AppText(".", size = 22.sp, color = AppColors.muted)
-                    }
-                }
             }
         }
 
@@ -178,50 +153,16 @@ fun HomeScreen(
         Column(
             Modifier.weight(1f).fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 150.dp),
         ) {
-            // Next task: tap to complete it, like the prototype.
-            val next = state.nextTask
-            var checking by remember { mutableStateOf(false) }
-            val nextText = next?.text ?: if (state.allTasks.isEmpty()) "Add a task on Study" else "All done for today"
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .enterStagger(2, once = true)
-                    .clickableRole({
-                        if (next == null) { if (state.allTasks.isEmpty()) onOpenWidgets() }
-                        else if (!checking) {
-                            checking = true
-                            scope.launch { delay(520); state.toggleAny(next.id); checking = false }
-                        }
-                    }),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                CheckCircle(checking, size = 30.dp)
-                Column(Modifier.weight(1f)) {
-                    Caption("Up next")
-                    androidx.compose.animation.Crossfade(
-                        targetState = nextText,
-                        animationSpec = Motion.enter(300),
-                        label = "nextTask",
-                    ) { txt ->
-                        AppText(txt, Modifier.padding(top = 2.dp), size = 19.sp, weight = FontWeight.Medium, letterSpacing = (-0.4).sp, maxLines = 1, color = if (next == null) AppColors.muted else AppColors.text)
-                    }
-                }
-            }
-
-            Hair(1, Modifier.padding(vertical = 20.dp))
-
-            // Rows that would not fully fit are left out instead of being cut in half (Lock In adds a caption line).
+            // Rows that would not fully fit are left out instead of being cut in half.
             FitColumn(Modifier.fillMaxWidth().weight(1f)) {
-                val shown = state.homeApps.filter { !state.isGated(it) }.mapNotNull { state.appByPackage(it) }
-                if (state.lockIn) Caption("Locked in \u00B7 only your home apps", Modifier.padding(bottom = 6.dp))
+                val shown = state.homeApps.mapNotNull { state.appByPackage(it) }
                 shown.forEachIndexed { i, app ->
                     Box(Modifier.enterStagger(3 + i, once = true)) {
-                        AppRow(app, gated = state.isGated(app.packageName), meta = state.appMsToday[app.packageName]?.takeIf { it >= 60_000L }?.let { formatMillis(it) } ?: "", onClick = { onOpenApp(app) })
+                        AppRow(app, onClick = { onOpenApp(app) })
                     }
                 }
                 LaunchedEffect(Unit) { delay(900); Intro.played = true }
-                if (shown.size < 6 && !state.lockIn) {
+                if (shown.size < 6) {
                     Row(
                         Modifier.fillMaxWidth().clickableRole({ nav.go(Route.HomePicker) }).padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -231,6 +172,8 @@ fun HomeScreen(
                         AppText(if (shown.isEmpty()) "Choose your six apps" else "Add an app", size = 18.sp, weight = FontWeight.Medium, color = AppColors.muted)
                     }
                 }
+                val screen = state.screenTimeMs
+                if (screen != null) Caption("Screen time today \u00B7 ${formatMillis(screen)}", Modifier.padding(top = 14.dp))
             }
         }
 
@@ -343,7 +286,7 @@ fun Hair(index: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AppRow(app: AppEntry, gated: Boolean, meta: String, onClick: () -> Unit) {
+private fun AppRow(app: AppEntry, onClick: () -> Unit) {
     val source = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val shift by animateFloatAsState(if (pressed) 8f else 0f, Motion.press(), label = "shift")
@@ -358,10 +301,8 @@ private fun AppRow(app: AppEntry, gated: Boolean, meta: String, onClick: () -> U
     ) {
         AppText(
             app.label, Modifier.weight(1f), size = 28.sp, weight = FontWeight.Medium, letterSpacing = (-1.1).sp, lineHeight = 32.sp,
-            color = if (gated) AppColors.gate else AppColors.text, maxLines = 1,
+            color = AppColors.text, maxLines = 1,
         )
-        if (gated) GatedTag()
-        if (meta.isNotEmpty()) AppText(meta, size = 11.sp, color = AppColors.muted, mono = true)
     }
 }
 
@@ -404,18 +345,14 @@ fun Modifier.verticalSwipes(onUp: () -> Unit, onDown: () -> Unit): Modifier = po
     }
 }
 
-/**
- * The bar under both pages, as in the prototype: All apps pill and three round buttons, then the Home / Today tabs
- * with a line that follows the pager while you swipe.
- */
+/** The bar at the bottom: the All apps pill and two round buttons, Phone and Messages. */
 @Composable
-fun BottomBar(pager: PagerState, onApps: () -> Unit, onPhone: () -> Unit, onMessages: () -> Unit, onSteady: () -> Unit, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun BottomBar(onApps: () -> Unit, onPhone: () -> Unit, onMessages: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
             .background(Brush.verticalGradient(0f to Color.Transparent, 0.38f to AppColors.phone, 1f to AppColors.phone))
-            .padding(start = 22.dp, end = 22.dp, bottom = 14.dp, top = 34.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(start = 22.dp, end = 22.dp, bottom = 22.dp, top = 34.dp),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Row(
@@ -428,48 +365,12 @@ fun BottomBar(pager: PagerState, onApps: () -> Unit, onPhone: () -> Unit, onMess
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 AppIcon(Ic.Chevron, AppColors.phone, size = 18.dp, modifier = Modifier.graphicsLayer { rotationZ = -90f })
-                AppText("All apps", size = 15.sp, weight = FontWeight.Medium, color = AppColors.phone, display = false)
+                AppText("Find an app", size = 15.sp, weight = FontWeight.Medium, color = AppColors.phone, display = false)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DockButton(Ic.Phone, "Phone", onPhone)
                 DockButton(Ic.Message, "Messages", onMessages)
-                DockButton(Ic.Steady, "Steady mode", onSteady)
             }
-        }
-        Tabs(pager, onSelect)
-    }
-}
-
-@Composable
-private fun Tabs(pager: PagerState, onSelect: (Int) -> Unit) {
-    val labels = listOf("Home", "Study")
-    val widths = remember { androidx.compose.runtime.mutableStateListOf(0f, 0f) }
-    val offsets = remember { androidx.compose.runtime.mutableStateListOf(0f, 0f) }
-    val p = (pager.currentPage + pager.currentPageOffsetFraction).coerceIn(0f, 1f)
-    val idx = Math.round(p)
-    Box(Modifier.fillMaxWidth().padding(bottom = 4.dp), contentAlignment = Alignment.TopCenter) {
-        Box {
-            Row(horizontalArrangement = Arrangement.spacedBy(26.dp)) {
-                labels.forEachIndexed { i, l ->
-                    val tint by animateColorAsState(if (i == idx) AppColors.text else AppColors.muted, Motion.state(160), label = "tabTint")
-                    Caption(
-                        l,
-                        Modifier
-                            .onGloballyPositioned { c -> widths[i] = c.size.width.toFloat(); offsets[i] = c.positionInParent().x }
-                            .clickableRole({ onSelect(i) })
-                            .padding(vertical = 8.dp),
-                        color = tint,
-                    )
-                }
-            }
-            Box(
-                Modifier
-                    .align(Alignment.BottomStart)
-                    .graphicsLayer { translationX = offsets[0] + (offsets[1] - offsets[0]) * p }
-                    .width(with(LocalDensity.current) { (widths[0] + (widths[1] - widths[0]) * p).toDp() })
-                    .height(1.5.dp)
-                    .background(AppColors.text),
-            )
         }
     }
 }

@@ -11,7 +11,6 @@ import com.example.productivitylauncher.ui.theme.Look
 import com.example.productivitylauncher.ui.theme.Motion
 import com.example.productivitylauncher.ui.theme.ThemeMode
 import org.json.JSONArray
-import org.json.JSONObject
 
 /**
  * All launcher state, saved on the device in SharedPreferences. Nothing leaves the phone.
@@ -22,7 +21,6 @@ class LauncherState(context: Context) {
     private val prefs: SharedPreferences = appContext.getSharedPreferences("launcher", Context.MODE_PRIVATE)
 
     private fun str(k: String, d: String = ""): String = prefs.getString(k, d) ?: d
-    private fun int(k: String, d: Int): Int = prefs.getInt(k, d)
     private fun bool(k: String, d: Boolean): Boolean = prefs.getBoolean(k, d)
     private fun long(k: String, d: Long): Long = prefs.getLong(k, d)
     private fun save(block: SharedPreferences.Editor.() -> Unit) {
@@ -41,37 +39,31 @@ class LauncherState(context: Context) {
         resumeTick++
     }
 
-    fun pipFacts(): PipFacts = PipFacts(
-        hour = hourOf(),
-        frog = frog,
-        frogDone = frogDone,
-        water = water,
-        waterGoal = waterGoal,
-        gatedMin = gatedMs?.let { it / 60_000L },
-        limitMin = dailyLimitMin,
-        activeMin45 = activeMs45?.let { it / 60_000L },
-        eveningHour = eveningHour,
-        eveningDone = eveningDone,
-        dumpCount = dumps.size,
-        focusActive = focusActive,
-        frogJustDone = frogDone && System.currentTimeMillis() - frogDoneAt < 45 * 60_000L,
-    )
-
     // ------------------------------------------------------------ apps
 
-    /** Every launchable app, including hidden ones. Only the Hidden apps screen should read this. */
-    var allApps by mutableStateOf<List<AppEntry>>(emptyList())
+    var apps by mutableStateOf<List<AppEntry>>(emptyList())
         private set
 
-    /** The apps the rest of the launcher sees: hidden apps are left out, as if they were not installed. */
-    val apps: List<AppEntry> get() = allApps.filter { it.packageName !in hidden }
-
     fun refreshApps(pm: PackageManager) {
-        val loaded = loadLaunchableApps(pm, appContext.packageName)
-        allApps = loaded
+        apps = loadLaunchableApps(pm, appContext.packageName)
     }
 
     fun appByPackage(pkg: String): AppEntry? = apps.firstOrNull { it.packageName == pkg }
+
+    /** The six apps on Home, in order. These open at once. Every other app needs its full name typed and a time chosen. */
+    var homeApps by mutableStateOf(readStringList("home_apps"))
+        private set
+
+    private fun readStringList(k: String): List<String> = runCatching {
+        val arr = JSONArray(str(k, "[]"))
+        (0 until arr.length()).map { arr.getString(it) }
+    }.getOrDefault(emptyList())
+
+    fun updateHomeApps(list: List<String>) {
+        homeApps = list.distinct().take(6)
+        val arr = JSONArray(homeApps)
+        save { putString("home_apps", arr.toString()) }
+    }
 
     // ------------------------------------------------------------ onboarding and appearance
 
@@ -99,138 +91,6 @@ class LauncherState(context: Context) {
 
     fun updateAnimations(on: Boolean) { animations = on; Motion.enabled = on; save { putBoolean("animations", on) } }
 
-    var pipOn by mutableStateOf(bool("pip_on", true))
-        private set
-
-    fun updatePipOn(v: Boolean) { pipOn = v; save { putBoolean("pip_on", v) } }
-
-    // ------------------------------------------------------------ frog
-
-    /** Minutes after midnight. Used for the greeting and the evening shutdown. */
-    var wakeMin by mutableStateOf(int("wake_min", 7 * 60))
-        private set
-    var bedMin by mutableStateOf(int("bed_min", 23 * 60))
-        private set
-    fun updateWake(m: Int) { wakeMin = ((m % 1440) + 1440) % 1440; save { putInt("wake_min", wakeMin) } }
-    fun updateBed(m: Int) { bedMin = ((m % 1440) + 1440) % 1440; save { putInt("bed_min", bedMin) } }
-
-    var userName by mutableStateOf(str("user_name"))
-        private set
-    fun updateUserName(n: String) { userName = n.trim(); save { putString("user_name", userName) } }
-
-    var frog by mutableStateOf(str("frog"))
-        private set
-    var frogDoneDay by mutableStateOf(str("frog_done_day"))
-        private set
-    /** When the frog was marked eaten (milliseconds), so Pip can react right away. */
-    var frogDoneAt by mutableStateOf(long("frog_done_at", 0L))
-        private set
-    var tomorrowFrog by mutableStateOf(str("tomorrow_frog"))
-        private set
-    var frogMinutes by mutableStateOf(int("frog_minutes", 25))
-        private set
-    var eatenDays by mutableStateOf(prefs.getStringSet("eaten_days", emptySet()) ?: emptySet())
-        private set
-
-    val frogDone: Boolean get() = frogDoneDay == dayKey()
-
-    fun updateFrog(text: String) { frog = text; save { putString("frog", text) } }
-    fun updateTomorrowFrog(text: String) { tomorrowFrog = text; save { putString("tomorrow_frog", text) } }
-    fun updateFrogMinutes(m: Int) { frogMinutes = m.coerceIn(5, 120); save { putInt("frog_minutes", frogMinutes) } }
-
-    fun setFrogDone(done: Boolean) {
-        val today = dayKey()
-        if (done) {
-            frogDoneDay = today
-            frogDoneAt = System.currentTimeMillis()
-            eatenDays = eatenDays + today
-        } else {
-            frogDoneDay = ""
-            frogDoneAt = 0L
-            eatenDays = eatenDays - today
-        }
-        save {
-            putLong("frog_done_at", frogDoneAt)
-            putString("frog_done_day", frogDoneDay)
-            putStringSet("eaten_days", eatenDays)
-        }
-    }
-
-    // ------------------------------------------------------------ the other tasks in the to-do list
-
-    var tasks by mutableStateOf(readTasks())
-        private set
-
-    private fun readTasks(): List<Task> = runCatching {
-        val arr = JSONArray(str("tasks", "[]"))
-        (0 until arr.length()).map { i ->
-            val o = arr.getJSONObject(i)
-            Task(o.getString("id"), o.getString("text"), o.optBoolean("done", false))
-        }
-    }.getOrDefault(emptyList())
-
-    private fun writeTasks(list: List<Task>) {
-        tasks = list
-        val arr = JSONArray()
-        list.forEach { t -> arr.put(JSONObject().put("id", t.id).put("text", t.text).put("done", t.done)) }
-        save { putString("tasks", arr.toString()) }
-    }
-
-    /** The other tasks wait until the frog is eaten. With no frog set, nothing waits. */
-    val tasksLocked: Boolean get() = false
-
-    /** One plain list for the UI: the first task (kept as the "frog" for Pip and Focus) followed by the rest. */
-    val allTasks: List<Task> get() =
-        (if (frog.isNotBlank()) listOf(Task(MAIN_ID, frog, frogDone)) else emptyList()) + tasks
-
-    /** The first task that is not done yet. */
-    val nextTask: Task? get() = allTasks.firstOrNull { !it.done }
-
-    fun toggleAny(id: String) {
-        if (id == MAIN_ID) setFrogDone(!frogDone) else writeTasks(tasks.map { if (it.id == id) it.copy(done = !it.done) else it })
-    }
-
-    fun addAny(text: String) {
-        if (text.isBlank()) return
-        if (frog.isBlank()) updateFrog(text.trim()) else addTask(text)
-    }
-
-    fun removeAny(id: String) {
-        if (id != MAIN_ID) { removeTask(id); return }
-        val first = tasks.firstOrNull()
-        setFrogDone(false)
-        if (first == null) updateFrog("") else { updateFrog(first.text); writeTasks(tasks.drop(1)) }
-    }
-
-    fun addTask(text: String) {
-        if (text.isBlank()) return
-        writeTasks(tasks + Task(System.nanoTime().toString(), text.trim()))
-    }
-
-    fun toggleTask(id: String) {
-        writeTasks(tasks.map { if (it.id == id) it.copy(done = !it.done) else it })
-    }
-
-    fun removeTask(id: String) = writeTasks(tasks.filterNot { it.id == id })
-
-    /** Makes a task today's frog. A frog that is not done yet goes back into the list. Not allowed once the frog is eaten. */
-    fun makeFrog(id: String) {
-        if (frogDone) return
-        val t = tasks.firstOrNull { it.id == id } ?: return
-        val old = frog
-        val rest = tasks.filterNot { it.id == id }
-        writeTasks(if (old.isNotBlank()) listOf(Task(System.nanoTime().toString(), old)) + rest else rest)
-        updateFrog(t.text)
-    }
-
-    // ------------------------------------------------------------ Lock In mode
-
-    /** While on, only the Home apps are shown. Any other app must be found by typing its full name. */
-    var lockIn by mutableStateOf(bool("lock_in", false))
-        private set
-
-    fun updateLockIn(on: Boolean) { lockIn = on; save { putBoolean("lock_in", on) } }
-
     // ------------------------------------------------------------ red button (urge lock)
 
     /** Epoch millis when the red button's timer ends, or 0. Saved, so closing the app does not end it. */
@@ -248,297 +108,7 @@ class LauncherState(context: Context) {
         save { putLong("urge_end", urgeEnd) }
     }
 
-    // ------------------------------------------------------------ water, note
-
-    var water by mutableStateOf(int("water", 0))
-        private set
-    var waterGoal by mutableStateOf(int("water_goal", 8))
-        private set
-
-    fun updateWater(n: Int) { water = n.coerceIn(0, 30); save { putInt("water", water) } }
-    fun updateWaterGoal(n: Int) { waterGoal = n.coerceIn(1, 16); save { putInt("water_goal", waterGoal) } }
-
-    var note by mutableStateOf(str("note"))
-        private set
-
-    fun updateNote(t: String) { note = t; save { putString("note", t) } }
-
-    // ------------------------------------------------------------ habits and brain dump
-
-    var habits by mutableStateOf(readHabits())
-        private set
-
-    private fun readHabits(): List<Habit> = runCatching {
-        val arr = JSONArray(str("habits", "[]"))
-        (0 until arr.length()).map { i ->
-            val o = arr.getJSONObject(i)
-            val days = o.optJSONArray("done")
-            Habit(
-                id = o.getString("id"),
-                anchor = o.getString("anchor"),
-                action = o.getString("action"),
-                doneDays = if (days == null) emptySet() else (0 until days.length()).map { days.getString(it) }.toSet(),
-            )
-        }
-    }.getOrDefault(emptyList())
-
-    private fun writeHabits(list: List<Habit>) {
-        habits = list
-        val arr = JSONArray()
-        list.forEach { h ->
-            val o = JSONObject()
-            o.put("id", h.id)
-            o.put("anchor", h.anchor)
-            o.put("action", h.action)
-            o.put("done", JSONArray(h.doneDays.toList()))
-            arr.put(o)
-        }
-        save { putString("habits", arr.toString()) }
-    }
-
-    fun addHabit(anchor: String, action: String) {
-        if (anchor.isBlank() || action.isBlank()) return
-        writeHabits(habits + Habit(System.nanoTime().toString(), anchor.trim(), action.trim()))
-    }
-
-    fun removeHabit(id: String) = writeHabits(habits.filterNot { it.id == id })
-
-    fun toggleHabit(id: String) {
-        val today = dayKey()
-        writeHabits(habits.map {
-            if (it.id != id) it else it.copy(doneDays = if (today in it.doneDays) it.doneDays - today else it.doneDays + today)
-        })
-    }
-
-    var dumps by mutableStateOf(readDumps())
-        private set
-
-    private fun readDumps(): List<Dump> = runCatching {
-        val arr = JSONArray(str("dumps", "[]"))
-        (0 until arr.length()).map { i ->
-            val o = arr.getJSONObject(i)
-            Dump(o.getString("id"), o.getString("text"), o.optLong("at", 0L))
-        }
-    }.getOrDefault(emptyList())
-
-    private fun writeDumps(list: List<Dump>) {
-        dumps = list
-        val arr = JSONArray()
-        list.forEach { d ->
-            val o = JSONObject()
-            o.put("id", d.id)
-            o.put("text", d.text)
-            o.put("at", d.createdAt)
-            arr.put(o)
-        }
-        save { putString("dumps", arr.toString()) }
-    }
-
-    fun addDump(text: String) {
-        if (text.isBlank()) return
-        writeDumps(listOf(Dump(System.nanoTime().toString(), text.trim(), System.currentTimeMillis())) + dumps)
-    }
-
-    fun removeDump(id: String) = writeDumps(dumps.filterNot { it.id == id })
-
-    // ------------------------------------------------------------ gated apps and home apps
-
-    var gated by mutableStateOf(prefs.getStringSet("gated", emptySet()) ?: emptySet())
-        private set
-    /** Apps kept out of the All apps list and the Home picker. Typing an app's full name still finds it. */
-    var hidden by mutableStateOf(prefs.getStringSet("hidden", emptySet()) ?: emptySet())
-        private set
-
-    fun setHidden(pkg: String, on: Boolean) {
-        hidden = if (on) hidden + pkg else hidden - pkg
-        if (on && pkg in homeApps) updateHomeApps(homeApps - pkg)
-        save { putStringSet("hidden", hidden) }
-    }
-
-    var pendingRemoval by mutableStateOf(readLongMap("pending_removal"))
-        private set
-    var homeApps by mutableStateOf(readStringList("home_apps"))
-        private set
-
-    private fun readStringList(k: String): List<String> = runCatching {
-        val arr = JSONArray(str(k, "[]"))
-        (0 until arr.length()).map { arr.getString(it) }
-    }.getOrDefault(emptyList())
-
-    private fun readLongMap(k: String): Map<String, Long> = runCatching {
-        val o = JSONObject(str(k, "{}"))
-        o.keys().asSequence().associateWith { o.getLong(it) }
-    }.getOrDefault(emptyMap())
-
-    private fun writeLongMap(k: String, m: Map<String, Long>) {
-        val o = JSONObject()
-        m.forEach { (key, v) -> o.put(key, v) }
-        save { putString(k, o.toString()) }
-    }
-
-    fun isGated(pkg: String) = pkg in gated
-
-    fun addGated(pkg: String) {
-        gated = gated + pkg
-        pendingRemoval = pendingRemoval - pkg
-        // A gated app does not belong on the Home list.
-        if (pkg in homeApps) updateHomeApps(homeApps - pkg)
-        save { putStringSet("gated", gated) }
-        writeLongMap("pending_removal", pendingRemoval)
-    }
-
-    /** Removing a gate waits 24 hours, so a weak moment cannot undo it. */
-    fun requestRemoveGated(pkg: String) {
-        if (pkg !in gated || pkg in pendingRemoval) return
-        pendingRemoval = pendingRemoval + (pkg to System.currentTimeMillis() + WEAKEN_DELAY_MS)
-        writeLongMap("pending_removal", pendingRemoval)
-    }
-
-    /** Setup only: before the gate is in use there is nothing to protect, so removing is instant. */
-    fun removeGatedNow(pkg: String) {
-        gated = gated - pkg
-        pendingRemoval = pendingRemoval - pkg
-        save { putStringSet("gated", gated) }
-        writeLongMap("pending_removal", pendingRemoval)
-    }
-
-    fun cancelRemoveGated(pkg: String) {
-        pendingRemoval = pendingRemoval - pkg
-        writeLongMap("pending_removal", pendingRemoval)
-    }
-
-    fun updateHomeApps(list: List<String>) {
-        // A gated app can never be a Home app.
-        homeApps = list.distinct().filter { it !in gated }.take(6)
-        val arr = JSONArray(homeApps)
-        save { putString("home_apps", arr.toString()) }
-    }
-
-    // ------------------------------------------------------------ gate settings (weakening waits 24h)
-
-    private var limitValue by mutableStateOf(int("limit", 60))
-    private var breathsValue by mutableStateOf(int("breaths", 3))
-    private var wordsValue by mutableStateOf(int("phrase_words", 5))
-    private var growingValue by mutableStateOf(int("growing_wait", 1))
-    var pendingChanges by mutableStateOf(readPending())
-        private set
-
-    val dailyLimitMin: Int get() = limitValue
-    val breaths: Int get() = breathsValue
-    val phraseWords: Int get() = wordsValue
-    val growingWait: Boolean get() = growingValue == 1
-
-    private fun readPending(): Map<String, PendingChange> = runCatching {
-        val o = JSONObject(str("pending_changes", "{}"))
-        o.keys().asSequence().associateWith {
-            val p = o.getJSONObject(it)
-            PendingChange(p.getInt("v"), p.getLong("at"))
-        }
-    }.getOrDefault(emptyMap())
-
-    private fun writePending(m: Map<String, PendingChange>) {
-        pendingChanges = m
-        val o = JSONObject()
-        m.forEach { (k, p) -> o.put(k, JSONObject().put("v", p.value).put("at", p.applyAt)) }
-        save { putString("pending_changes", o.toString()) }
-    }
-
-    private fun current(s: GateSetting): Int = when (s) {
-        GateSetting.Limit -> limitValue
-        GateSetting.Breaths -> breathsValue
-        GateSetting.PhraseWords -> wordsValue
-        GateSetting.GrowingWait -> growingValue
-    }
-
-    private fun applyNow(s: GateSetting, v: Int) {
-        when (s) {
-            GateSetting.Limit -> limitValue = v
-            GateSetting.Breaths -> breathsValue = v
-            GateSetting.PhraseWords -> wordsValue = v
-            GateSetting.GrowingWait -> growingValue = v
-        }
-        save { putInt(s.key, v) }
-    }
-
-    /** Stronger changes apply at once. Weaker ones are saved as pending and apply after 24 hours. */
-    fun changeGateSetting(s: GateSetting, v: Int) {
-        val old = current(s)
-        if (v == old) {
-            writePending(pendingChanges - s.key)
-        } else if (isWeakening(s, old, v)) {
-            writePending(pendingChanges + (s.key to PendingChange(v, System.currentTimeMillis() + WEAKEN_DELAY_MS)))
-        } else {
-            applyNow(s, v)
-            writePending(pendingChanges - s.key)
-        }
-    }
-
-    fun pendingFor(s: GateSetting): PendingChange? = pendingChanges[s.key]
-
-    /** Applies every pending change and gate removal whose 24 hours have passed. Call on start and resume. */
-    fun applyPending() {
-        val now = System.currentTimeMillis()
-        val due = pendingChanges.filter { it.value.applyAt <= now }
-        if (due.isNotEmpty()) {
-            due.forEach { (key, p) ->
-                GateSetting.entries.firstOrNull { it.key == key }?.let { applyNow(it, p.value) }
-            }
-            writePending(pendingChanges - due.keys)
-        }
-        val removable = pendingRemoval.filter { it.value <= now }.keys
-        if (removable.isNotEmpty()) {
-            gated = gated - removable
-            pendingRemoval = pendingRemoval - removable
-            save { putStringSet("gated", gated) }
-            writeLongMap("pending_removal", pendingRemoval)
-        }
-    }
-
-    // ------------------------------------------------------------ gate bookkeeping
-
-    private var opensDay = str("opens_day")
-    private var opens by mutableStateOf(readOpens())
-
-    private fun readOpens(): Map<String, Long> =
-        if (str("opens_day") == dayKey()) readLongMap("opens") else emptyMap()
-
-    fun opensToday(pkg: String): Int {
-        if (opensDay != dayKey()) return 0
-        return (opens[pkg] ?: 0L).toInt()
-    }
-
-    fun recordOpen(pkg: String) {
-        val today = dayKey()
-        if (opensDay != today) { opensDay = today; opens = emptyMap() }
-        opens = opens + (pkg to (opens[pkg] ?: 0L) + 1)
-        save { putString("opens_day", today) }
-        writeLongMap("opens", opens)
-    }
-
-    var backedOut by mutableStateOf(readLongMap("backed_out"))
-        private set
-
-    fun recordBackOut() {
-        val today = dayKey()
-        backedOut = backedOut + (today to (backedOut[today] ?: 0L) + 1)
-        writeLongMap("backed_out", backedOut)
-    }
-
-    fun backedOutOn(day: String): Int = (backedOut[day] ?: 0L).toInt()
-
-    // Minutes the user chose in gates today. Used for the daily limit when usage access is not granted.
-    private var bookedDay = str("booked_day")
-    var bookedMs by mutableStateOf(if (str("booked_day") == dayKey()) long("booked_ms", 0L) else 0L)
-        private set
-
-    private fun addBooked(ms: Long) {
-        val today = dayKey()
-        if (bookedDay != today) { bookedDay = today; bookedMs = 0L }
-        bookedMs += ms
-        save { putString("booked_day", today); putLong("booked_ms", bookedMs) }
-    }
-
-    // ------------------------------------------------------------ sessions
+    // ------------------------------------------------------------ sessions (time chosen for an app)
 
     var sessionPkg by mutableStateOf(str("session_pkg"))
         private set
@@ -553,7 +123,6 @@ class LauncherState(context: Context) {
         sessionPkg = pkg
         sessionEnd = System.currentTimeMillis() + minutes * 60_000L
         sessionNotified = false
-        addBooked(minutes * 60_000L)
         save {
             putString("session_pkg", pkg)
             putLong("session_end", sessionEnd)
@@ -583,198 +152,38 @@ class LauncherState(context: Context) {
         return false
     }
 
-    // ------------------------------------------------------------ focus
-
-    var focusEnd by mutableStateOf(long("focus_end", 0L))
-        private set
-    var focusTotalMs by mutableStateOf(long("focus_total", 0L))
-        private set
-    var focusDnd by mutableStateOf(bool("focus_dnd", true))
-        private set
-    var focusLockGated by mutableStateOf(bool("focus_lock", true))
-        private set
-
-    val focusActive: Boolean get() = focusEnd > System.currentTimeMillis()
-
-    fun startFocus(minutes: Int) {
-        focusTotalMs = minutes * 60_000L
-        focusEnd = System.currentTimeMillis() + focusTotalMs
-        save { putLong("focus_end", focusEnd); putLong("focus_total", focusTotalMs) }
-    }
-
-    fun stopFocus() {
-        focusEnd = 0L
-        save { putLong("focus_end", 0L) }
-    }
-
-    fun updateFocusDnd(v: Boolean) { focusDnd = v; save { putBoolean("focus_dnd", v) } }
-    fun updateFocusLockGated(v: Boolean) { focusLockGated = v; save { putBoolean("focus_lock", v) } }
-
-    // ------------------------------------------------------------ evening and goals
-
-    var eveningHour by mutableStateOf(int("evening_hour", 21))
-        private set
-    var eveningDoneDay by mutableStateOf(str("evening_done"))
-        private set
-    var screenGoalMin by mutableStateOf(int("screen_goal", 180))
-        private set
-
-    val eveningDone: Boolean get() = eveningDoneDay == dayKey()
-
-    fun updateEveningHour(h: Int) { eveningHour = h.coerceIn(18, 23); save { putInt("evening_hour", eveningHour) } }
-    fun finishEvening() { eveningDoneDay = dayKey(); save { putString("evening_done", eveningDoneDay) } }
-    fun setScreenGoal(m: Int) { screenGoalMin = m.coerceIn(30, 600); save { putInt("screen_goal", screenGoalMin) } }
-
-    // ------------------------------------------------------------ widgets page
-
-    var widgets by mutableStateOf(addNewWidgetsOnce(readStringList("widgets").ifEmpty { DEFAULT_WIDGETS }))
-        private set
-
-    /** The first time this version runs, existing users get the new Focus and Exam widgets near the top. */
-    private fun addNewWidgetsOnce(list: List<String>): List<String> {
-        if (bool("widgets_v3", false)) return list
-        val out = list.toMutableList()
-        var at = minOf(2, out.size)
-        for (id in listOf("focus", "exam")) if (id !in out) { out.add(at, id); at++ }
-        save { putString("widgets", JSONArray(out).toString()); putBoolean("widgets_v3", true) }
-        return out
-    }
-
-    var widgetHeights by mutableStateOf(readLongMap("widget_heights"))
-        private set
-
-    fun widgetHeight(id: String, default: Int): Int = (widgetHeights[id] ?: default.toLong()).toInt()
-
-    fun updateWidgetHeight(id: String, dp: Int) {
-        widgetHeights = widgetHeights + (id to dp.coerceIn(80, 600).toLong())
-        writeLongMap("widget_heights", widgetHeights)
-    }
-
-    fun hasWidget(id: String) = id in widgets
-
-    fun toggleWidget(id: String) = updateWidgets(if (id in widgets) widgets - id else widgets + id)
-
-    fun addWidgetId(id: String) { if (id !in widgets) updateWidgets(widgets + id) }
-
-    fun removeWidgetId(id: String) = updateWidgets(widgets - id)
-
-    /** Drag and drop: puts the widget [fromId] where [toId] is. */
-    fun reorderWidget(fromId: String, toId: String) {
-        val i = widgets.indexOf(fromId)
-        val j = widgets.indexOf(toId)
-        if (i < 0 || j < 0 || i == j) return
-        val list = widgets.toMutableList()
-        list.add(j, list.removeAt(i))
-        updateWidgets(list)
-    }
-
-    // ------------------------------------------------------------ exam countdown
-
-    var examName by mutableStateOf(str("exam_name"))
-        private set
-
-    /** The exam day as an epoch day, or 0 when none is set. */
-    var examDay by mutableStateOf(long("exam_day", 0L))
-        private set
-
-    fun updateExam(name: String, epochDay: Long) {
-        examName = name; examDay = epochDay
-        save { putString("exam_name", name); putLong("exam_day", epochDay) }
-    }
-
-    private fun updateWidgets(list: List<String>) {
-        widgets = list
-        save { putString("widgets", JSONArray(list).toString()) }
-    }
-
     // ------------------------------------------------------------ usage numbers (read-only, from UsageStats)
 
     var usageAccess by mutableStateOf(false)
         private set
-    var screenTimeMs by mutableStateOf<Long?>(null)
-        private set
-    var gatedMs by mutableStateOf<Long?>(null)
-        private set
-    var activeMs45 by mutableStateOf<Long?>(null)
-        private set
-    var weekMs by mutableStateOf<List<Long>>(emptyList())
-        private set
 
-    /** Time spent in each app today (package name to milliseconds), without this launcher. */
-    var appMsToday by mutableStateOf<Map<String, Long>>(emptyMap())
+    /** Total screen time today across apps, without this launcher. Null until Usage access is allowed. */
+    var screenTimeMs by mutableStateOf<Long?>(null)
         private set
 
     /** Reads usage numbers on the calling thread. Call it off the main thread. */
     fun refreshUsage() {
         val reader = UsageReader(appContext)
-        val access = reader.hasAccess()
-        if (!access) {
+        if (!reader.hasAccess()) {
             usageAccess = false
             screenTimeMs = null
-            gatedMs = null
-            activeMs45 = null
-            weekMs = emptyList()
-            appMsToday = emptyMap()
             return
         }
         val now = System.currentTimeMillis()
-        val dayStart = startOfDay(now)
-        val perApp = reader.perPackage(dayStart, now)
         val own = appContext.packageName
-        val total = perApp.filterKeys { it != own }.values.sum()
-        val gatedTotal = perApp.filterKeys { it in gated }.values.sum()
-        val week = (6 downTo 0).map { back ->
-            val s = startOfDay(now - back * DAY_MS)
-            val e = if (back == 0) now else s + DAY_MS
-            reader.perPackage(s, e).filterKeys { it != own }.values.sum()
-        }
+        val perApp = reader.perPackage(startOfDay(now), now)
         usageAccess = true
-        screenTimeMs = total
-        gatedMs = gatedTotal
-        activeMs45 = reader.activeMsInLast(45 * 60_000L)
-        weekMs = week
-        appMsToday = perApp.filterKeys { it != own }
+        screenTimeMs = perApp.filterKeys { it != own }.values.sum()
     }
 
-    /** Time used in gated apps today: real usage if allowed, otherwise the minutes the user booked. */
-    val gatedUsedMs: Long get() = gatedMs ?: bookedMs
-
-    val limitReached: Boolean get() = gatedUsedMs >= dailyLimitMin * 60_000L
-
-    // ------------------------------------------------------------ daily rollover and reset
-
-    /** Starts a new day: resets water, moves tomorrow's frog in, clears a finished frog, carries an unfinished one over. */
-    fun rollover() {
-        val today = dayKey()
-        val last = str("last_day")
-        if (last == today) return
-        if (last.isNotEmpty()) {
-            if (tomorrowFrog.isNotBlank()) {
-                updateFrog(tomorrowFrog)
-                updateTomorrowFrog("")
-            } else if (frogDoneDay.isNotEmpty() && frogDoneDay != today) {
-                updateFrog("")
-            }
-        }
-        // Finished tasks are cleared for the new day. Unfinished ones carry over.
-        if (last.isNotEmpty() && tasks.any { it.done }) writeTasks(tasks.filterNot { it.done })
-        updateWater(0)
-        save { putString("last_day", today) }
-    }
+    // ------------------------------------------------------------ reset
 
     /** Deletes everything this app stored. */
     fun resetAll() {
         prefs.edit().clear().apply()
-        frog = ""; frogDoneDay = ""; frogDoneAt = 0L; tomorrowFrog = ""; frogMinutes = 25; eatenDays = emptySet()
-        water = 0; waterGoal = 8; note = ""
-        habits = emptyList(); dumps = emptyList(); tasks = emptyList(); lockIn = false; urgeEnd = 0L; urgeButtonOn = true; examName = ""; examDay = 0L
-        gated = emptySet(); hidden = emptySet(); pendingRemoval = emptyMap(); homeApps = emptyList()
-        limitValue = 60; breathsValue = 3; wordsValue = 5; growingValue = 1; pendingChanges = emptyMap()
-        opens = emptyMap(); backedOut = emptyMap(); bookedMs = 0L
+        urgeEnd = 0L; urgeButtonOn = true
+        homeApps = emptyList()
         sessionPkg = ""; sessionEnd = 0L; sessionNotified = true
-        focusEnd = 0L; focusDnd = true; focusLockGated = true
-        eveningHour = 21; eveningDoneDay = ""; screenGoalMin = 180
-        widgets = DEFAULT_WIDGETS; widgetHeights = emptyMap()
-        themeMode = ThemeMode.Auto; look = Look.Standard; animations = true; Motion.enabled = true; pipOn = true; onboarded = false
+        themeMode = ThemeMode.Auto; look = Look.Standard; animations = true; Motion.enabled = true; onboarded = false
     }
 }

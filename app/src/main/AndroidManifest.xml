@@ -9,16 +9,10 @@
 
     <!--
       Optional permissions, each asked for by the user in Settings and only used on this device:
-      usage access (screen time), display over other apps (floating timer, red button), calendar read (Agenda widget).
-      Do Not Disturb access is granted in system settings and needs no manifest permission here.
+      usage access (screen time), display over other apps (floating timer, red button), notification access (red button lock).
     -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.READ_CALENDAR" />
-    <!-- Background noise player in Quick actions: a media-playback foreground service with a Stop notification. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Lets us list launchable apps on Android 11+ without the broad QUERY_ALL_PACKAGES permission. -->
     <queries>
@@ -51,23 +45,17 @@
             </intent-filter>
         </activity>
 
-        <!-- Floating timer shown over a gated app while a session runs. -->
+        <!-- Floating timer shown over an app while its time runs. -->
         <service
             android:name=".service.SessionOverlayService"
             android:exported="false" />
-
-        <!-- White, pink and brown noise made in code. No audio files, no network. -->
-        <service
-            android:name=".service.NoiseService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
 
         <!-- The red button drawn over other apps. Runs only when the user turns it on and allows "Display over other apps". -->
         <service
             android:name=".service.UrgeButtonService"
             android:exported="false" />
 
-        <!-- Dismisses notifications from hidden apps, and from every app during the red button lock. Active only if "Notification access" is allowed. -->
+        <!-- Dismisses every notification during the red button lock. Active only if "Notification access" is allowed. -->
         <service
             android:name=".service.NotificationGuardService"
             android:exported="true"

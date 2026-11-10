@@ -6,17 +6,14 @@ import android.service.notification.StatusBarNotification
 
 /**
  * Runs only when the user allows "Notification access". It reads nothing but which app posted, and keeps no copy.
- * 1. Hidden apps behave as if they were not installed, so their notifications are dismissed as they arrive.
- * 2. While the red button lock runs, every notification is dismissed, so there is nothing to tap that opens an app.
+ * While the red button lock runs, every notification is dismissed, so there is nothing to tap that opens an app.
  */
 class NotificationGuardService : NotificationListenerService() {
     private fun prefs() = getSharedPreferences("launcher", Context.MODE_PRIVATE)
 
     private fun shouldDismiss(sbn: StatusBarNotification): Boolean {
         if (sbn.packageName == packageName) return false
-        val p = prefs()
-        if (p.getLong("urge_end", 0L) > System.currentTimeMillis()) return true
-        return sbn.packageName in (p.getStringSet("hidden", emptySet()) ?: emptySet())
+        return prefs().getLong("urge_end", 0L) > System.currentTimeMillis()
     }
 
     override fun onListenerConnected() {

@@ -141,25 +141,17 @@ fun AppDrawer(state: LauncherState, open: Boolean, onClose: () -> Unit, onOpenAp
                             cursorBrush = SolidColor(AppColors.text),
                             modifier = Modifier.fillMaxWidth(),
                             decorationBox = { inner ->
-                                Box { if (query.isEmpty()) AppText(if (state.lockIn) "Type an app's full name" else "Search apps", color = AppColors.muted, display = false); inner() }
+                                Box { if (query.isEmpty()) AppText("Type an app's full name", color = AppColors.muted, display = false); inner() }
                             },
                         )
                     }
                 }
 
-                // Lock In: nothing is listed until the full name of an app is typed.
-                val shown = when {
-                    state.lockIn -> exactNameMatches(state.apps, query)
-                    // Hidden apps are not in state.apps at all.
-                    else -> filterApps(state.apps, query).sortedBy { it.label.lowercase() }
-                }
+                // Nothing is listed until the full name of an app is typed.
+                val shown = exactNameMatches(state.apps, query)
                 if (shown.isEmpty()) {
                     AppText(
-                        when {
-                            state.lockIn && query.isBlank() -> "Lock In is on. Type an app's full name to find it. Your Home apps are on the Home page."
-                            state.lockIn -> "No app has exactly that name."
-                            else -> "No apps match \u201C$query\u201D."
-                        },
+                        if (query.isBlank()) "Type an app's full name to find it. Your Home apps are on the Home page." else "No app has exactly that name.",
                         color = AppColors.muted, display = false, modifier = Modifier.padding(horizontal = 24.dp, vertical = 40.dp),
                     )
                 }
@@ -175,7 +167,6 @@ fun AppDrawer(state: LauncherState, open: Boolean, onClose: () -> Unit, onOpenAp
                         if (header != null) {
                             AppText(header, Modifier.fillMaxWidth().background(AppColors.phone).padding(top = 14.dp, bottom = 2.dp), size = 15.sp, weight = FontWeight.Medium, color = AppColors.muted, display = true)
                         }
-                        val gated = state.isGated(app.packageName)
                         val src = remember { MutableInteractionSource() }
                         val pressed by src.collectIsPressedAsState()
                         val shift by androidx.compose.animation.core.animateDpAsState(if (pressed) 8.dp else 0.dp, Motion.state(250), label = "shift")
@@ -186,14 +177,13 @@ fun AppDrawer(state: LauncherState, open: Boolean, onClose: () -> Unit, onOpenAp
                                 .combinedClickable(
                                     interactionSource = src, indication = null, role = Role.Button,
                                     onClick = { scope.launch { onClose(); delay(250); onOpenApp(app) } },
-                                    onLongClick = { if (!state.lockIn) options = app },
+                                    onLongClick = { options = app },
                                 )
                                 .padding(vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             AppText(app.label, Modifier.weight(1f), size = 24.sp, maxLines = 1, letterSpacing = (-0.72).sp, weight = FontWeight.Medium, color = AppColors.text)
-                            if (gated) Caption("gated")
                         }
                     }
                 }
@@ -203,35 +193,18 @@ fun AppDrawer(state: LauncherState, open: Boolean, onClose: () -> Unit, onOpenAp
 
     val target = options
     if (target != null) {
-        val gated = state.isGated(target.packageName)
         val onHome = target.packageName in state.homeApps
-        val pending = target.packageName in state.pendingRemoval
         AlertDialog(
             onDismissRequest = { options = null },
             containerColor = AppColors.card,
             title = { AppText(target.label, size = 20.sp, weight = FontWeight.SemiBold) },
             text = {
                 Column {
-                    if (gated) {
-                        AppText(
-                            if (pending) "Gate removal is waiting for its 24 hour delay." else "Removing a gate takes 24 hours, so a weak moment can't undo it.",
-                            size = 15.sp, color = AppColors.muted, modifier = Modifier.padding(bottom = 8.dp),
-                        )
-                    }
-                    OptionRow(if (gated) (if (pending) "Keep the gate" else "Remove gate (in 24 hours)") else "Gate this app") {
-                        if (!gated) state.addGated(target.packageName)
-                        else if (pending) state.cancelRemoveGated(target.packageName)
-                        else state.requestRemoveGated(target.packageName)
+                    OptionRow(if (onHome) "Remove from Home" else "Add to Home") {
+                        if (onHome) state.updateHomeApps(state.homeApps - target.packageName)
+                        else state.updateHomeApps((state.homeApps + target.packageName).takeLast(6))
                         options = null
                     }
-                    if (!gated) {
-                        OptionRow(if (onHome) "Remove from Home" else "Add to Home") {
-                            if (onHome) state.updateHomeApps(state.homeApps - target.packageName)
-                            else state.updateHomeApps((state.homeApps + target.packageName).takeLast(6))
-                            options = null
-                        }
-                    }
-                    OptionRow("Hide app") { state.setHidden(target.packageName, true); options = null }
                     OptionRow("App info") { openAppInfo(context, target.packageName); options = null }
                 }
             },

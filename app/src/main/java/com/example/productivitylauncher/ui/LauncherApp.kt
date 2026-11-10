@@ -1,105 +1,59 @@
 package com.example.productivitylauncher.ui
 
-import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.ui.graphics.graphicsLayer
-import com.example.productivitylauncher.ui.theme.Motion
-import kotlin.math.absoluteValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.productivitylauncher.data.AppEntry
 import com.example.productivitylauncher.data.LauncherState
-import com.example.productivitylauncher.data.PipAction
-import com.example.productivitylauncher.data.WidgetHost
 import com.example.productivitylauncher.data.launchApp
-import com.example.productivitylauncher.data.pipMessage
+import com.example.productivitylauncher.data.openMessages
+import com.example.productivitylauncher.data.openPhone
+import com.example.productivitylauncher.service.UrgeButtonService
 import com.example.productivitylauncher.ui.apps.AppDrawer
-import com.example.productivitylauncher.ui.apps.GatedPickerScreen
 import com.example.productivitylauncher.ui.apps.HomePickerScreen
-import com.example.productivitylauncher.ui.focus.EveningScreen
-import com.example.productivitylauncher.ui.focus.FocusScreen
-import com.example.productivitylauncher.ui.focus.WeekScreen
-import com.example.productivitylauncher.ui.gate.GateScreen
-import com.example.productivitylauncher.ui.gate.LockedScreen
+import com.example.productivitylauncher.ui.gate.TimeScreen
 import com.example.productivitylauncher.ui.gate.TimesUpScreen
+import com.example.productivitylauncher.ui.home.BottomBar
 import com.example.productivitylauncher.ui.home.HomeScreen
-import com.example.productivitylauncher.ui.home.QuickPanel
-import com.example.productivitylauncher.ui.theme.lookFilter
-import androidx.compose.ui.graphics.CompositingStrategy
 import com.example.productivitylauncher.ui.onboarding.OnboardingScreen
-import com.example.productivitylauncher.ui.pip.PipBubble
-import com.example.productivitylauncher.ui.pip.PipCard
-import com.example.productivitylauncher.ui.pip.PipChip
-import com.example.productivitylauncher.ui.pip.PIP_ENABLED
-import com.example.productivitylauncher.ui.pip.PipDock
 import com.example.productivitylauncher.ui.settings.SettingsScreen
-import com.example.productivitylauncher.ui.urge.UrgeScreen
 import com.example.productivitylauncher.ui.theme.AppColors
-import com.example.productivitylauncher.ui.widgets.BrainDumpScreen
-import com.example.productivitylauncher.ui.today.TodayScreen
+import com.example.productivitylauncher.ui.theme.Motion
+import com.example.productivitylauncher.ui.theme.lookFilter
+import com.example.productivitylauncher.ui.urge.UrgeScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
+fun LauncherApp(state: LauncherState, homeSignal: Int) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val pager = rememberPagerState(pageCount = { 2 })
 
     var route by remember { mutableStateOf<Route>(if (state.onboarded) Route.Main else Route.Onboarding) }
     val stack = remember { ArrayList<Route>() }
-    // Which way the last move went, so screens slide in from the right and back out to the right.
-    var forward by remember { mutableStateOf(true) }
-    var pipOpen by remember { mutableStateOf(false) }
-    var quickOpen by remember { mutableStateOf(false) }
     var drawerOpen by remember { mutableStateOf(false) }
-    var pipVariant by remember { mutableIntStateOf(0) }
-    var pipChip by remember { mutableStateOf<String?>(null) }
-    // Pip tucks against the screen edge when nobody touches it. pipTouch restarts the idle timer.
-    var pipDocked by remember { mutableStateOf(false) }
-    var pipTouch by remember { mutableIntStateOf(0) }
-    // Pip always knows the time: this ticks every minute so greetings and reminders stay current.
-    val minute by produceState(System.currentTimeMillis() / 60_000L) {
-        while (true) { delay(60_000L - System.currentTimeMillis() % 60_000L); value = System.currentTimeMillis() / 60_000L }
-    }
 
     // The red button: while its timer runs, nothing but the lock screen is shown.
     val urgeNow by produceState(System.currentTimeMillis(), state.urgeEnd) {
@@ -112,49 +66,35 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
     val urgeActive = state.urgeEnd > urgeNow
     LaunchedEffect(urgeActive) {
         if (urgeActive) {
-            com.example.productivitylauncher.service.UrgeButtonService.guard(context)
+            UrgeButtonService.guard(context)
             stack.clear()
             if (route != Route.Onboarding) route = Route.Main
-            pipOpen = false
-            quickOpen = false
             drawerOpen = false
-            pager.scrollToPage(0)
         }
     }
 
     val nav = remember {
         Nav(
             go = { r ->
-                forward = r != Route.Main
                 if (r == Route.Main) stack.clear() else stack.add(route)
                 route = r
-                pipOpen = false
-                quickOpen = false
                 drawerOpen = false
             },
-            back = {
-                forward = false
-                route = if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex) else Route.Main
-            },
+            back = { route = if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex) else Route.Main },
         )
     }
 
-    // Pressing Home always returns to the first page.
+    // Pressing Home always returns to the Home page.
     LaunchedEffect(homeSignal) {
         if (homeSignal > 0) {
             stack.clear()
             if (route != Route.Onboarding) route = Route.Main
-            pipOpen = false
             drawerOpen = false
-            quickOpen = false
-            pager.scrollToPage(0)
         }
     }
 
     // Runs each time the launcher comes back to the foreground.
     LaunchedEffect(state.resumeTick) {
-        state.rollover()
-        state.applyPending()
         state.syncSession()
         withContext(Dispatchers.IO) {
             state.refreshApps(context.packageManager)
@@ -182,32 +122,16 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             route == Route.Onboarding -> Unit
             drawerOpen -> drawerOpen = false
             route != Route.Main -> nav.back()
-            quickOpen -> quickOpen = false
-            pipOpen -> pipOpen = false
-            pager.currentPage != 0 -> scope.launch { pager.animateScrollToPage(0) }
         }
     }
 
-    var launching by remember { mutableStateOf<AppEntry?>(null) }
-    LaunchedEffect(launching) {
-        val a = launching ?: return@LaunchedEffect
-        delay(520)
-        launchApp(context, a)
-        delay(900)
-        launching = null
-    }
-    fun launchWithFlourish(app: AppEntry) {
-        launchApp(context, app)
-    }
-
+    /** Home apps open at once. Any other app asks how long you need it first. */
     fun openApp(app: AppEntry) {
         val pkg = app.packageName
         when {
-            !state.isGated(pkg) -> launchWithFlourish(app)
-            state.sessionActive && state.sessionPkg == pkg -> launchWithFlourish(app)
-            state.focusActive && state.focusLockGated -> nav.go(Route.Locked(LockReason.Focus, pkg))
-            state.limitReached -> nav.go(Route.Locked(LockReason.DailyLimit, pkg))
-            else -> nav.go(Route.Gate(pkg))
+            pkg in state.homeApps -> launchApp(context, app)
+            state.sessionActive && state.sessionPkg == pkg -> launchApp(context, app)
+            else -> nav.go(Route.Time(pkg))
         }
     }
 
@@ -235,137 +159,25 @@ fun LauncherApp(state: LauncherState, widgetHost: WidgetHost, homeSignal: Int) {
             },
             label = "route",
         ) { r ->
-        if (r == null) UrgeScreen(state.urgeEnd - urgeNow) else when (r) {
-            Route.Main -> Box(Modifier.fillMaxSize()) {
-                HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
-                    // While you swipe, the page that is leaving softens and shrinks a little, like a card behind.
-                    Box(
-                        Modifier.fillMaxSize().clipToBounds().graphicsLayer {
-                            // Like the prototype: the page slides a third further and fades as it leaves.
-                            val signed = page - (pager.currentPage + pager.currentPageOffsetFraction)
-                            translationX = -signed * size.width * 0.32f
-                            alpha = 1f - signed.absoluteValue.coerceIn(0f, 1f) * 0.8f
-                        },
-                    ) {
-                        if (page == 0) HomeScreen(state, nav, onOpenApp = { openApp(it) }, page = 0, onOpenWidgets = { scope.launch { pager.animateScrollToPage(1) } }, onOpenQuick = { quickOpen = true }, onOpenDrawer = { drawerOpen = true })
-                        else TodayScreen(state, nav, widgetHost, page = 1, onOpenHome = { scope.launch { pager.animateScrollToPage(0) } })
-                    }
-                }
-                com.example.productivitylauncher.ui.home.BottomBar(
-                    pager,
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    onApps = { drawerOpen = true },
-                    onPhone = { com.example.productivitylauncher.data.openPhone(context) },
-                    onMessages = { com.example.productivitylauncher.data.openMessages(context) },
-                    onSteady = { nav.go(Route.Steady) },
-                    onSelect = { scope.launch { pager.animateScrollToPage(it) } },
-                )
-                QuickPanel(state, quickOpen, { quickOpen = false })
-                if (PIP_ENABLED && state.pipOn) {
-                    // Reading these makes Pip choose again when the minute, the resume or the frog changes.
-                    @Suppress("UNUSED_VARIABLE") val clockTick = minute + state.resumeTick
-                    val message = pipMessage(state.pipFacts(), pipVariant)
-
-                    // The moment the frog is eaten, Pip says well done in a small speech chip.
-                    var wasDone by remember { mutableStateOf(state.frogDone) }
-                    LaunchedEffect(state.frogDone) {
-                        val justEaten = state.frogDone && !wasDone
-                        wasDone = state.frogDone
-                        if (justEaten) {
-                            pipChip = pipMessage(state.pipFacts(), 0).text
-                            delay(9_000L)
-                            pipChip = null
-                        }
-                    }
-                    val chip = pipChip
-
-                    // A chip needs Pip out beside it. Otherwise, after a quiet moment, Pip tucks itself away.
-                    val chipShowing = chip != null
-                    LaunchedEffect(chipShowing) { if (chipShowing) pipDocked = false }
-                    LaunchedEffect(pipDocked, pipOpen, chipShowing, pipTouch) {
-                        if (!pipDocked && !pipOpen && !chipShowing) {
-                            delay(PipDock.IdleMillis)
-                            pipDocked = true
-                        }
-                    }
-
-                    if (chip != null && !pipOpen && !pipDocked) {
-                        PipChip(chip, onClick = { pipChip = null; pipOpen = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 96.dp, bottom = 116.dp).widthIn(max = 240.dp))
-                    }
-                    PipBubble(
-                        message,
-                        docked = pipDocked,
-                        onClick = {
-                            pipTouch++
-                            // First touch brings a tucked-away Pip out; the next one opens its message.
-                            if (pipDocked) pipDocked = false else { pipVariant++; pipChip = null; pipOpen = true }
-                        },
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 110.dp),
+            if (r == null) UrgeScreen(state.urgeEnd - urgeNow) else when (r) {
+                Route.Main -> Box(Modifier.fillMaxSize()) {
+                    HomeScreen(state, nav, onOpenApp = { openApp(it) }, onOpenDrawer = { drawerOpen = true })
+                    BottomBar(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        onApps = { drawerOpen = true },
+                        onPhone = { openPhone(context) },
+                        onMessages = { openMessages(context) },
                     )
-                    if (pipOpen) {
-                        // Keep the text Pip started with, so it does not change while it is typing.
-                        val cardMessage = remember(pipOpen) { message }
-                        PipCard(
-                            cardMessage,
-                            timeLabel = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault()).format(java.util.Date()),
-                            onDismiss = { pipOpen = false },
-                            onAction = { action ->
-                                pipOpen = false
-                                when (action) {
-                                    PipAction.Focus -> nav.go(Route.Focus)
-                                    PipAction.Evening -> nav.go(Route.Evening)
-                                    PipAction.BrainDump -> nav.go(Route.BrainDump)
-                                    PipAction.SetFrog -> scope.launch { pager.animateScrollToPage(1) }
-                                    PipAction.Water -> state.updateWater(state.water + 1)
-                                    PipAction.None -> Unit
-                                }
-                            },
-                        )
-                    }
+                    AppDrawer(state, drawerOpen, { drawerOpen = false }, onOpenApp = { openApp(it) })
                 }
-                AppDrawer(state, drawerOpen, { drawerOpen = false }, onOpenApp = { openApp(it) })
-            }
-            is Route.Gate -> {
-                val app = state.appByPackage(r.pkg)
-                if (app == null) nav.back() else GateScreen(state, app, nav)
-            }
-            Route.BrainDump -> BrainDumpScreen(state, nav)
-            Route.AddWidget -> com.example.productivitylauncher.ui.widgets.AddWidgetScreen(state, nav, widgetHost)
-            Route.Steady -> com.example.productivitylauncher.ui.steady.SteadyScreen(state, nav)
-            Route.Focus -> FocusScreen(state, nav)
-            Route.Evening -> EveningScreen(state, nav)
-            Route.Week -> WeekScreen(state, nav)
-            Route.Settings -> SettingsScreen(state, nav)
-            Route.GatedPicker -> GatedPickerScreen(state, nav)
-            Route.HiddenPicker -> com.example.productivitylauncher.ui.apps.HiddenPickerScreen(state, nav)
-            Route.HomePicker -> HomePickerScreen(state, nav)
-            is Route.Locked -> LockedScreen(state, r.reason, state.appByPackage(r.pkg), nav)
-            is Route.TimesUp -> TimesUpScreen(state, state.appByPackage(r.pkg), nav)
-            Route.Onboarding -> OnboardingScreen(state, nav)
-        }
-        }
-        launching?.let { LaunchOverlay(it.label) }
-    }
-}
-
-/** The circle that grows from the middle and names the app being opened, like the prototype. */
-@Composable
-private fun LaunchOverlay(name: String) {
-    var go by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { go = true }
-    val p by androidx.compose.animation.core.animateFloatAsState(if (go) 1f else 0f, Motion.morph(750), label = "launch")
-    val ink = AppColors.text
-    val paper = AppColors.phone
-    Box(Modifier.fillMaxSize()) {
-        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-            val r = kotlin.math.hypot(size.width, size.height) * 0.62f * p
-            drawCircle(ink, radius = r, center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2))
-        }
-        val a = ((p - 0.35f) / 0.4f).coerceIn(0f, 1f)
-        Box(Modifier.fillMaxSize().graphicsLayer { alpha = a; translationY = (1f - a) * 14.dp.toPx() }, contentAlignment = Alignment.Center) {
-            androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
-                com.example.productivitylauncher.ui.components.AppText(name, size = 48.sp, weight = androidx.compose.ui.text.font.FontWeight.Medium, color = paper, align = androidx.compose.ui.text.style.TextAlign.Center)
-                com.example.productivitylauncher.ui.components.Caption("Opening", color = paper.copy(alpha = 0.6f))
+                is Route.Time -> {
+                    val app = state.appByPackage(r.pkg)
+                    if (app == null) nav.back() else TimeScreen(state, app, nav)
+                }
+                is Route.TimesUp -> TimesUpScreen(state.appByPackage(r.pkg), nav)
+                Route.Settings -> SettingsScreen(state, nav)
+                Route.HomePicker -> HomePickerScreen(state, nav)
+                Route.Onboarding -> OnboardingScreen(state, nav)
             }
         }
     }
